@@ -9,7 +9,8 @@
         let theme = localStorage.getItem("meek_theme") || "light";
         document.documentElement.setAttribute("data-color-mode", theme);
     </script>
-<meta name="description" content="**注：现在新版本elastic stack已经支持将kafka作为输出和输入的目标**
+<meta name="description" content="
+**注：现在新版本elastic stack已经支持将kafka作为输出和输入的目标**
 
 当日志不是结构化数据：*.log->filebeat->kafka->logstash->elasticsearch
 
@@ -30,7 +31,8 @@ filebeat.inputs:
 - type: filestream #新版本常用文件流输入方式
   id: my-filestream-id #每个文件流输入必须有一个唯一的 ID。">
 <meta property="og:title" content="EFK日志系统">
-<meta property="og:description" content="**注：现在新版本elastic stack已经支持将kafka作为输出和输入的目标**
+<meta property="og:description" content="
+**注：现在新版本elastic stack已经支持将kafka作为输出和输入的目标**
 
 当日志不是结构化数据：*.log->filebeat->kafka->logstash->elasticsearch
 
