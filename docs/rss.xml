@@ -1,5 +1,11 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<rss xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/" version="2.0"><channel><title>V's Blog</title><link>https://blog.witter.top</link><description>Blog description</description><copyright>V's Blog</copyright><docs>http://www.rssboard.org/rss-specification</docs><generator>python-feedgen</generator><image><url>https://img.witter.top/file/b037878209903b7d5bb17.jpg</url><title>avatar</title><link>https://blog.witter.top</link></image><lastBuildDate>Thu, 20 Jun 2024 02:44:49 +0000</lastBuildDate><managingEditor>V's Blog</managingEditor><ttl>60</ttl><webMaster>V's Blog</webMaster><item><title>Certbot 申请SSL证书</title><link>https://blog.witter.top/post/Certbot%20-shen-qing-SSL-zheng-shu.html</link><description># CertBot&#13;
+<rss xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/" version="2.0"><channel><title>V's Blog</title><link>https://blog.witter.top</link><description>Blog description</description><copyright>V's Blog</copyright><docs>http://www.rssboard.org/rss-specification</docs><generator>python-feedgen</generator><image><url>https://img.witter.top/file/b037878209903b7d5bb17.jpg</url><title>avatar</title><link>https://blog.witter.top</link></image><lastBuildDate>Thu, 20 Jun 2024 02:47:39 +0000</lastBuildDate><managingEditor>V's Blog</managingEditor><ttl>60</ttl><webMaster>V's Blog</webMaster><item><title>Azkaban</title><link>https://blog.witter.top/post/Azkaban.html</link><description># Azkaban&#13;
+&#13;
+## 1.部署&#13;
+&#13;
+### 1.1 Solo&#13;
+&#13;
+独立服务器是Azkaban的独立实例，也是最简单的开始。</description><guid isPermaLink="true">https://blog.witter.top/post/Azkaban.html</guid><pubDate>Thu, 20 Jun 2024 02:47:18 +0000</pubDate></item><item><title>Certbot 申请SSL证书</title><link>https://blog.witter.top/post/Certbot%20-shen-qing-SSL-zheng-shu.html</link><description># CertBot&#13;
 &#13;
 ## 官方网址&#13;
 &#13;
