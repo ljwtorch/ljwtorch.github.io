@@ -1,5 +1,3 @@
-# EFK日志告警系统
-
 **注：现在新版本elastic stack已经支持将kafka作为输出和输入的目标**
 
 当日志不是结构化数据：*.log->filebeat->kafka->logstash->elasticsearch
