@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html data-color-mode="light" data-dark-theme="dark" data-light-theme="light" lang="zh-CN">
+<head>
+    <meta content="text/html; charset=utf-8" http-equiv="content-type" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <link href="//cdn.staticfile.net/Primer/21.0.7/primer.css" rel="stylesheet" />
+    <link rel="icon" href="https://img.witter.top/file/b037878209903b7d5bb17.jpg"><script>
+        let theme = localStorage.getItem("meek_theme") || "light";
+        document.documentElement.setAttribute("data-color-mode", theme);
+    </script>
+<meta name="description" content="logrotate 是一个 linux 系统日志的管理工具。">
+<meta property="og:title" content="Logrotate">
+<meta property="og:description" content="logrotate 是一个 linux 系统日志的管理工具。">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://blog.witter.top/post/Logrotate.html">
+<meta property="og:image" content="https://img.witter.top/file/b037878209903b7d5bb17.jpg">
+<title>Logrotate</title>
+<link href="//unpkg.com/@wooorm/starry-night@2.1.1/style/both.css" rel="stylesheet" />
+
+</head>
+<style>
+body{box-sizing: border-box;min-width: 200px;max-width: 900px;margin: 20px auto;padding: 45px;font-size: 16px;font-family: sans-serif;line-height: 1.25;}
+#header{display:flex;padding-bottom:8px;border-bottom: 1px solid var(--borderColor-muted, var(--color-border-muted));margin-bottom: 16px;}
+#footer {margin-top:64px; text-align: center;font-size: small;}
+
+</style>
+
+<style>
+.postTitle{margin: auto 0;font-size:40px;font-weight:bold;}
+.title-right{display:flex;margin:auto 0 0 auto;}
+.title-right .circle{padding: 14px 16px;margin-right:8px;}
+#postBody{border-bottom: 1px solid var(--color-border-default);padding-bottom:36px;}
+#postBody hr{height:2px;}
+#cmButton{height:48px;margin-top:48px;}
+#comments{margin-top:64px;}
+.g-emoji{font-size:24px;}
+@media (max-width: 600px) {
+    body {padding: 8px;}
+    .postTitle{font-size:24px;}
+}
+</style>
+
+
+
+
+<body>
+    <div id="header">
+<h1 class="postTitle">Logrotate</h1>
+<div class="title-right">
+    <a href="https://blog.witter.top" id="buttonHome" class="btn btn-invisible circle" title="首页">
+        <svg class="octicon" width="16" height="16">
+            <path id="pathHome" fill-rule="evenodd"></path>
+        </svg>
+    </a>
+    
+    <a href="https://github.com/ljwtorch/ljwtorch.github.io/issues/10" target="_blank" class="btn btn-invisible circle" title="Issue">
+        <svg class="octicon" width="16" height="16">
+            <path id="pathIssue" fill-rule="evenodd"></path>
+        </svg>
+    </a>
+    
+
+    <a class="btn btn-invisible circle" onclick="modeSwitch();" title="切换主题">
+        <svg class="octicon" width="16" height="16" >
+            <path id="themeSwitch" fill-rule="evenodd"></path>
+        </svg>
+    </a>
+
+</div>
+</div>
+    <div id="content">
+<div class="markdown-body" id="postBody"><p>logrotate 是一个 linux 系统日志的管理工具。可以对单个日志文件或者某个目录下的文件按时间 / 大小进行切割，压缩操作；指定日志保存数量；还可以在切割之后运行自定义命令。</p>
+<p>logrotate 是基于 crontab 运行的，所以这个时间点是由 crontab 控制的，具体可以查询 crontab 的配置文件 /etc/anacrontab。 系统会按照计划的频率运行 logrotate，通常是每天。在大多数的 Linux 发行版本上，计划每天运行的脚本位于 /etc/cron.daily/logrotate。</p>
+<blockquote>
+<p>/etc/cron.daily</p>
+<div class="highlight highlight-source-shell"><pre class="notranslate"><span class="pl-c"><span class="pl-c">#!</span>/bin/sh</span>
+
+<span class="pl-c"><span class="pl-c">#</span> skip in favour of systemd timer</span>
+<span class="pl-k">if</span> [ <span class="pl-k">-d</span> /run/systemd/system ]<span class="pl-k">;</span> <span class="pl-k">then</span>
+ <span class="pl-c1">exit</span> 0
+<span class="pl-k">fi</span>
+
+<span class="pl-c"><span class="pl-c">#</span> this cronjob persists removals (but not purges)</span>
+<span class="pl-k">if</span> [ <span class="pl-k">!</span> <span class="pl-k">-x</span> /usr/sbin/logrotate ]<span class="pl-k">;</span> <span class="pl-k">then</span>
+ <span class="pl-c1">exit</span> 0
+<span class="pl-k">fi</span>
+
+/usr/sbin/logrotate /etc/logrotate.conf
+EXITVALUE=<span class="pl-smi">$?</span>
+<span class="pl-k">if</span> [ <span class="pl-smi">$EXITVALUE</span> <span class="pl-k">!=</span> 0 ]<span class="pl-k">;</span> <span class="pl-k">then</span>
+ /usr/bin/logger -t logrotate <span class="pl-s"><span class="pl-pds">"</span>ALERT exited abnormally with [<span class="pl-smi">$EXITVALUE</span>]<span class="pl-pds">"</span></span>
+<span class="pl-k">fi</span>
+<span class="pl-c1">exit</span> <span class="pl-smi">$EXITVALUE</span></pre></div>
+</blockquote>
+<h2>原理</h2>
+<p>logrotate 是怎么做到滚动日志时不影响程序正常的日志输出呢？</p>
+<ol>
+<li><strong>create</strong>：mv+create 执行完之后，通知应用重新在新文件写入
+<ul>
+<li>重命名正在输出日志文件，因为重命名只修改目录以及文件的名称，而进程操作文件使用的是 inode，所以并不影响原程序继续输出日志；</li>
+<li>创建新的日志文件，文件名和原日志文件一样，注意，此时只是文件名称一样，而 inode 编号不同，原程序输出的日志还是往原日志文件输出；</li>
+<li>最后通过某些方式通知程序，重新打开日志文件；由于重新打开日志文件会用到文件路径而非 inode 编号，所以打开的是新的日志文件；</li>
+</ul>
+</li>
+<li><strong>copytruncate</strong>：把正在输出的日志拷 (copy) 一份出来，再清空 (trucate) 原来的日志；清空操作比较快，但如果日志文件太大，那么复制就会比较耗时，从而可能导致部分日志丢失，不过这种方式不需要应用程序的支持
+<ul>
+<li>将当前正在输出的日志文件复制为目标文件，此时程序仍然将日志输出到原来文件中，此时，原文件名也没有变。</li>
+<li>清空日志文件，原程序仍然还是输出到预案日志文件中，因为清空文件只把文件的内容删除了，而 inode 并没改变，后续日志的输出仍然写入该文件中。</li>
+</ul>
+</li>
+</ol>
+<h2>Linux文件操作机制</h2>
+<p>Linux 文件系统里文件和文件名的关系如下图：</p>
+<p><a target="_blank" rel="noopener noreferrer nofollow" href="https://camo.githubusercontent.com/c87db08d5377b4bea0c4bdd7f9ff595165bd3e76ab9dd17e917f7b5d9230d299/68747470733a2f2f696d672e7769747465722e746f702f66696c652f6565326630393939356538343738363866313237612e706e67"><img src="https://camo.githubusercontent.com/c87db08d5377b4bea0c4bdd7f9ff595165bd3e76ab9dd17e917f7b5d9230d299/68747470733a2f2f696d672e7769747465722e746f702f66696c652f6565326630393939356538343738363866313237612e706e67" alt="image-20230131094227080" data-canonical-src="https://img.witter.top/file/ee2f09995e847868f127a.png" style="max-width: 100%;"></a></p>
+<p>目录也是文件，文件里存着文件名和对应的 inode 编号。通过这个 inode 编号可以查到文件的元数据和文件内容。文件的元数据有引用计数、操作权限、拥有者 ID、创建时间、最后修改时间等等。文件件名并不在元数据里而是在目录文件中。因此文件改名、移动，都不会修改文件，而是修改目录文件。</p>
+<p><a target="_blank" rel="noopener noreferrer nofollow" href="https://camo.githubusercontent.com/2cbf940679c1e3b736615fc1756c711e407139eff9dfdf3bfc14e2b3be0da578/68747470733a2f2f696d672e7769747465722e746f702f66696c652f6664383032383665383539393131396462353735372e706e67"><img src="https://camo.githubusercontent.com/2cbf940679c1e3b736615fc1756c711e407139eff9dfdf3bfc14e2b3be0da578/68747470733a2f2f696d672e7769747465722e746f702f66696c652f6664383032383665383539393131396462353735372e706e67" alt="image-20230131094747354" data-canonical-src="https://img.witter.top/file/fd80286e8599119db5757.png" style="max-width: 100%;"></a></p>
+<p>进程每新打开一个文件，系统会分配一个新的文件描述符给这个文件。文件描述符对应着一个文件表。表里面存着文件的状态信息（<code class="notranslate">O_APPEND</code>/<code class="notranslate">O_CREAT</code>/<code class="notranslate">O_DIRECT</code>...）、当前文件位置和文件的 inode 信息。系统会为每个进程创建独立的文件描述符和文件表，不同进程是不会共用同一个文件表。正因为如此，不同进程可以同时用不同的状态操作同一个文件的不同位置。文件表中存的是 inode 信息而不是文件路径，所以文件路径发生改变不会影响文件操作。</p>
+<h2>Logrotate配置</h2>
+<p>执行文件： <code class="notranslate">/usr/sbin/logrotate</code></p>
+<p>主配置文件: <code class="notranslate">/etc/logrotate.conf</code></p>
+<p>自定义配置文件: <code class="notranslate">/etc/logrotate.d/*.conf</code></p>
+<p>修改配置文件后，不需要重启服务，本质上logrotate是一个可执行文件，不是以deamon运行</p>
+<div class="highlight highlight-source-shell"><pre class="notranslate"><span class="pl-c"><span class="pl-c">#</span> see "man logrotate" for details</span>
+<span class="pl-c"><span class="pl-c">#</span> rotate log files weekly</span>
+<span class="pl-c"><span class="pl-c">#</span> 每周轮换日志文件</span>
+weekly
+
+<span class="pl-c"><span class="pl-c">#</span> use the adm group by default, since this is the owning group of /var/log/syslog.</span>
+<span class="pl-c"><span class="pl-c">#</span> 默认使用 adm 组，因为这是 /var/log/syslog 的拥有组。</span>
+su root adm
+
+<span class="pl-c"><span class="pl-c">#</span> keep 4 weeks worth of backlogs</span>
+<span class="pl-c"><span class="pl-c">#</span> 保持4周的积压量</span>
+rotate 4
+
+<span class="pl-c"><span class="pl-c">#</span> create new (empty) log files after rotating old ones</span>
+<span class="pl-c"><span class="pl-c">#</span> 在轮换旧的日志文件后创建新的（空的）日志文件</span>
+create
+
+<span class="pl-c"><span class="pl-c">#</span> use date as a suffix of the rotated file</span>
+<span class="pl-c"><span class="pl-c">#</span> 使用日期作为旋转后的文件的后缀</span>
+<span class="pl-c"><span class="pl-c">#</span>dateext</span>
+
+<span class="pl-c"><span class="pl-c">#</span> uncomment this if you want your log files compressed</span>
+<span class="pl-c"><span class="pl-c">#</span> 如果你想让你的日志文件被压缩，请取消这个注释</span>
+<span class="pl-c"><span class="pl-c">#</span>compress</span>
+
+<span class="pl-c"><span class="pl-c">#</span> packages drop log rotation information into this directory</span>
+<span class="pl-c"><span class="pl-c">#</span> 软件包将日志轮换信息放入此目录</span>
+include /etc/logrotate.d
+
+<span class="pl-c"><span class="pl-c">#</span> system-specific logs may be also be configured here.</span>
+<span class="pl-c"><span class="pl-c">#</span> 系统特定的日志也可以在这里配置。</span></pre></div>
+<p><strong>/etc/anacrontab</strong></p>
+<div class="highlight highlight-source-shell"><pre class="notranslate"><span class="pl-c"><span class="pl-c">#</span> /etc/anacrontab: configuration file for anacron</span>
+
+<span class="pl-c"><span class="pl-c">#</span> See anacron(8) and anacrontab(5) for details.</span>
+
+SHELL=/bin/sh
+PATH=/sbin:/bin:/usr/sbin:/usr/bin
+MAILTO=root
+<span class="pl-c"><span class="pl-c">#</span> the maximal random delay added to the base delay of the jobs</span>
+RANDOM_DELAY=45
+<span class="pl-c"><span class="pl-c">#</span> the jobs will be started during the following hours only</span>
+START_HOURS_RANGE=3-22
+
+<span class="pl-c"><span class="pl-c">#</span>period in days   delay in minutes   job-identifier   command</span>
+1       5       cron.daily              nice run-parts /etc/cron.daily
+7       25      cron.weekly             nice run-parts /etc/cron.weekly
+@monthly 45     cron.monthly            nice run-parts /etc/cron.monthly</pre></div>
+<p>如果机器没有关机，默认的logrotate（配置文件里设置的是cron.daily）一般会在每天的3点05分到3点50分之间执行；</p>
+<p>真实的延迟时间是 RANDOM_DELAY + delay in minutes；</p>
+<p>如果在3-22这个时间段内服务器处于关机状态,则logrotate会在机器开机5分钟后执行分割日志的操作；</p>
+<h2>Logrotate运行</h2>
+<div class="highlight highlight-source-shell"><pre class="notranslate">用法: logrotate [OPTION...] <span class="pl-k">&lt;</span>configfile<span class="pl-k">&gt;</span>
+  -d, --debug               <span class="pl-c"><span class="pl-c">#</span>Don't do anything, just test and print debug messages</span>
+  							<span class="pl-c"><span class="pl-c">#</span>不做任何事情，只是测试和打印调试信息</span>
+  -f, --force               <span class="pl-c"><span class="pl-c">#</span>Force file rotation</span>
+  							<span class="pl-c"><span class="pl-c">#</span>强制旋转文件</span>
+  -m, --mail=command        <span class="pl-c"><span class="pl-c">#</span>Command to send mail (instead of `/usr/bin/mail')</span>
+  							<span class="pl-c"><span class="pl-c">#</span>发送邮件的命令（而不是`/usr/bin/mail'）</span>
+  -s, --state=statefile     <span class="pl-c"><span class="pl-c">#</span>Path of state file</span>
+  							<span class="pl-c"><span class="pl-c">#</span>状态文件的路径</span>
+  -v, --verbose             <span class="pl-c"><span class="pl-c">#</span>Display messages during rotation</span>
+  							<span class="pl-c"><span class="pl-c">#</span>显示旋转过程中的信息</span>
+  -l, --log=logfile         <span class="pl-c"><span class="pl-c">#</span>Log file or 'syslog' to log to syslog</span>
+  							<span class="pl-c"><span class="pl-c">#</span>日志文件或 "syslog "来记录到syslog。</span>
+      --version             Display version information</pre></div>
+<p>debug 模式：指定 <code class="notranslate">[-d|--debug]</code></p>
+<pre lang="text" class="notranslate"><code class="notranslate">logrotate -d &lt;configfile&gt;
+</code></pre>
+<p>并不会真正进行 rotate 或者 compress 操作，但是会打印出整个执行的流程，和调用的脚本等详细信息。</p>
+<p>verbose 模式： 指定 <code class="notranslate">[-v|--verbose]</code></p>
+<pre lang="text" class="notranslate"><code class="notranslate">logrotate -v &lt;configfile&gt;
+</code></pre>
+<p>会真正执行操作，打印出详细信息（debug 模式，默认是开启 verbose）</p>
+<p>state：指定一个状态文件，此文件记录logrotate上次运行时所看到和执行的操作，以便指导他下次运行时要执行的操作</p>
+<h2>Logrotate参数</h2>
+<div class="highlight highlight-source-shell"><pre class="notranslate">/var/log/log_file {
+    monthly
+    rotate 5
+    compress
+    delaycompress
+    missingok
+    notifempty
+    create 644 root root
+    postrotate
+        /usr/bin/killall -HUP rsyslogd
+    endscript
+}</pre></div>
+<ul>
+<li>monthly: 日志文件将按月轮循。其它可用值为<code class="notranslate">daily</code>，<code class="notranslate">weekly</code>或者<code class="notranslate">yearly</code>。</li>
+<li>rotate 5: 一次将存储 5 个归档日志。对于第六个归档，时间最久的归档将被删除。</li>
+<li>compress: 在轮循任务完成后，已轮循的归档将使用 gzip 进行压缩。</li>
+<li>delaycompress: 总是与 compress 选项一起用，delaycompress 选项指示 logrotate 不要将最近的归档压缩，压缩 将在下一次轮循周期进行。这在你或任何软件仍然需要读取最新归档时很有用。</li>
+<li>missingok: 在日志轮循期间，任何错误将被忽略，例如 “文件无法找到” 之类的错误。</li>
+<li>notifempty: 如果日志文件为空，轮循不会进行。</li>
+<li>create 644 root root: 以指定的权限创建全新的日志文件，同时 logrotate 也会重命名原始日志文件。</li>
+<li>postrotate/endscript: 在所有其它指令完成后，postrotate 和 endscript 里面指定的命令将被执行。在这种情况下，rsyslogd 进程将立即再次读取其配置并继续运行。</li>
+</ul>
+<blockquote>
+<p>常见配置参数</p>
+</blockquote>
+<ol>
+<li>daily ：指定转储周期为每天</li>
+<li>weekly ：指定转储周期为每周</li>
+<li>monthly ：指定转储周期为每月</li>
+<li>dateext：归档旧版本的日志文件，添加一个每日扩展名，如YYYMMDD，而不是简单地添加一个数字。扩展名可以使用dateformat选项进行配置</li>
+<li>dateformat：只允许使用%Y %m %d和%s指定器。默认值是-%Y%m%d，由这种格式产生的日期戳必须是词法可排序的（即先是年，然后是月，然后是日。例如，2001/12/01</li>
+<li>rotate count ：指定日志文件删除之前转储的次数，0 指没有备份，5 指保留 5 个备份</li>
+<li>tabooext [+] list：让 logrotate 不转储指定扩展名的文件，缺省的扩展名是：.rpm-orig, .rpmsave, v, 和～</li>
+<li>missingok：在日志轮循期间，任何错误将被忽略，例如 “文件无法找到” 之类的错误。</li>
+<li>size size：当日志文件到达指定的大小时才转储，bytes (缺省) 及 KB (sizek) 或 MB (sizem)</li>
+<li>compress： 通过 gzip 压缩转储以后的日志</li>
+<li>compresscmd：指定使用哪个命令来压缩日志文件</li>
+<li>uncompresscmd：指定使用哪个命令来解压缩日志文件。默认是gunzip</li>
+<li>nocompress： 旧版本的日志文件不会被压缩</li>
+<li>copytruncate：用于还在打开中的日志文件，把当前日志备份并截断</li>
+<li>nocopytruncate： 备份日志文件但是不截断</li>
+<li>create mode owner group ： 转储文件，使用指定的文件模式创建新的日志文件</li>
+<li>nocreate： 不建立新的日志文件</li>
+<li>delaycompress： 和 compress 一起使用时，转储的日志文件到下一次转储时才压缩</li>
+<li>nodelaycompress： 覆盖 delaycompress 选项，转储同时压缩。</li>
+<li>errors address ： 专储时的错误信息发送到指定的 Email 地址</li>
+<li>ifempty ：即使是空文件也转储，这个是 logrotate 的缺省选项。</li>
+<li>notifempty ：如果是空文件的话，不转储</li>
+<li>mail address ： 把转储的日志文件发送到指定的 E-mail 地址</li>
+<li>nomail ： 转储时不发送日志文件</li>
+<li>olddir directory：储后的日志文件放入指定的目录，必须和当前日志文件在同一个文件系统</li>
+<li>noolddir： 转储后的日志文件和当前日志文件放在同一个目录下</li>
+<li>prerotate/endscript：在转储以前需要执行的命令可以放入这个对，这两个关键字必须单独成行</li>
+<li>sharedscripts：如果指定了sharedscripts，那么无论有多少日志与通配符模式相匹配，脚本都只运行一次，整个模式都会传递给它们。然而，如果模式中没有一个日志需要轮换，脚本就根本不会被运行。如果脚本以错误方式退出，剩下的动作将不会对任何日志执行；</li>
+<li></li>
+</ol>
+<h2>运行示例</h2>
+<div class="highlight highlight-source-shell"><pre class="notranslate">/home/torch/koko.log {
+        su ceasia ceasia <span class="pl-c"><span class="pl-c">#</span>权限</span>
+        daily
+        dateext
+        rotate 14
+        compress
+        missingok
+        copytruncate
+        sharedscripts
+        notifempty
+}
+
+<span class="pl-c"><span class="pl-c">#</span> debug运行</span>
+ceasia@dev-32:<span class="pl-k">~</span>$ logrotate -df /etc/logrotate.d/koko 
+WARNING: logrotate <span class="pl-k">in</span> debug mode does nothing except printing debug messages<span class="pl-k">!</span>  Consider using verbose mode (-v) instead <span class="pl-k">if</span> this is not what you want.
+
+reading config file /etc/logrotate.d/koko
+Reading state from file: /var/lib/logrotate/status
+Allocating <span class="pl-c1">hash</span> table <span class="pl-k">for</span> state file, size 64 entries
+
+Handling 1 logs
+
+rotating pattern: /home/torch/koko.log  forced from <span class="pl-c1">command</span> line (14 rotations)
+empty log files are not rotated, old logs are removed
+considering log /home/torch/koko.log
+Creating new state
+  Now: 2023-01-31 15:27
+  Last rotated at 2023-01-31 15:00
+  log needs rotating
+rotating log /home/torch/koko.log, log-<span class="pl-k">&gt;</span>rotateCount is 14
+dateext suffix <span class="pl-s"><span class="pl-pds">'</span>-20230131<span class="pl-pds">'</span></span>
+glob pattern <span class="pl-s"><span class="pl-pds">'</span>-[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]<span class="pl-pds">'</span></span>
+glob finding old rotated logs failed
+copying /home/torch/koko.log to /home/torch/koko.log-20230131
+truncating /home/torch/koko.log
+compressing log with: /bin/gzip
+
+<span class="pl-c"><span class="pl-c">#</span> 强制运行</span>
+ceasia@dev-32:<span class="pl-k">~</span>$ sudo logrotate -fv /etc/logrotate.d/koko 
+reading config file /etc/logrotate.d/koko
+Reading state from file: /var/lib/logrotate/status
+Allocating <span class="pl-c1">hash</span> table <span class="pl-k">for</span> state file, size 64 entries
+
+Handling 1 logs
+
+rotating pattern: /home/torch/koko.log  forced from <span class="pl-c1">command</span> line (14 rotations)
+empty log files are not rotated, old logs are removed
+switching euid to 1000 and egid to 1000
+considering log /home/torch/koko.log
+  Now: 2023-01-31 15:31
+  Last rotated at 2023-01-31 15:00
+  log does not need rotating (log is empty)
+switching euid to 0 and egid to 0
+
+<span class="pl-c"><span class="pl-c">#</span> 设置crontab</span>
+01 0 <span class="pl-k">*</span> <span class="pl-k">*</span> <span class="pl-k">*</span> /usr/sbin/logrotate /etc/logrotate.d/koko --state /opt/jumpserver/koko/data/logs/logrotate-state
+</pre></div>
+<div class="highlight highlight-source-shell"><pre class="notranslate">/var/log/nginx/<span class="pl-k">*</span>.log {
+        daily
+        dateext
+        missingok
+        rotate 31
+        compress
+        delaycompress
+        notifempty
+        create 0640 nginx root
+        sharedscripts
+        postrotate
+                /bin/kill -USR1 <span class="pl-s"><span class="pl-pds">`</span>cat /usr/local/nginx/logs/nginx.pid <span class="pl-k">2&gt;</span>/dev/null<span class="pl-pds">`</span></span> <span class="pl-k">2&gt;</span>/dev/null <span class="pl-k">||</span> <span class="pl-c1">true</span>
+        endscript
+}
+</pre></div></div>
+<div style="font-size:small;margin-top:8px;float:right;">🍺转载文章请注明出处，谢谢！🍺</div>
+<button class="btn btn-block" type="button" onclick="openComments()" id="cmButton">评论</button>
+<div class="comments" id="comments"></div>
+</div>
+    <div id="footer">Copyright © <span id="year"></span><a href="https://blog.witter.top"> V's Blog </a>
+<p><a href="https://beian.miit.gov.cn/" target="_blank">冀ICP备2022019998号</a>
+<span id="runday"></span>Powered by <a href="https://meekdai.com/Gmeek.html" target="_blank">Gmeek</a>
+</p>
+
+<script>
+if("06/20/2024"!=""){
+    var now=new Date();
+    var startSite=new Date("06/20/2024");
+    var diff=now.getTime()-startSite.getTime();
+    var diffDay=Math.floor(diff/(1000*60*60*24));
+    document.getElementById("year").innerHTML=now.getFullYear();
+    if("冀ICP备2022019998号"!=""){document.getElementById("runday").innerHTML=" • "+"网站运行"+diffDay+"天"+" • ";}
+    else{document.getElementById("runday").innerHTML="网站运行"+diffDay+"天"+" • ";}
+}
+</script>
+</div>
+</body>
+<script>
+var IconList={'sun': 'M8 10.5a2.5 2.5 0 100-5 2.5 2.5 0 000 5zM8 12a4 4 0 100-8 4 4 0 000 8zM8 0a.75.75 0 01.75.75v1.5a.75.75 0 01-1.5 0V.75A.75.75 0 018 0zm0 13a.75.75 0 01.75.75v1.5a.75.75 0 01-1.5 0v-1.5A.75.75 0 018 13zM2.343 2.343a.75.75 0 011.061 0l1.06 1.061a.75.75 0 01-1.06 1.06l-1.06-1.06a.75.75 0 010-1.06zm9.193 9.193a.75.75 0 011.06 0l1.061 1.06a.75.75 0 01-1.06 1.061l-1.061-1.06a.75.75 0 010-1.061zM16 8a.75.75 0 01-.75.75h-1.5a.75.75 0 010-1.5h1.5A.75.75 0 0116 8zM3 8a.75.75 0 01-.75.75H.75a.75.75 0 010-1.5h1.5A.75.75 0 013 8zm10.657-5.657a.75.75 0 010 1.061l-1.061 1.06a.75.75 0 11-1.06-1.06l1.06-1.06a.75.75 0 011.06 0zm-9.193 9.193a.75.75 0 010 1.06l-1.06 1.061a.75.75 0 11-1.061-1.06l1.06-1.061a.75.75 0 011.061 0z', 'moon': 'M9.598 1.591a.75.75 0 01.785-.175 7 7 0 11-8.967 8.967.75.75 0 01.961-.96 5.5 5.5 0 007.046-7.046.75.75 0 01.175-.786zm1.616 1.945a7 7 0 01-7.678 7.678 5.5 5.5 0 107.678-7.678z', 'sync': 'M1.705 8.005a.75.75 0 0 1 .834.656 5.5 5.5 0 0 0 9.592 2.97l-1.204-1.204a.25.25 0 0 1 .177-.427h3.646a.25.25 0 0 1 .25.25v3.646a.25.25 0 0 1-.427.177l-1.38-1.38A7.002 7.002 0 0 1 1.05 8.84a.75.75 0 0 1 .656-.834ZM8 2.5a5.487 5.487 0 0 0-4.131 1.869l1.204 1.204A.25.25 0 0 1 4.896 6H1.25A.25.25 0 0 1 1 5.75V2.104a.25.25 0 0 1 .427-.177l1.38 1.38A7.002 7.002 0 0 1 14.95 7.16a.75.75 0 0 1-1.49.178A5.5 5.5 0 0 0 8 2.5Z', 'home': 'M6.906.664a1.749 1.749 0 0 1 2.187 0l5.25 4.2c.415.332.657.835.657 1.367v7.019A1.75 1.75 0 0 1 13.25 15h-3.5a.75.75 0 0 1-.75-.75V9H7v5.25a.75.75 0 0 1-.75.75h-3.5A1.75 1.75 0 0 1 1 13.25V6.23c0-.531.242-1.034.657-1.366l5.25-4.2Zm1.25 1.171a.25.25 0 0 0-.312 0l-5.25 4.2a.25.25 0 0 0-.094.196v7.019c0 .138.112.25.25.25H5.5V8.25a.75.75 0 0 1 .75-.75h3.5a.75.75 0 0 1 .75.75v5.25h2.75a.25.25 0 0 0 .25-.25V6.23a.25.25 0 0 0-.094-.195Z', 'github': 'M8 0c4.42 0 8 3.58 8 8a8.013 8.013 0 0 1-5.45 7.59c-.4.08-.55-.17-.55-.38 0-.27.01-1.13.01-2.2 0-.75-.25-1.23-.54-1.48 1.78-.2 3.65-.88 3.65-3.95 0-.88-.31-1.59-.82-2.15.08-.2.36-1.02-.08-2.12 0 0-.67-.22-2.2.82-.64-.18-1.32-.27-2-.27-.68 0-1.36.09-2 .27-1.53-1.03-2.2-.82-2.2-.82-.44 1.1-.16 1.92-.08 2.12-.51.56-.82 1.28-.82 2.15 0 3.06 1.86 3.75 3.64 3.95-.23.2-.44.55-.51 1.07-.46.21-1.61.55-2.33-.66-.15-.24-.6-.83-1.23-.82-.67.01-.27.38.01.53.34.19.73.9.82 1.13.16.45.68 1.31 2.69.94 0 .67.01 1.3.01 1.49 0 .21-.15.45-.55.38A7.995 7.995 0 0 1 0 8c0-4.42 3.58-8 8-8Z'};
+var utterancesLoad=0;
+
+let themeSettings={
+    "dark": ["dark","moon","#00f0ff","dark-blue"],
+    "light": ["light","sun","#ff5000","github-light"],
+    "auto": ["auto","sync","","preferred-color-scheme"]
+};
+function changeTheme(mode, icon, color, utheme){
+    document.documentElement.setAttribute("data-color-mode",mode);
+    document.getElementById("themeSwitch").setAttribute("d",value=IconList[icon]);
+    document.getElementById("themeSwitch").parentNode.style.color=color;
+    if(utterancesLoad==1){utterancesTheme(utheme);}
+}
+function modeSwitch(){
+    let currentMode=document.documentElement.getAttribute('data-color-mode');
+    let newMode = currentMode === "light" ? "dark" : currentMode === "dark" ? "auto" : "light";
+    localStorage.setItem("meek_theme", newMode);
+    if(themeSettings[newMode]){
+        changeTheme(...themeSettings[newMode]);
+    }
+}
+function utterancesTheme(theme){
+    const message={type:'set-theme',theme: theme};
+    const iframe=document.getElementsByClassName('utterances-frame')[0];
+    iframe.contentWindow.postMessage(message,'https://utteranc.es');
+}
+if(themeSettings[theme]){changeTheme(...themeSettings[theme]);}
+console.log("\n %c Gmeek last https://github.com/Meekdai/Gmeek \n\n","padding:5px 0;background:#02d81d;color:#fff");
+</script>
+
+<script>
+document.getElementById("pathHome").setAttribute("d",IconList["home"]);
+document.getElementById("pathIssue").setAttribute("d",IconList["github"]);
+
+function openComments(){
+    cm=document.getElementById("comments");
+    cmButton=document.getElementById("cmButton");
+    cmButton.innerHTML="loading";
+    span=document.createElement("span");
+    span.setAttribute("class","AnimatedEllipsis");
+    cmButton.appendChild(span);
+
+    script=document.createElement("script");
+    script.setAttribute("src","https://utteranc.es/client.js");
+    script.setAttribute("repo","ljwtorch/ljwtorch.github.io");
+    script.setAttribute("issue-term","title");
+    
+    if(localStorage.getItem("meek_theme")=="dark"){script.setAttribute("theme","dark-blue");}
+    else if(localStorage.getItem("meek_theme")=="light") {script.setAttribute("theme","github-light");}
+    else{script.setAttribute("theme","preferred-color-scheme");}
+    
+    script.setAttribute("crossorigin","anonymous");
+    script.setAttribute("async","");
+    cm.appendChild(script);
+
+    int=self.setInterval("iFrameLoading()",200);
+}
+
+function iFrameLoading(){
+    var utterances=document.getElementsByClassName('utterances');
+    if(utterances.length==1){
+        if(utterances[0].style.height!=""){
+            utterancesLoad=1;
+            int=window.clearInterval(int);
+            document.getElementById("cmButton").style.display="none";
+            console.log("utterances Load OK");
+        }
+    }
+}
+</script>
+
+
+</html>
