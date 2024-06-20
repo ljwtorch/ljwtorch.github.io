@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html data-color-mode="light" data-dark-theme="dark" data-light-theme="light" lang="zh-CN">
+<head>
+    <meta content="text/html; charset=utf-8" http-equiv="content-type" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <link href="//cdn.staticfile.net/Primer/21.0.7/primer.css" rel="stylesheet" />
+    <link rel="icon" href="https://img.witter.top/file/b037878209903b7d5bb17.jpg"><script>
+        let theme = localStorage.getItem("meek_theme") || "light";
+        document.documentElement.setAttribute("data-color-mode", theme);
+    </script>
+<meta name="description" content="# Linux工具
+
+## psmisc
+
+psmisc 是一个 Linux 工具集，它提供了一些管理和监视进程的实用工具。">
+<meta property="og:title" content="Linux 工具">
+<meta property="og:description" content="# Linux工具
+
+## psmisc
+
+psmisc 是一个 Linux 工具集，它提供了一些管理和监视进程的实用工具。">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://blog.witter.top/post/Linux%20-gong-ju.html">
+<meta property="og:image" content="https://img.witter.top/file/b037878209903b7d5bb17.jpg">
+<title>Linux 工具</title>
+<link href="//unpkg.com/@wooorm/starry-night@2.1.1/style/both.css" rel="stylesheet" />
+
+</head>
+<style>
+body{box-sizing: border-box;min-width: 200px;max-width: 900px;margin: 20px auto;padding: 45px;font-size: 16px;font-family: sans-serif;line-height: 1.25;}
+#header{display:flex;padding-bottom:8px;border-bottom: 1px solid var(--borderColor-muted, var(--color-border-muted));margin-bottom: 16px;}
+#footer {margin-top:64px; text-align: center;font-size: small;}
+
+</style>
+
+<style>
+.postTitle{margin: auto 0;font-size:40px;font-weight:bold;}
+.title-right{display:flex;margin:auto 0 0 auto;}
+.title-right .circle{padding: 14px 16px;margin-right:8px;}
+#postBody{border-bottom: 1px solid var(--color-border-default);padding-bottom:36px;}
+#postBody hr{height:2px;}
+#cmButton{height:48px;margin-top:48px;}
+#comments{margin-top:64px;}
+.g-emoji{font-size:24px;}
+@media (max-width: 600px) {
+    body {padding: 8px;}
+    .postTitle{font-size:24px;}
+}
+</style>
+
+
+
+
+<body>
+    <div id="header">
+<h1 class="postTitle">Linux 工具</h1>
+<div class="title-right">
+    <a href="https://blog.witter.top" id="buttonHome" class="btn btn-invisible circle" title="首页">
+        <svg class="octicon" width="16" height="16">
+            <path id="pathHome" fill-rule="evenodd"></path>
+        </svg>
+    </a>
+    
+    <a href="https://github.com/ljwtorch/ljwtorch.github.io/issues/8" target="_blank" class="btn btn-invisible circle" title="Issue">
+        <svg class="octicon" width="16" height="16">
+            <path id="pathIssue" fill-rule="evenodd"></path>
+        </svg>
+    </a>
+    
+
+    <a class="btn btn-invisible circle" onclick="modeSwitch();" title="切换主题">
+        <svg class="octicon" width="16" height="16" >
+            <path id="themeSwitch" fill-rule="evenodd"></path>
+        </svg>
+    </a>
+
+</div>
+</div>
+    <div id="content">
+<div class="markdown-body" id="postBody"><h1>Linux工具</h1>
+<h2>psmisc</h2>
+<p>psmisc 是一个 Linux 工具集，它提供了一些管理和监视进程的实用工具。它的名字源自 "process status miscellaneous"。psmisc 工具集包含了一些常用的进程管理工具，例如 <code class="notranslate">ps</code>、<code class="notranslate">killall</code>、<code class="notranslate">fuser</code> 等等。</p>
+<p>以下是一些示例用法：</p>
+<ol>
+<li>
+<p><strong>ps</strong>: 显示当前系统中的进程信息；</p>
+<div class="highlight highlight-source-shell"><pre class="notranslate">bashCopy code
+ps aux               <span class="pl-c"><span class="pl-c">#</span> 显示当前所有进程的详细信息</span>
+ps -ef               <span class="pl-c"><span class="pl-c">#</span> 显示所有进程的详细信息</span>
+ps -u username       <span class="pl-c"><span class="pl-c">#</span> 显示特定用户的进程信息</span>
+ps -p PID            <span class="pl-c"><span class="pl-c">#</span> 显示特定进程ID的信息</span></pre></div>
+</li>
+<li>
+<p><strong>killall</strong>: 根据进程名字杀死进程；</p>
+<div class="highlight highlight-source-shell"><pre class="notranslate">bashCopy code
+killall firefox      <span class="pl-c"><span class="pl-c">#</span> 杀死所有名为 firefox 的进程</span>
+killall -u username  <span class="pl-c"><span class="pl-c">#</span> 杀死特定用户的所有进程</span></pre></div>
+</li>
+<li>
+<p><strong>fuser</strong>: 显示正在使用指定文件或文件系统的进程信息；</p>
+<div class="highlight highlight-source-shell"><pre class="notranslate">bashCopy code
+fuser -v /dev/sda1   <span class="pl-c"><span class="pl-c">#</span> 显示使用 /dev/sda1 的进程信息</span>
+fuser -k /mnt        <span class="pl-c"><span class="pl-c">#</span> 杀死使用 /mnt 目录的进程</span></pre></div>
+</li>
+<li>
+<p><strong>pstree</strong>: 以树形结构显示进程关系；</p>
+<div class="highlight highlight-source-shell"><pre class="notranslate">bashCopy code
+pstree               <span class="pl-c"><span class="pl-c">#</span> 显示当前系统中所有进程的树形结构</span>
+pstree -p            <span class="pl-c"><span class="pl-c">#</span> 显示进程树以及对应的进程ID</span></pre></div>
+</li>
+<li>
+<p><strong>peekfd</strong>: 显示文件描述符的信息；</p>
+<div class="highlight highlight-source-shell"><pre class="notranslate">bashCopy code
+peekfd -p PID        <span class="pl-c"><span class="pl-c">#</span> 显示特定进程的文件描述符信息</span></pre></div>
+</li>
+<li>
+<p><code class="notranslate">psloginfo</code>: 分析系统日志文件，并按时间顺序显示系统启动后产生的进程信息；</p>
+</li>
+<li>
+<p><code class="notranslate">nice/renice</code>: 改变进程的优先级（nice值），从而影响其CPU调度优先级；</p>
+</li>
+</ol>
+<h2>rsync</h2>
+<h3>1.安装</h3>
+<div class="highlight highlight-source-shell"><pre class="notranslate">sudo apt install rsync
+<span class="pl-c"><span class="pl-c">#</span>服务器双方都要安装！</span></pre></div>
+<h3>2.基本用法</h3>
+<h4>2.1 -r 参数</h4>
+<p>本机使用 rsync 命令时，可以作为<code class="notranslate">cp</code>和<code class="notranslate">mv</code>命令的替代方法，将源目录同步到目标目录。</p>
+<div class="highlight highlight-source-shell"><pre class="notranslate">rsync -r <span class="pl-c1">source</span> destination</pre></div>
+<p>上面命令中，<code class="notranslate">-r</code>表示递归，即包含子目录。注意，<code class="notranslate">-r</code>是必须的，否则 rsync 运行不会成功。<code class="notranslate">source</code>目录表示源目录，<code class="notranslate">destination</code>表示目标目录。</p>
+<p>如果有多个文件或目录需要同步，可以写成下面这样。</p>
+<div class="highlight highlight-source-shell"><pre class="notranslate">rsync -r source1 source2 destination</pre></div>
+<p>上面命令中，<code class="notranslate">source1</code>、<code class="notranslate">source2</code>都会被同步到<code class="notranslate">destination</code>目录。</p>
+<h4>2.2 -a 参数</h4>
+<p><code class="notranslate">-a</code>参数可以替代<code class="notranslate">-r</code>，除了可以递归同步以外，还可以同步元信息（比如修改时间、权限等）。由于 rsync 默认使用文件大小和修改时间决定文件是否需要更新，所以<code class="notranslate">-a</code>比<code class="notranslate">-r</code>更有用。下面的用法才是常见的写法。</p>
+<div class="highlight highlight-source-shell"><pre class="notranslate">rsync -r source1 source2 destination</pre></div>
+<p>目标目录<code class="notranslate">destination</code>如果不存在，rsync 会自动创建。执行上面的命令后，源目录<code class="notranslate">source</code>被完整地复制到了目标目录<code class="notranslate">destination</code>下面，即形成了<code class="notranslate">destination/source</code>的目录结构。</p>
+<p>如果只想同步源目录<code class="notranslate">source</code>里面的内容到目标目录<code class="notranslate">destination</code>，则需要在源目录后面加上斜杠。</p>
+<div class="highlight highlight-source-shell"><pre class="notranslate">rsync -a source/ destination</pre></div>
+<p>上面命令执行后，<code class="notranslate">source</code>目录里面的内容，就都被复制到了<code class="notranslate">destination</code>目录里面，并不会在<code class="notranslate">destination</code>下面创建一个<code class="notranslate">source</code>子目录。</p>
+<h4>2.3 -n 参数</h4>
+<p>如果不确定 rsync 执行后会产生什么结果，可以先用<code class="notranslate">-n</code>或<code class="notranslate">--dry-run</code>参数模拟执行的结果。</p>
+<div class="highlight highlight-source-shell"><pre class="notranslate">rsync -anv source/ destination</pre></div>
+<p>上面命令中，<code class="notranslate">-n</code>参数模拟命令执行的结果，并不真的执行命令。<code class="notranslate">-v</code>参数则是将结果输出到终端，这样就可以看到哪些内容会被同步。</p>
+<h4>2.4 --delete 参数</h4>
+<p>默认情况下，rsync 只确保源目录的所有内容（明确排除的文件除外）都复制到目标目录。它不会使两个目录保持相同，并且不会删除文件。如果要使得目标目录成为源目录的镜像副本，则必须使用<code class="notranslate">--delete</code>参数，这将删除只存在于目标目录、不存在于源目录的文件。</p>
+<div class="highlight highlight-source-shell"><pre class="notranslate">rsync -av --delete source/ destination</pre></div>
+<p>上面命令中，<code class="notranslate">--delete</code>参数会使得<code class="notranslate">destination</code>成为<code class="notranslate">source</code>的一个镜像。</p>
+<h3>3.排除文件</h3>
+<h4>3.1 --exclude</h4>
+<p>同步时排除某些文件或目录：</p>
+<div class="highlight highlight-source-shell"><pre class="notranslate">rsync -av --exclude=<span class="pl-s"><span class="pl-pds">'</span>*.txt<span class="pl-pds">'</span></span> source/ destination
+<span class="pl-c"><span class="pl-c">#</span> 或者</span>
+rsync -av --exclude <span class="pl-s"><span class="pl-pds">'</span>*.txt<span class="pl-pds">'</span></span> source/ destination</pre></div>
+<p><em>注：rsync会同步以点开头的文件，如果要排除隐藏文件，可以<code class="notranslate">--exclude=".*"</code></em></p>
+<div class="highlight highlight-source-shell"><pre class="notranslate"><span class="pl-c"><span class="pl-c">#</span>如果要排除某个目录里面所有的文件，但不排除目录本身：</span>
+rsync -av --exclude <span class="pl-s"><span class="pl-pds">'</span>dir1/*<span class="pl-pds">'</span></span> source/ destination
+
+<span class="pl-c"><span class="pl-c">#</span>多个排除模式可以用多个--exclude参数</span>
+rsync -av --exclude <span class="pl-s"><span class="pl-pds">'</span>file1.txt<span class="pl-pds">'</span></span> --exclude <span class="pl-s"><span class="pl-pds">'</span>dir1/*<span class="pl-pds">'</span></span> source/ destination
+
+<span class="pl-c"><span class="pl-c">#</span>多个排除模式可以使用Bash大括号的扩展功能，可以只使用一个--exclude参数</span>
+rsync -av --exclude={<span class="pl-s"><span class="pl-pds">'</span>file1.txt<span class="pl-pds">'</span></span>,<span class="pl-s"><span class="pl-pds">'</span>dir1/*<span class="pl-pds">'</span></span>} source/ destination
+
+<span class="pl-c"><span class="pl-c">#</span>如果要排除的文件过多，可以写入到一个文件中，每个模式一行，使用--exclude--from参数指定这个文件</span>
+rsync -av --exclude-from=<span class="pl-s"><span class="pl-pds">'</span>exclude-file.txt<span class="pl-pds">'</span></span> source/ destination</pre></div>
+<h4>3.2 --include</h4>
+<p>用来指定必须同步的文件模式，往往与--exclude结合使用</p>
+<div class="highlight highlight-source-shell"><pre class="notranslate"><span class="pl-c"><span class="pl-c">#</span>下面命令指定同步时，排除所有文件，但是会包括txt文件</span>
+rsync -av --include=<span class="pl-s"><span class="pl-pds">"</span>*.txt<span class="pl-pds">"</span></span> --exclude=<span class="pl-s"><span class="pl-pds">'</span>*<span class="pl-pds">'</span></span> source/ destination</pre></div>
+<h3>4.远程同步</h3>
+<h4>4.1 SSH同步</h4>
+<div class="highlight highlight-source-shell"><pre class="notranslate"><span class="pl-c"><span class="pl-c">#</span>可以将本地内容同步到远程服务器</span>
+rsync -av source/ username@remote_host:destination
+<span class="pl-c"><span class="pl-c">#</span>也可以将远程内容同步到本地</span>
+rsync -av username@remote_host:source/ destination
+
+<span class="pl-c"><span class="pl-c">#</span>如果ssh命令有附加的参数，必须使用-e参数指定要执行的ssh命令</span>
+rsync -av -e <span class="pl-s"><span class="pl-pds">'</span>ssh -p 10000<span class="pl-pds">'</span></span> source/ user@remote_host:/destination</pre></div>
+<h4>4.2 rsync协议</h4>
+<p>除了SSH，如果另一台服务器安装并运行了rsync守护程序，可以使用rsync://协议，端口873，进行传输：</p>
+<div class="highlight highlight-source-shell"><pre class="notranslate"><span class="pl-c"><span class="pl-c">#</span>写法是服务器与目标目录之间使用双冒号分隔::	下面指令中的module不是实际路径名，而是rsync守护程序指定的一个资源名，由管理员分配</span>
+rsync -av source/ 192.168.122.32::module/destination
+
+<span class="pl-c"><span class="pl-c">#</span>列出rsync守护程序分配的所有module列表：</span>
+rsync rsync://192.168.122.32
+
+<span class="pl-c"><span class="pl-c">#</span>除了使用双冒号，也可以使用rsync://协议指定地址</span>
+rsync -av source/ rsync://192.168.122.32/module/destination</pre></div>
+<h3>5.增量备份</h3>
+<p>rsync支持增量备份，除了源目录与目标目录直接比较，rsync 还支持使用基准目录，即将源目录与基准目录之间变动的部分，同步到目标目录。</p>
+<p>大概流程是：第一次同步是全量备份，所有文件在基准目录里同步一份，以后每一次同步都是增量备份，只同步源目录与基准目录之间有变动的部分，将这部分保存在一个新的目标目录，这个新的目标目录之中，也是包含所有文件，但实际上，只有那些变动过的文件是存在于该目录，其他没有变动的文件都是指向基准目录文件的硬链接。</p>
+<div class="highlight highlight-source-shell"><pre class="notranslate"><span class="pl-c"><span class="pl-c">#</span>--link-dest参数用来指定同步时的基准目录</span>
+rsync -a --delete --link-dest /compare/path /source/path /target/path</pre></div>
+<p>增量备份脚本示例：</p>
+<div class="highlight highlight-source-shell"><pre class="notranslate"><span class="pl-c"><span class="pl-c">#!</span>/bin/bash</span>
+<span class="pl-c"><span class="pl-c">#</span> A script to perform incremental backups using rsync</span>
+<span class="pl-c1">set</span> -o errexit	<span class="pl-c"><span class="pl-c">#</span>发生错误时立即退出shell</span>
+<span class="pl-c1">set</span> -o nounset	<span class="pl-c"><span class="pl-c">#</span>尝试使用未设置的变量时引发错误</span>
+<span class="pl-c1">set</span> -o pipefail	<span class="pl-c"><span class="pl-c">#</span>管道命令中，任一命令失败则整个管道命令标记为失败</span>
+
+<span class="pl-c"><span class="pl-c">#</span>readonly关键字可以声明一个变量为只读，不能被修改或重新赋值</span>
+<span class="pl-k">readonly</span> SOURCE_DIR=<span class="pl-s"><span class="pl-pds">"</span><span class="pl-smi">${HOME}</span><span class="pl-pds">"</span></span>
+<span class="pl-k">readonly</span> BACKUP_DIR=<span class="pl-s"><span class="pl-pds">"</span>/mnt/data/backups<span class="pl-pds">"</span></span>
+<span class="pl-k">readonly</span> DATETIME=<span class="pl-s"><span class="pl-pds">"</span><span class="pl-s"><span class="pl-pds">$(</span>date <span class="pl-s"><span class="pl-pds">'</span>+%Y-%m-%d_%H:%M:%S<span class="pl-pds">'</span></span><span class="pl-pds">)</span></span><span class="pl-pds">"</span></span>
+<span class="pl-k">readonly</span> BACKUP_PATH=<span class="pl-s"><span class="pl-pds">"</span><span class="pl-smi">${BACKUP_DIR}</span>/<span class="pl-smi">${DATETIME}</span><span class="pl-pds">"</span></span>
+<span class="pl-k">readonly</span> LATEST_LINK=<span class="pl-s"><span class="pl-pds">"</span><span class="pl-smi">${BACKUP_DIR}</span>/latest<span class="pl-pds">"</span></span>
+
+mkdir -p <span class="pl-s"><span class="pl-pds">"</span><span class="pl-smi">${BACKUP_DIR}</span><span class="pl-pds">"</span></span>
+<span class="pl-c"><span class="pl-c">#</span>指定源目录的路径——指定一个备份目录作为硬链接参考目录——排除目录——指定备份文件的路径</span>
+rsync -av --delete <span class="pl-s"><span class="pl-pds">"</span><span class="pl-smi">${SOURCE_DIR}</span>/<span class="pl-pds">"</span></span> --link-dest <span class="pl-s"><span class="pl-pds">"</span><span class="pl-smi">${LATEST_LINK}</span><span class="pl-pds">"</span></span> --exclude=<span class="pl-s"><span class="pl-pds">"</span>.cache<span class="pl-pds">"</span></span> <span class="pl-s"><span class="pl-pds">"</span><span class="pl-smi">${BACKUP_PATH}</span><span class="pl-pds">"</span></span>
+
+<span class="pl-c"><span class="pl-c">#</span>删除之前最新备份的符号链接</span>
+rm -rf <span class="pl-s"><span class="pl-pds">"</span><span class="pl-smi">${LATEST_LINK}</span><span class="pl-pds">"</span></span>
+<span class="pl-c"><span class="pl-c">#</span>创建一个指向当前备份的符号链接，以便标记为最新备份</span>
+ln -s <span class="pl-s"><span class="pl-pds">"</span><span class="pl-smi">${BACKUP_PATH}</span><span class="pl-pds">"</span></span> <span class="pl-s"><span class="pl-pds">"</span><span class="pl-smi">${LATEST_LINK}</span><span class="pl-pds">"</span></span></pre></div>
+<h3>6.配置</h3>
+<p><code class="notranslate">-a</code>、<code class="notranslate">--archive</code>参数表示存档模式，保存所有的元数据，比如修改时间（modification time）、权限、所有者等，并且软链接也会同步过去。</p>
+<p><code class="notranslate">--append</code>参数指定文件接着上次中断的地方，继续传输。</p>
+<p><code class="notranslate">--append-verify</code>参数跟<code class="notranslate">--append</code>参数类似，但会对传输完成后的文件进行一次校验。如果校验失败，将重新发送整个文件。</p>
+<p><code class="notranslate">-b</code>、<code class="notranslate">--backup</code>参数指定在删除或更新目标目录已经存在的文件时，将该文件更名后进行备份，默认行为是删除。更名规则是添加由<code class="notranslate">--suffix</code>参数指定的文件后缀名，默认是<code class="notranslate">~</code>。</p>
+<p><code class="notranslate">--backup-dir</code>参数指定文件备份时存放的目录，比如<code class="notranslate">--backup-dir=/path/to/backups</code>。</p>
+<p><code class="notranslate">--bwlimit</code>参数指定带宽限制，默认单位是 KB/s，比如<code class="notranslate">--bwlimit=100</code>。</p>
+<p><code class="notranslate">-c</code>、<code class="notranslate">--checksum</code>参数改变<code class="notranslate">rsync</code>的校验方式。默认情况下，rsync 只检查文件的大小和最后修改日期是否发生变化，如果发生变化，就重新传输；使用这个参数以后，则通过判断文件内容的校验和，决定是否重新传输。</p>
+<p><code class="notranslate">--delete</code>参数删除只存在于目标目录、不存在于源目标的文件，即保证目标目录是源目标的镜像。</p>
+<p><code class="notranslate">-e</code>参数指定使用 SSH 协议传输数据。</p>
+<p><code class="notranslate">--exclude</code>参数指定排除不进行同步的文件，比如<code class="notranslate">--exclude="*.iso"</code>。</p>
+<p><code class="notranslate">--exclude-from</code>参数指定一个本地文件，里面是需要排除的文件模式，每个模式一行。</p>
+<p><code class="notranslate">--existing</code>、<code class="notranslate">--ignore-non-existing</code>参数表示不同步目标目录中不存在的文件和目录。</p>
+<p><code class="notranslate">-h</code>参数表示以人类可读的格式输出。</p>
+<p><code class="notranslate">-h</code>、<code class="notranslate">--help</code>参数返回帮助信息。</p>
+<p><code class="notranslate">-i</code>参数表示输出源目录与目标目录之间文件差异的详细情况。</p>
+<p><code class="notranslate">--ignore-existing</code>参数表示只要该文件在目标目录中已经存在，就跳过去，不再同步这些文件。</p>
+<p><code class="notranslate">--include</code>参数指定同步时要包括的文件，一般与<code class="notranslate">--exclude</code>结合使用。</p>
+<p><code class="notranslate">--link-dest</code>参数指定增量备份的基准目录。</p>
+<p><code class="notranslate">-m</code>参数指定不同步空目录。</p>
+<p><code class="notranslate">--max-size</code>参数设置传输的最大文件的大小限制，比如不超过200KB（<code class="notranslate">--max-size='200k'</code>）。</p>
+<p><code class="notranslate">--min-size</code>参数设置传输的最小文件的大小限制，比如不小于10KB（<code class="notranslate">--min-size=10k</code>）。</p>
+<p><code class="notranslate">-n</code>参数或<code class="notranslate">--dry-run</code>参数模拟将要执行的操作，而并不真的执行。配合<code class="notranslate">-v</code>参数使用，可以看到哪些内容会被同步过去。</p>
+<p><code class="notranslate">-P</code>参数是<code class="notranslate">--progress</code>和<code class="notranslate">--partial</code>这两个参数的结合。</p>
+<p><code class="notranslate">--partial</code>参数允许恢复中断的传输。不使用该参数时，<code class="notranslate">rsync</code>会删除传输到一半被打断的文件；使用该参数后，传输到一半的文件也会同步到目标目录，下次同步时再恢复中断的传输。一般需要与<code class="notranslate">--append</code>或<code class="notranslate">--append-verify</code>配合使用。</p>
+<p><code class="notranslate">--partial-dir</code>参数指定将传输到一半的文件保存到一个临时目录，比如<code class="notranslate">--partial-dir=.rsync-partial</code>。一般需要与<code class="notranslate">--append</code>或<code class="notranslate">--append-verify</code>配合使用。</p>
+<p><code class="notranslate">--progress</code>参数表示显示进展。</p>
+<p><code class="notranslate">-r</code>参数表示递归，即包含子目录。</p>
+<p><code class="notranslate">--remove-source-files</code>参数表示传输成功后，删除发送方的文件。</p>
+<p><code class="notranslate">--size-only</code>参数表示只同步大小有变化的文件，不考虑文件修改时间的差异。</p>
+<p><code class="notranslate">--suffix</code>参数指定文件名备份时，对文件名添加的后缀，默认是<code class="notranslate">~</code>。</p>
+<p><code class="notranslate">-u</code>、<code class="notranslate">--update</code>参数表示同步时跳过目标目录中修改时间更新的文件，即不同步这些有更新的时间戳的文件。</p>
+<p><code class="notranslate">-v</code>参数表示输出细节。<code class="notranslate">-vv</code>表示输出更详细的信息，<code class="notranslate">-vvv</code>表示输出最详细的信息。</p>
+<p><code class="notranslate">--version</code>参数返回 rsync 的版本。</p>
+<p><code class="notranslate">-z</code>参数指定同步时压缩数据。</p>
+<h2>screen</h2>
+<h3>1.安装</h3>
+<p><code class="notranslate">apt install screen</code></p>
+<h3>2.基础命令</h3>
+<div class="highlight highlight-source-shell"><pre class="notranslate"><span class="pl-c"><span class="pl-c">#</span> 终端列表</span>
+screen -ls
+
+<span class="pl-c"><span class="pl-c">#</span> 新建终端，一般用-R创建虚拟终端</span>
+<span class="pl-c"><span class="pl-c">#</span> 使用-R创建，如果之前有创建唯一一个同名的screen，则直接进入之前创建的screen</span>
+<span class="pl-c"><span class="pl-c">#</span> 使用-S创建和直接输入screen创建的虚拟终端，不会检录之前创建的screen（也就是会创建同名的screen)</span>
+screen -R <span class="pl-c1">test</span>
+
+<span class="pl-c"><span class="pl-c">#</span> 返回主终端</span>
+ctrl+a d
+
+<span class="pl-c"><span class="pl-c">#</span> 回到终端 -R -r 都可以</span>
+screen -r [pid/name]
+
+<span class="pl-c"><span class="pl-c">#</span> 退出终端</span>
+<span class="pl-c1">exit</span>
+</pre></div>
+<h2>trzsz</h2>
+<h3>1.安装&amp;使用</h3>
+<p><a href="https://github.com/trzsz/trzsz-go">https://github.com/trzsz/trzsz-go</a></p></div>
+<div style="font-size:small;margin-top:8px;float:right;">🍺转载文章请注明出处，谢谢！🍺</div>
+<button class="btn btn-block" type="button" onclick="openComments()" id="cmButton">评论</button>
+<div class="comments" id="comments"></div>
+</div>
+    <div id="footer">Copyright © <span id="year"></span><a href="https://blog.witter.top"> V's Blog </a>
+<p><a href="https://beian.miit.gov.cn/" target="_blank">冀ICP备2022019998号</a>
+<span id="runday"></span>Powered by <a href="https://meekdai.com/Gmeek.html" target="_blank">Gmeek</a>
+</p>
+
+<script>
+if("06/20/2024"!=""){
+    var now=new Date();
+    var startSite=new Date("06/20/2024");
+    var diff=now.getTime()-startSite.getTime();
+    var diffDay=Math.floor(diff/(1000*60*60*24));
+    document.getElementById("year").innerHTML=now.getFullYear();
+    if("冀ICP备2022019998号"!=""){document.getElementById("runday").innerHTML=" • "+"网站运行"+diffDay+"天"+" • ";}
+    else{document.getElementById("runday").innerHTML="网站运行"+diffDay+"天"+" • ";}
+}
+</script>
+</div>
+</body>
+<script>
+var IconList={'sun': 'M8 10.5a2.5 2.5 0 100-5 2.5 2.5 0 000 5zM8 12a4 4 0 100-8 4 4 0 000 8zM8 0a.75.75 0 01.75.75v1.5a.75.75 0 01-1.5 0V.75A.75.75 0 018 0zm0 13a.75.75 0 01.75.75v1.5a.75.75 0 01-1.5 0v-1.5A.75.75 0 018 13zM2.343 2.343a.75.75 0 011.061 0l1.06 1.061a.75.75 0 01-1.06 1.06l-1.06-1.06a.75.75 0 010-1.06zm9.193 9.193a.75.75 0 011.06 0l1.061 1.06a.75.75 0 01-1.06 1.061l-1.061-1.06a.75.75 0 010-1.061zM16 8a.75.75 0 01-.75.75h-1.5a.75.75 0 010-1.5h1.5A.75.75 0 0116 8zM3 8a.75.75 0 01-.75.75H.75a.75.75 0 010-1.5h1.5A.75.75 0 013 8zm10.657-5.657a.75.75 0 010 1.061l-1.061 1.06a.75.75 0 11-1.06-1.06l1.06-1.06a.75.75 0 011.06 0zm-9.193 9.193a.75.75 0 010 1.06l-1.06 1.061a.75.75 0 11-1.061-1.06l1.06-1.061a.75.75 0 011.061 0z', 'moon': 'M9.598 1.591a.75.75 0 01.785-.175 7 7 0 11-8.967 8.967.75.75 0 01.961-.96 5.5 5.5 0 007.046-7.046.75.75 0 01.175-.786zm1.616 1.945a7 7 0 01-7.678 7.678 5.5 5.5 0 107.678-7.678z', 'sync': 'M1.705 8.005a.75.75 0 0 1 .834.656 5.5 5.5 0 0 0 9.592 2.97l-1.204-1.204a.25.25 0 0 1 .177-.427h3.646a.25.25 0 0 1 .25.25v3.646a.25.25 0 0 1-.427.177l-1.38-1.38A7.002 7.002 0 0 1 1.05 8.84a.75.75 0 0 1 .656-.834ZM8 2.5a5.487 5.487 0 0 0-4.131 1.869l1.204 1.204A.25.25 0 0 1 4.896 6H1.25A.25.25 0 0 1 1 5.75V2.104a.25.25 0 0 1 .427-.177l1.38 1.38A7.002 7.002 0 0 1 14.95 7.16a.75.75 0 0 1-1.49.178A5.5 5.5 0 0 0 8 2.5Z', 'home': 'M6.906.664a1.749 1.749 0 0 1 2.187 0l5.25 4.2c.415.332.657.835.657 1.367v7.019A1.75 1.75 0 0 1 13.25 15h-3.5a.75.75 0 0 1-.75-.75V9H7v5.25a.75.75 0 0 1-.75.75h-3.5A1.75 1.75 0 0 1 1 13.25V6.23c0-.531.242-1.034.657-1.366l5.25-4.2Zm1.25 1.171a.25.25 0 0 0-.312 0l-5.25 4.2a.25.25 0 0 0-.094.196v7.019c0 .138.112.25.25.25H5.5V8.25a.75.75 0 0 1 .75-.75h3.5a.75.75 0 0 1 .75.75v5.25h2.75a.25.25 0 0 0 .25-.25V6.23a.25.25 0 0 0-.094-.195Z', 'github': 'M8 0c4.42 0 8 3.58 8 8a8.013 8.013 0 0 1-5.45 7.59c-.4.08-.55-.17-.55-.38 0-.27.01-1.13.01-2.2 0-.75-.25-1.23-.54-1.48 1.78-.2 3.65-.88 3.65-3.95 0-.88-.31-1.59-.82-2.15.08-.2.36-1.02-.08-2.12 0 0-.67-.22-2.2.82-.64-.18-1.32-.27-2-.27-.68 0-1.36.09-2 .27-1.53-1.03-2.2-.82-2.2-.82-.44 1.1-.16 1.92-.08 2.12-.51.56-.82 1.28-.82 2.15 0 3.06 1.86 3.75 3.64 3.95-.23.2-.44.55-.51 1.07-.46.21-1.61.55-2.33-.66-.15-.24-.6-.83-1.23-.82-.67.01-.27.38.01.53.34.19.73.9.82 1.13.16.45.68 1.31 2.69.94 0 .67.01 1.3.01 1.49 0 .21-.15.45-.55.38A7.995 7.995 0 0 1 0 8c0-4.42 3.58-8 8-8Z'};
+var utterancesLoad=0;
+
+let themeSettings={
+    "dark": ["dark","moon","#00f0ff","dark-blue"],
+    "light": ["light","sun","#ff5000","github-light"],
+    "auto": ["auto","sync","","preferred-color-scheme"]
+};
+function changeTheme(mode, icon, color, utheme){
+    document.documentElement.setAttribute("data-color-mode",mode);
+    document.getElementById("themeSwitch").setAttribute("d",value=IconList[icon]);
+    document.getElementById("themeSwitch").parentNode.style.color=color;
+    if(utterancesLoad==1){utterancesTheme(utheme);}
+}
+function modeSwitch(){
+    let currentMode=document.documentElement.getAttribute('data-color-mode');
+    let newMode = currentMode === "light" ? "dark" : currentMode === "dark" ? "auto" : "light";
+    localStorage.setItem("meek_theme", newMode);
+    if(themeSettings[newMode]){
+        changeTheme(...themeSettings[newMode]);
+    }
+}
+function utterancesTheme(theme){
+    const message={type:'set-theme',theme: theme};
+    const iframe=document.getElementsByClassName('utterances-frame')[0];
+    iframe.contentWindow.postMessage(message,'https://utteranc.es');
+}
+if(themeSettings[theme]){changeTheme(...themeSettings[theme]);}
+console.log("\n %c Gmeek last https://github.com/Meekdai/Gmeek \n\n","padding:5px 0;background:#02d81d;color:#fff");
+</script>
+
+<script>
+document.getElementById("pathHome").setAttribute("d",IconList["home"]);
+document.getElementById("pathIssue").setAttribute("d",IconList["github"]);
+
+function openComments(){
+    cm=document.getElementById("comments");
+    cmButton=document.getElementById("cmButton");
+    cmButton.innerHTML="loading";
+    span=document.createElement("span");
+    span.setAttribute("class","AnimatedEllipsis");
+    cmButton.appendChild(span);
+
+    script=document.createElement("script");
+    script.setAttribute("src","https://utteranc.es/client.js");
+    script.setAttribute("repo","ljwtorch/ljwtorch.github.io");
+    script.setAttribute("issue-term","title");
+    
+    if(localStorage.getItem("meek_theme")=="dark"){script.setAttribute("theme","dark-blue");}
+    else if(localStorage.getItem("meek_theme")=="light") {script.setAttribute("theme","github-light");}
+    else{script.setAttribute("theme","preferred-color-scheme");}
+    
+    script.setAttribute("crossorigin","anonymous");
+    script.setAttribute("async","");
+    cm.appendChild(script);
+
+    int=self.setInterval("iFrameLoading()",200);
+}
+
+function iFrameLoading(){
+    var utterances=document.getElementsByClassName('utterances');
+    if(utterances.length==1){
+        if(utterances[0].style.height!=""){
+            utterancesLoad=1;
+            int=window.clearInterval(int);
+            document.getElementById("cmButton").style.display="none";
+            console.log("utterances Load OK");
+        }
+    }
+}
+</script>
+
+
+</html>
