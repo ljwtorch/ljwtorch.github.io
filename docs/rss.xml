@@ -1,2 +1,34 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<rss xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/" version="2.0"><channel><title>Blog Title</title><link>https://ljwtorch.github.io</link><description>Blog description</description><copyright>Blog Title</copyright><docs>http://www.rssboard.org/rss-specification</docs><generator>python-feedgen</generator><image><url>https://github.githubassets.com/favicons/favicon.svg</url><title>avatar</title><link>https://ljwtorch.github.io</link></image><lastBuildDate>Thu, 20 Jun 2024 02:19:28 +0000</lastBuildDate><managingEditor>Blog Title</managingEditor><ttl>60</ttl><webMaster>Blog Title</webMaster><item><title>V's first</title><link>https://ljwtorch.github.io/post/V%27s%20first.html</link><description>&gt; just a test。</description><guid isPermaLink="true">https://ljwtorch.github.io/post/V%27s%20first.html</guid><pubDate>Thu, 20 Jun 2024 02:19:02 +0000</pubDate></item></channel></rss>
+<rss xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/" version="2.0"><channel><title>V's Blog</title><link>https://blog.witter.top</link><description>Blog description</description><copyright>V's Blog</copyright><docs>http://www.rssboard.org/rss-specification</docs><generator>python-feedgen</generator><image><url>https://img.witter.top/file/b037878209903b7d5bb17.jpg</url><title>avatar</title><link>https://blog.witter.top</link></image><lastBuildDate>Thu, 20 Jun 2024 02:47:39 +0000</lastBuildDate><managingEditor>V's Blog</managingEditor><ttl>60</ttl><webMaster>V's Blog</webMaster><item><title>Azkaban</title><link>https://blog.witter.top/post/Azkaban.html</link><description># Azkaban&#13;
+&#13;
+## 1.部署&#13;
+&#13;
+### 1.1 Solo&#13;
+&#13;
+独立服务器是Azkaban的独立实例，也是最简单的开始。</description><guid isPermaLink="true">https://blog.witter.top/post/Azkaban.html</guid><pubDate>Thu, 20 Jun 2024 02:47:18 +0000</pubDate></item><item><title>Certbot 申请SSL证书</title><link>https://blog.witter.top/post/Certbot%20-shen-qing-SSL-zheng-shu.html</link><description># CertBot&#13;
+&#13;
+## 官方网址&#13;
+&#13;
+https://certbot.eff.org/&#13;
+&#13;
+## 申请SSL证书&#13;
+&#13;
+&gt; 指定Nginx路径方法：&#13;
+&gt;&#13;
+&gt; 方式1： certbot --nginx    (当linux有多个版本nginx，会出现找错nginx的配置文件路径)&#13;
+&gt;&#13;
+&gt; 方式2： certbot --nginx-server-root  /usr/local/nginx/conf    (指定nginx的配置文件路径)&#13;
+&#13;
+1. 为单域名申请SSL证书&#13;
+&#13;
+   ```shell&#13;
+   # 安装 certbot 以及 certbot nginx 插件&#13;
+   sudo yum install certbot python2-certbot-nginx -y&#13;
+   &#13;
+   # 执行配置，中途会询问你的邮箱，如实填写即可&#13;
+   sudo certbot --nginx&#13;
+   &#13;
+   # 自动续约&#13;
+   sudo certbot renew --dry-run&#13;
+   &#13;
+   # 获得并安装一个证书。</description><guid isPermaLink="true">https://blog.witter.top/post/Certbot%20-shen-qing-SSL-zheng-shu.html</guid><pubDate>Thu, 20 Jun 2024 02:44:24 +0000</pubDate></item><item><title>V's first</title><link>https://blog.witter.top/post/V%27s%20first.html</link><description>&gt; just a test。</description><guid isPermaLink="true">https://blog.witter.top/post/V%27s%20first.html</guid><pubDate>Thu, 20 Jun 2024 02:19:02 +0000</pubDate></item></channel></rss>

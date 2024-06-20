@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html data-color-mode="light" data-dark-theme="dark" data-light-theme="light" lang="zh-CN">
+<head>
+    <meta content="text/html; charset=utf-8" http-equiv="content-type" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <link href="//cdn.staticfile.net/Primer/21.0.7/primer.css" rel="stylesheet" />
+    <link rel="icon" href="https://img.witter.top/file/b037878209903b7d5bb17.jpg"><script>
+        let theme = localStorage.getItem("meek_theme") || "light";
+        document.documentElement.setAttribute("data-color-mode", theme);
+    </script>
+<meta name="description" content="# Azkaban
+
+## 1.部署
+
+### 1.1 Solo
+
+独立服务器是Azkaban的独立实例，也是最简单的开始。">
+<meta property="og:title" content="Azkaban">
+<meta property="og:description" content="# Azkaban
+
+## 1.部署
+
+### 1.1 Solo
+
+独立服务器是Azkaban的独立实例，也是最简单的开始。">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://blog.witter.top/post/Azkaban.html">
+<meta property="og:image" content="https://img.witter.top/file/b037878209903b7d5bb17.jpg">
+<title>Azkaban</title>
+<link href="//unpkg.com/@wooorm/starry-night@2.1.1/style/both.css" rel="stylesheet" />
+
+</head>
+<style>
+body{box-sizing: border-box;min-width: 200px;max-width: 900px;margin: 20px auto;padding: 45px;font-size: 16px;font-family: sans-serif;line-height: 1.25;}
+#header{display:flex;padding-bottom:8px;border-bottom: 1px solid var(--borderColor-muted, var(--color-border-muted));margin-bottom: 16px;}
+#footer {margin-top:64px; text-align: center;font-size: small;}
+
+</style>
+
+<style>
+.postTitle{margin: auto 0;font-size:40px;font-weight:bold;}
+.title-right{display:flex;margin:auto 0 0 auto;}
+.title-right .circle{padding: 14px 16px;margin-right:8px;}
+#postBody{border-bottom: 1px solid var(--color-border-default);padding-bottom:36px;}
+#postBody hr{height:2px;}
+#cmButton{height:48px;margin-top:48px;}
+#comments{margin-top:64px;}
+.g-emoji{font-size:24px;}
+@media (max-width: 600px) {
+    body {padding: 8px;}
+    .postTitle{font-size:24px;}
+}
+</style>
+
+
+
+
+<body>
+    <div id="header">
+<h1 class="postTitle">Azkaban</h1>
+<div class="title-right">
+    <a href="https://blog.witter.top" id="buttonHome" class="btn btn-invisible circle" title="首页">
+        <svg class="octicon" width="16" height="16">
+            <path id="pathHome" fill-rule="evenodd"></path>
+        </svg>
+    </a>
+    
+    <a href="https://github.com/ljwtorch/ljwtorch.github.io/issues/3" target="_blank" class="btn btn-invisible circle" title="Issue">
+        <svg class="octicon" width="16" height="16">
+            <path id="pathIssue" fill-rule="evenodd"></path>
+        </svg>
+    </a>
+    
+
+    <a class="btn btn-invisible circle" onclick="modeSwitch();" title="切换主题">
+        <svg class="octicon" width="16" height="16" >
+            <path id="themeSwitch" fill-rule="evenodd"></path>
+        </svg>
+    </a>
+
+</div>
+</div>
+    <div id="content">
+<div class="markdown-body" id="postBody"><h1>Azkaban</h1>
+<h2>1.部署</h2>
+<h3>1.1 Solo</h3>
+<p>独立服务器是Azkaban的独立实例，也是最简单的开始。独立服务器具有以下优点</p>
+<ul>
+<li><strong>易于安装</strong> - 不需要MySQL实例。它使用H2作为其主要的持久性存储。</li>
+<li><strong>易于启动</strong> - Web服务器和执行器服务器都在相同的过程中运行</li>
+<li><strong>全功能</strong> - 它包装所有的Azkaban功能。您可以正常使用它并为其安装插件</li>
+</ul>
+<p>按照以下步骤开始。</p>
+<ol>
+<li>**克隆仓库：**运行<code class="notranslate">git clone https://github.com/azkaban/azkaban.git</code></li>
+<li><strong>构建Azkaban并创建安装</strong>运行<code class="notranslate">cd azkaban; ./gradlew build installDist</code></li>
+<li>**启动服务器：**运行<code class="notranslate">cd azkaban-solo-server/build/install/azkaban-solo-server; bin/azkaban-solo-start.sh</code></li>
+<li>**停止服务器：**运行<code class="notranslate">bin/azkaban-solo-shutdown.sh</code>从azkaban-solo-server安装目录中</li>
+</ol>
+<p>编译安装报错解决办法：</p>
+<ol>
+<li>
+<p>编译安装指令：<code class="notranslate">./gradlew clean build -x test</code> -x test是为了跳过测试阶段；</p>
+</li>
+<li>
+<p>配置编译镜像源：</p>
+<div class="highlight highlight-source-shell"><pre class="notranslate">vim build.gradle
+  repositories {
+        maven {
+            url <span class="pl-s"><span class="pl-pds">'</span>https://maven.aliyun.com/repository/public/<span class="pl-pds">'</span></span>
+        }
+        <span class="pl-en">mavenCentral</span>()
+        maven {
+            url <span class="pl-s"><span class="pl-pds">'</span>https://maven.aliyun.com/repository/gradle-plugin/<span class="pl-pds">'</span></span>
+        }
+  }</pre></div>
+</li>
+<li>
+<p>安装node，npm不使用默认的Download：</p>
+<div class="highlight highlight-source-shell"><pre class="notranslate"><span class="pl-c"><span class="pl-c">#</span> true改为false</span>
+node {
+    // Version of node to use.
+    version = <span class="pl-s"><span class="pl-pds">'</span>8.10.0<span class="pl-pds">'</span></span>
+
+    // Version of npm to use.
+    npmVersion = <span class="pl-s"><span class="pl-pds">'</span>5.6.0<span class="pl-pds">'</span></span>
+
+    // Base URL <span class="pl-k">for</span> fetching node distributions (change <span class="pl-k">if</span> you have a mirror).
+    distBaseUrl = <span class="pl-s"><span class="pl-pds">'</span>https://nodejs.org/dist<span class="pl-pds">'</span></span>
+
+    // If true, it will download node using above parameters.
+    // If false, it will try to use globally installed node.
+    download = <span class="pl-c1">false</span>
+
+    // Set the work directory <span class="pl-k">for</span> unpacking node
+    workDir = file(<span class="pl-s"><span class="pl-pds">"</span><span class="pl-smi">${project.buildDir}</span>/nodejs<span class="pl-pds">"</span></span>)
+
+    // Set the work directory where node_modules should be located
+    nodeModulesDir = file(<span class="pl-s"><span class="pl-pds">"</span><span class="pl-smi">${project.projectDir}</span><span class="pl-pds">"</span></span>)
+}</pre></div>
+</li>
+<li>
+<p>编译完成后拷贝出各个模块build/distributions下的压缩包即可；</p>
+</li>
+</ol>
+<h3>1.2 集群</h3>
+<ol>
+<li>
+<p>安装MySQL；</p>
+<div class="highlight highlight-source-shell"><pre class="notranslate">docker run -d -p 3306:3306 --name mysql \
+-v ./logs:/var/log/mysql \
+-v ./data:/var/lib/mysql \
+-v ./conf:/etc/mysql \
+--restart=always \
+-e MYSQL_ROOT_PASSWORD=root \
+-d mysql:5.7.31
+
+<span class="pl-c"><span class="pl-c">#</span>skip-grant-tables</span></pre></div>
+</li>
+<li>
+<p>设置数据库：</p>
+<div class="highlight highlight-source-shell"><pre class="notranslate"><span class="pl-c"><span class="pl-c">#</span> 为Azkaban创建一个数据库。例如：</span>
+mysql<span class="pl-k">&gt;</span> CREATE DATABASE azkaban<span class="pl-k">;</span>
+<span class="pl-c"><span class="pl-c">#</span> 为Azkaban创建一个数据库用户。例如：</span>
+mysql<span class="pl-k">&gt;</span> CREATE USER <span class="pl-s"><span class="pl-pds">'</span>username<span class="pl-pds">'</span></span>@<span class="pl-s"><span class="pl-pds">'</span>%<span class="pl-pds">'</span></span> IDENTIFIED BY <span class="pl-s"><span class="pl-pds">'</span>password<span class="pl-pds">'</span></span><span class="pl-k">;</span>
+<span class="pl-c"><span class="pl-c">#</span> 设置数据库的用户权限。 为Azkaban创建一个用户（如果尚未创建），并为Azkaban数据库中的所有表赋予用户INSERT，SELECT，UPDATE，DELETE权限。</span>
+mysql<span class="pl-k">&gt;</span> CREATE USER <span class="pl-s"><span class="pl-pds">'</span>username<span class="pl-pds">'</span></span>@<span class="pl-s"><span class="pl-pds">'</span>%<span class="pl-pds">'</span></span> IDENTIFIED BY <span class="pl-s"><span class="pl-pds">'</span>password<span class="pl-pds">'</span></span><span class="pl-k">;</span>
+<span class="pl-c"><span class="pl-c">#</span> 配置数据包大小可能需要配置。默认情况下，MySQL可能有一个可接受的低数据包大小。为了增加它，你需要将属性max_allowed_packet设置为更高的值，比如1024M。</span></pre></div>
+</li>
+<li>
+<p>创建Azkaban表：</p>
+<div class="highlight highlight-source-shell"><pre class="notranslate">CREATE DATABASE azkaban<span class="pl-k">;</span>
+CREATE USER <span class="pl-s"><span class="pl-pds">'</span>azkaban<span class="pl-pds">'</span></span>@<span class="pl-s"><span class="pl-pds">'</span>%<span class="pl-pds">'</span></span> IDENTIFIED BY <span class="pl-s"><span class="pl-pds">'</span>azkaban<span class="pl-pds">'</span></span><span class="pl-k">;</span>
+GRANT SELECT,INSERT,UPDATE,DELETE ON azkaban.<span class="pl-k">*</span> to <span class="pl-s"><span class="pl-pds">'</span>azkaban<span class="pl-pds">'</span></span>@<span class="pl-s"><span class="pl-pds">'</span>%<span class="pl-pds">'</span></span> WITH GRANT OPTION<span class="pl-k">;</span>
+<span class="pl-c"><span class="pl-c">#</span> 加载mysql表</span>
+mysql<span class="pl-k">&gt;</span> <span class="pl-c1">source</span> /opt/model/azkaban/azkaban-db-3.84.4/create-all-sql-3.84.4.sql</pre></div>
+</li>
+<li>
+<p>启动azkaban-exec</p>
+<div class="highlight highlight-source-shell"><pre class="notranslate"><span class="pl-c"><span class="pl-c">#</span> 要进入到exec的根目录中执行bash脚本，否则会因为配置文件中的相对路径而报错</span>
+bash bin/start-exec.sh
+curl -G <span class="pl-s"><span class="pl-pds">"</span>node0:12321/executor?action=activate<span class="pl-pds">"</span></span> <span class="pl-k">&amp;&amp;</span> <span class="pl-c1">echo</span>
+<span class="pl-c"><span class="pl-c">#</span> 运行的每台机器都要执行，每次服务关闭重新打开后都需要激活，注意数据库中的execute表中激活值为1，未激活为0</span></pre></div>
+</li>
+<li>
+<p>启动azkaban-web</p>
+<div class="highlight highlight-source-shell"><pre class="notranslate"><span class="pl-c"><span class="pl-c">#</span> 用户配置文件</span>
+vim azkaban-users.xml
+<span class="pl-c"><span class="pl-c">#</span> 添加一行用户配置</span>
+<span class="pl-k">&lt;</span>user password=<span class="pl-s"><span class="pl-pds">"</span>root<span class="pl-pds">"</span></span> roles=<span class="pl-s"><span class="pl-pds">"</span>admin<span class="pl-pds">"</span></span> username=<span class="pl-s"><span class="pl-pds">"</span>root<span class="pl-pds">"</span></span>/<span class="pl-k">&gt;</span>
+</pre></div>
+</li>
+</ol>
+<h1>进入到web的根目录执行</h1>
+<p><code class="notranslate">bash bin/start-web.sh</code></p>
+<ol>
+<li>
+<p>同一文件夹下创建azkaban.project</p>
+<div class="highlight highlight-source-yaml"><pre class="notranslate"><span class="pl-ent">azkaban-flow-version</span>: <span class="pl-c1">2.0</span>
+<span class="pl-c"><span class="pl-c">#</span> 该文件作用是采用新的flow-api的方式解析flow文件</span></pre></div>
+</li>
+<li>
+<p>新建basic.flow文件</p>
+<div class="highlight highlight-source-yaml"><pre class="notranslate"><span class="pl-ent">nodes</span>:
+  - <span class="pl-ent">name</span>: <span class="pl-s">jobA	</span><span class="pl-c"><span class="pl-c">#</span> Job名称</span>
+    <span class="pl-ent">type</span>: <span class="pl-s">command 	</span><span class="pl-c"><span class="pl-c">#</span> Job类型</span>
+    <span class="pl-ent">config</span>:	<span class="pl-c"><span class="pl-c">#</span> Job配置</span>
+      <span class="pl-ent">command</span>: <span class="pl-s">echo "Hello World"</span></pre></div>
+</li>
+<li>
+<p>将存放上述两个文件的文件夹压缩到一个zip文件中，文件必须为英文，在web端创建任务并上传；</p>
+</li>
+</ol>
+<h3>2.2 任务作业依赖案例</h3>
+<blockquote>
+<p>JobA和JobB执行结束后才能执行JobC</p>
+</blockquote>
+<ol>
+<li>
+<p>basic.flow</p>
+<div class="highlight highlight-source-yaml"><pre class="notranslate"><span class="pl-ent">nodes</span>:
+  - <span class="pl-ent">name</span>: <span class="pl-s">jobC</span>
+    <span class="pl-ent">type</span>: <span class="pl-s">command</span>
+    <span class="pl-c"><span class="pl-c">#</span> jobC 依赖 JobA和JobB</span>
+    <span class="pl-ent">dependsOn</span>:
+      - <span class="pl-s">jobA</span>
+      - <span class="pl-s">jobB</span>
+    <span class="pl-ent">config</span>:
+      <span class="pl-ent">command</span>: <span class="pl-s">echo "I’m JobC"</span>
+
+  - <span class="pl-ent">name</span>: <span class="pl-s">jobA</span>
+    <span class="pl-ent">type</span>: <span class="pl-s">command</span>
+    <span class="pl-ent">config</span>:
+      <span class="pl-ent">command</span>: <span class="pl-s">echo "I’m JobA"</span>
+
+  - <span class="pl-ent">name</span>: <span class="pl-s">jobB</span>
+    <span class="pl-ent">type</span>: <span class="pl-s">command</span>
+    <span class="pl-ent">config</span>:
+      <span class="pl-ent">command</span>: <span class="pl-s">echo "I’m JobB"</span></pre></div>
+</li>
+<li>
+<p>压缩、运行任务步骤同上</p>
+</li>
+</ol>
+<h3>2.3 自动失败重试案例</h3>
+<ol>
+<li>
+<p>basic.flow</p>
+<div class="highlight highlight-source-yaml"><pre class="notranslate"><span class="pl-ent">nodes</span>:
+  - <span class="pl-ent">name</span>: <span class="pl-s">JobA</span>
+    <span class="pl-ent">type</span>: <span class="pl-s">command</span>
+    <span class="pl-ent">config</span>:
+      <span class="pl-ent">command</span>: <span class="pl-s">sh /not_exists.sh</span>
+      <span class="pl-ent">retries</span>: <span class="pl-c1">3</span>	<span class="pl-c"><span class="pl-c">#</span> 重试次数</span>
+      <span class="pl-ent">retry.backoff</span>: <span class="pl-c1">10000</span>	<span class="pl-c"><span class="pl-c">#</span> 重试时间间隔</span></pre></div>
+<p>也可以在Flow全局配置中添加任务失败重试配置，此位置会应用到所有Job：</p>
+<div class="highlight highlight-source-yaml"><pre class="notranslate"><span class="pl-ent">config</span>:
+  <span class="pl-ent">retries</span>: <span class="pl-c1">3</span>
+  <span class="pl-ent">retry.backoff</span>: <span class="pl-c1">10000</span>
+<span class="pl-ent">nodes</span>:
+  - <span class="pl-ent">name</span>: <span class="pl-s">JobA</span>
+    <span class="pl-ent">type</span>: <span class="pl-s">command</span>
+    <span class="pl-ent">config</span>:
+      <span class="pl-ent">command</span>: <span class="pl-s">sh /not_exists.sh</span></pre></div>
+</li>
+<li>
+<p>压缩、运行任务步骤同上；</p>
+</li>
+</ol>
+<h3>2.4 手动失败重试案例</h3>
+<ol>
+<li>
+<p>basic.flow</p>
+<div class="highlight highlight-source-yaml"><pre class="notranslate"><span class="pl-ent">nodes</span>:
+  - <span class="pl-ent">name</span>: <span class="pl-s">JobA</span>
+    <span class="pl-ent">type</span>: <span class="pl-s">command</span>
+    <span class="pl-ent">config</span>:
+      <span class="pl-ent">command</span>: <span class="pl-s">echo "This is JobA."</span>
+
+  - <span class="pl-ent">name</span>: <span class="pl-s">JobB</span>
+    <span class="pl-ent">type</span>: <span class="pl-s">command</span>
+    <span class="pl-ent">dependsOn</span>:
+      - <span class="pl-s">JobA</span>
+    <span class="pl-ent">config</span>:
+      <span class="pl-ent">command</span>: <span class="pl-s">echo "This is JobB."</span>
+
+  - <span class="pl-ent">name</span>: <span class="pl-s">JobC</span>
+    <span class="pl-ent">type</span>: <span class="pl-s">command</span>
+    <span class="pl-ent">dependsOn</span>:
+      - <span class="pl-s">JobB</span>
+    <span class="pl-ent">config</span>:
+      <span class="pl-ent">command</span>: <span class="pl-s">echo "This is JobC."</span>
+
+  - <span class="pl-ent">name</span>: <span class="pl-s">JobD</span>
+    <span class="pl-ent">type</span>: <span class="pl-s">command</span>
+    <span class="pl-ent">dependsOn</span>:
+      - <span class="pl-s">JobC</span>
+    <span class="pl-ent">config</span>:
+      <span class="pl-ent">command</span>: <span class="pl-s">echo "This is JobD."</span>
+
+  - <span class="pl-ent">name</span>: <span class="pl-s">JobE</span>
+    <span class="pl-ent">type</span>: <span class="pl-s">command</span>
+    <span class="pl-ent">dependsOn</span>:
+      - <span class="pl-s">JobD</span>
+    <span class="pl-ent">config</span>:
+      <span class="pl-ent">command</span>: <span class="pl-s">echo "This is JobE."</span>
+
+  - <span class="pl-ent">name</span>: <span class="pl-s">JobF</span>
+    <span class="pl-ent">type</span>: <span class="pl-s">command</span>
+    <span class="pl-ent">dependsOn</span>:
+      - <span class="pl-s">JobE</span>
+    <span class="pl-ent">config</span>:
+      <span class="pl-ent">command</span>: <span class="pl-s">echo "This is JobF."</span></pre></div>
+</li>
+<li>
+<p>压缩、运行任务步骤同上；</p>
+</li>
+<li>
+<p>Enable和Disable下面都分别有如下参数：</p>
+<ol>
+<li>Parents：该作业的上一个任务</li>
+<li>Ancestors：该作业前的所有任务</li>
+<li>Children：该作业后的一个任务</li>
+<li>Descendents：该作业后的所有任务</li>
+<li>Enable All：所有的任务</li>
+</ol>
+</li>
+</ol></div>
+<div style="font-size:small;margin-top:8px;float:right;">转载请注明出处</div>
+<button class="btn btn-block" type="button" onclick="openComments()" id="cmButton">评论</button>
+<div class="comments" id="comments"></div>
+</div>
+    <div id="footer">Copyright © <span id="year"></span><a href="https://blog.witter.top"> V's Blog </a>
+<p>
+<span id="runday"></span>Powered by <a href="https://meekdai.com/Gmeek.html" target="_blank">Gmeek</a>
+</p>
+
+<script>
+if("06/20/2024"!=""){
+    var now=new Date();
+    var startSite=new Date("06/20/2024");
+    var diff=now.getTime()-startSite.getTime();
+    var diffDay=Math.floor(diff/(1000*60*60*24));
+    document.getElementById("year").innerHTML=now.getFullYear();
+    if(""!=""){document.getElementById("runday").innerHTML=" • "+"网站运行"+diffDay+"天"+" • ";}
+    else{document.getElementById("runday").innerHTML="网站运行"+diffDay+"天"+" • ";}
+}
+</script>
+</div>
+</body>
+<script>
+var IconList={'sun': 'M8 10.5a2.5 2.5 0 100-5 2.5 2.5 0 000 5zM8 12a4 4 0 100-8 4 4 0 000 8zM8 0a.75.75 0 01.75.75v1.5a.75.75 0 01-1.5 0V.75A.75.75 0 018 0zm0 13a.75.75 0 01.75.75v1.5a.75.75 0 01-1.5 0v-1.5A.75.75 0 018 13zM2.343 2.343a.75.75 0 011.061 0l1.06 1.061a.75.75 0 01-1.06 1.06l-1.06-1.06a.75.75 0 010-1.06zm9.193 9.193a.75.75 0 011.06 0l1.061 1.06a.75.75 0 01-1.06 1.061l-1.061-1.06a.75.75 0 010-1.061zM16 8a.75.75 0 01-.75.75h-1.5a.75.75 0 010-1.5h1.5A.75.75 0 0116 8zM3 8a.75.75 0 01-.75.75H.75a.75.75 0 010-1.5h1.5A.75.75 0 013 8zm10.657-5.657a.75.75 0 010 1.061l-1.061 1.06a.75.75 0 11-1.06-1.06l1.06-1.06a.75.75 0 011.06 0zm-9.193 9.193a.75.75 0 010 1.06l-1.06 1.061a.75.75 0 11-1.061-1.06l1.06-1.061a.75.75 0 011.061 0z', 'moon': 'M9.598 1.591a.75.75 0 01.785-.175 7 7 0 11-8.967 8.967.75.75 0 01.961-.96 5.5 5.5 0 007.046-7.046.75.75 0 01.175-.786zm1.616 1.945a7 7 0 01-7.678 7.678 5.5 5.5 0 107.678-7.678z', 'sync': 'M1.705 8.005a.75.75 0 0 1 .834.656 5.5 5.5 0 0 0 9.592 2.97l-1.204-1.204a.25.25 0 0 1 .177-.427h3.646a.25.25 0 0 1 .25.25v3.646a.25.25 0 0 1-.427.177l-1.38-1.38A7.002 7.002 0 0 1 1.05 8.84a.75.75 0 0 1 .656-.834ZM8 2.5a5.487 5.487 0 0 0-4.131 1.869l1.204 1.204A.25.25 0 0 1 4.896 6H1.25A.25.25 0 0 1 1 5.75V2.104a.25.25 0 0 1 .427-.177l1.38 1.38A7.002 7.002 0 0 1 14.95 7.16a.75.75 0 0 1-1.49.178A5.5 5.5 0 0 0 8 2.5Z', 'home': 'M6.906.664a1.749 1.749 0 0 1 2.187 0l5.25 4.2c.415.332.657.835.657 1.367v7.019A1.75 1.75 0 0 1 13.25 15h-3.5a.75.75 0 0 1-.75-.75V9H7v5.25a.75.75 0 0 1-.75.75h-3.5A1.75 1.75 0 0 1 1 13.25V6.23c0-.531.242-1.034.657-1.366l5.25-4.2Zm1.25 1.171a.25.25 0 0 0-.312 0l-5.25 4.2a.25.25 0 0 0-.094.196v7.019c0 .138.112.25.25.25H5.5V8.25a.75.75 0 0 1 .75-.75h3.5a.75.75 0 0 1 .75.75v5.25h2.75a.25.25 0 0 0 .25-.25V6.23a.25.25 0 0 0-.094-.195Z', 'github': 'M8 0c4.42 0 8 3.58 8 8a8.013 8.013 0 0 1-5.45 7.59c-.4.08-.55-.17-.55-.38 0-.27.01-1.13.01-2.2 0-.75-.25-1.23-.54-1.48 1.78-.2 3.65-.88 3.65-3.95 0-.88-.31-1.59-.82-2.15.08-.2.36-1.02-.08-2.12 0 0-.67-.22-2.2.82-.64-.18-1.32-.27-2-.27-.68 0-1.36.09-2 .27-1.53-1.03-2.2-.82-2.2-.82-.44 1.1-.16 1.92-.08 2.12-.51.56-.82 1.28-.82 2.15 0 3.06 1.86 3.75 3.64 3.95-.23.2-.44.55-.51 1.07-.46.21-1.61.55-2.33-.66-.15-.24-.6-.83-1.23-.82-.67.01-.27.38.01.53.34.19.73.9.82 1.13.16.45.68 1.31 2.69.94 0 .67.01 1.3.01 1.49 0 .21-.15.45-.55.38A7.995 7.995 0 0 1 0 8c0-4.42 3.58-8 8-8Z'};
+var utterancesLoad=0;
+
+let themeSettings={
+    "dark": ["dark","moon","#00f0ff","dark-blue"],
+    "light": ["light","sun","#ff5000","github-light"],
+    "auto": ["auto","sync","","preferred-color-scheme"]
+};
+function changeTheme(mode, icon, color, utheme){
+    document.documentElement.setAttribute("data-color-mode",mode);
+    document.getElementById("themeSwitch").setAttribute("d",value=IconList[icon]);
+    document.getElementById("themeSwitch").parentNode.style.color=color;
+    if(utterancesLoad==1){utterancesTheme(utheme);}
+}
+function modeSwitch(){
+    let currentMode=document.documentElement.getAttribute('data-color-mode');
+    let newMode = currentMode === "light" ? "dark" : currentMode === "dark" ? "auto" : "light";
+    localStorage.setItem("meek_theme", newMode);
+    if(themeSettings[newMode]){
+        changeTheme(...themeSettings[newMode]);
+    }
+}
+function utterancesTheme(theme){
+    const message={type:'set-theme',theme: theme};
+    const iframe=document.getElementsByClassName('utterances-frame')[0];
+    iframe.contentWindow.postMessage(message,'https://utteranc.es');
+}
+if(themeSettings[theme]){changeTheme(...themeSettings[theme]);}
+console.log("\n %c Gmeek last https://github.com/Meekdai/Gmeek \n\n","padding:5px 0;background:#02d81d;color:#fff");
+</script>
+
+<script>
+document.getElementById("pathHome").setAttribute("d",IconList["home"]);
+document.getElementById("pathIssue").setAttribute("d",IconList["github"]);
+
+function openComments(){
+    cm=document.getElementById("comments");
+    cmButton=document.getElementById("cmButton");
+    cmButton.innerHTML="loading";
+    span=document.createElement("span");
+    span.setAttribute("class","AnimatedEllipsis");
+    cmButton.appendChild(span);
+
+    script=document.createElement("script");
+    script.setAttribute("src","https://utteranc.es/client.js");
+    script.setAttribute("repo","ljwtorch/ljwtorch.github.io");
+    script.setAttribute("issue-term","title");
+    
+    if(localStorage.getItem("meek_theme")=="dark"){script.setAttribute("theme","dark-blue");}
+    else if(localStorage.getItem("meek_theme")=="light") {script.setAttribute("theme","github-light");}
+    else{script.setAttribute("theme","preferred-color-scheme");}
+    
+    script.setAttribute("crossorigin","anonymous");
+    script.setAttribute("async","");
+    cm.appendChild(script);
+
+    int=self.setInterval("iFrameLoading()",200);
+}
+
+function iFrameLoading(){
+    var utterances=document.getElementsByClassName('utterances');
+    if(utterances.length==1){
+        if(utterances[0].style.height!=""){
+            utterancesLoad=1;
+            int=window.clearInterval(int);
+            document.getElementById("cmButton").style.display="none";
+            console.log("utterances Load OK");
+        }
+    }
+}
+</script>
+
+
+</html>
