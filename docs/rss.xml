@@ -1,5 +1,18 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<rss xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/" version="2.0"><channel><title>V's Blog</title><link>https://blog.witter.top</link><description>自有清风常载鹤，从无猜意不惊鸥。</description><copyright>V's Blog</copyright><docs>http://www.rssboard.org/rss-specification</docs><generator>python-feedgen</generator><image><url>https://img.witter.top/file/b037878209903b7d5bb17.jpg</url><title>avatar</title><link>https://blog.witter.top</link></image><lastBuildDate>Thu, 20 Jun 2024 13:43:50 +0000</lastBuildDate><managingEditor>V's Blog</managingEditor><ttl>60</ttl><webMaster>V's Blog</webMaster><item><title>Helm</title><link>https://blog.witter.top/post/Helm.html</link><description>[官方文档](https://helm.sh/zh/docs/intro/install/)&#13;
+<rss xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/" version="2.0"><channel><title>V's Blog</title><link>https://blog.witter.top</link><description>自有清风常载鹤，从无猜意不惊鸥。</description><copyright>V's Blog</copyright><docs>http://www.rssboard.org/rss-specification</docs><generator>python-feedgen</generator><image><url>https://img.witter.top/file/b037878209903b7d5bb17.jpg</url><title>avatar</title><link>https://blog.witter.top</link></image><lastBuildDate>Thu, 20 Jun 2024 13:51:44 +0000</lastBuildDate><managingEditor>V's Blog</managingEditor><ttl>60</ttl><webMaster>V's Blog</webMaster><item><title>Linux 文件同步工具</title><link>https://blog.witter.top/post/Linux%20-wen-jian-tong-bu-gong-ju.html</link><description>## rsync&#13;
+&#13;
+### 1.安装&#13;
+&#13;
+```shell&#13;
+sudo apt install rsync&#13;
+#服务器双方都要安装！&#13;
+```&#13;
+&#13;
+### 2.基本用法&#13;
+&#13;
+#### 2.1 -r 参数&#13;
+&#13;
+本机使用 rsync 命令时，可以作为`cp`和`mv`命令的替代方法，将源目录同步到目标目录。</description><guid isPermaLink="true">https://blog.witter.top/post/Linux%20-wen-jian-tong-bu-gong-ju.html</guid><pubDate>Thu, 20 Jun 2024 13:51:19 +0000</pubDate></item><item><title>Helm</title><link>https://blog.witter.top/post/Helm.html</link><description>[官方文档](https://helm.sh/zh/docs/intro/install/)&#13;
 &#13;
 ### 用二进制版本安装&#13;
 &#13;
