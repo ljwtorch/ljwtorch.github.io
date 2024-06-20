@@ -1,5 +1,26 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<rss xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/" version="2.0"><channel><title>V's Blog</title><link>https://blog.witter.top</link><description>Blog description</description><copyright>V's Blog</copyright><docs>http://www.rssboard.org/rss-specification</docs><generator>python-feedgen</generator><image><url>https://img.witter.top/file/b037878209903b7d5bb17.jpg</url><title>avatar</title><link>https://blog.witter.top</link></image><lastBuildDate>Thu, 20 Jun 2024 02:47:39 +0000</lastBuildDate><managingEditor>V's Blog</managingEditor><ttl>60</ttl><webMaster>V's Blog</webMaster><item><title>Azkaban</title><link>https://blog.witter.top/post/Azkaban.html</link><description># Azkaban&#13;
+<rss xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/" version="2.0"><channel><title>V's Blog</title><link>https://blog.witter.top</link><description>Blog description</description><copyright>V's Blog</copyright><docs>http://www.rssboard.org/rss-specification</docs><generator>python-feedgen</generator><image><url>https://img.witter.top/file/b037878209903b7d5bb17.jpg</url><title>avatar</title><link>https://blog.witter.top</link></image><lastBuildDate>Thu, 20 Jun 2024 03:26:55 +0000</lastBuildDate><managingEditor>V's Blog</managingEditor><ttl>60</ttl><webMaster>V's Blog</webMaster><item><title>EFK日志系统</title><link>https://blog.witter.top/post/EFK-ri-zhi-xi-tong.html</link><description># EFK日志告警系统&#13;
+&#13;
+**注：现在新版本elastic stack已经支持将kafka作为输出和输入的目标**&#13;
+&#13;
+当日志不是结构化数据：*.log-&gt;filebeat-&gt;kafka-&gt;logstash-&gt;elasticsearch&#13;
+&#13;
+当日志是结构化数据：*.log-&gt;filebeat-&gt;kafka-&gt;filebeat-&gt;elasticsearch&#13;
+&#13;
+区别在于是否需要logstash进行日志的过滤和结构化；&#13;
+&#13;
+## 结构化日志&#13;
+&#13;
+**连接示例配置文件**&#13;
+&#13;
+### filebeat 1&#13;
+&#13;
+&gt; 此filebeat实例为日志采集端，即kafka生产者，可以有多个实例进行采集&#13;
+&#13;
+```yaml&#13;
+filebeat.inputs:&#13;
+- type: filestream #新版本常用文件流输入方式&#13;
+  id: my-filestream-id #每个文件流输入必须有一个唯一的 ID。</description><guid isPermaLink="true">https://blog.witter.top/post/EFK-ri-zhi-xi-tong.html</guid><pubDate>Thu, 20 Jun 2024 03:26:28 +0000</pubDate></item><item><title>Azkaban</title><link>https://blog.witter.top/post/Azkaban.html</link><description># Azkaban&#13;
 &#13;
 ## 1.部署&#13;
 &#13;
