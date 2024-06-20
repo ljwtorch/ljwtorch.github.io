@@ -234,12 +234,12 @@ docker run -d \
   -e KUBOARD_LOGIN_TYPE="ldap" \
   -e KUBOARD_ENDPOINT="http://10.1.1.33:80" \
   -e KUBOARD_AGENT_SERVER_TCP_PORT="10081" \
-  -e KUBOARD_ROOT_USER="lijuwei" \
-  -e LDAP_HOST="ipa.sonkwo.cn:636" \
+  -e KUBOARD_ROOT_USER="xxxxx" \
+  -e LDAP_HOST="ipa.xxxxxx.cn:636" \
   -e LDAP_SKIP_SSL_VERIFY="false" \
-  -e LDAP_BIND_DN="uid=lijuwei,cn=users,cn=accounts,dc=sonkwo,dc=cn" \
-  -e LDAP_BIND_PASSWORD="torch!35458745#" \
-  -e LDAP_BASE_DN="dc=sonkwo,dc=cn" \
+  -e LDAP_BIND_DN="uid=xxx,cn=users,cn=accounts,dc=xxx,dc=cn" \
+  -e LDAP_BIND_PASSWORD="xxxxxxxx" \
+  -e LDAP_BASE_DN="dc=xxxxxx,dc=cn" \
   -e LDAP_FILTER="(uid=%(user)s)" \
   -e LDAP_ID_ATTRIBUTE="uid" \
   -e LDAP_USER_NAME_ATTRIBUTE="uid" \
