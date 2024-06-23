@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<rss xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/" version="2.0"><channel><title>V's Blog</title><link>https://blog.witter.top</link><description>自有清风常载鹤，从无猜意不惊鸥。</description><copyright>V's Blog</copyright><docs>http://www.rssboard.org/rss-specification</docs><generator>python-feedgen</generator><image><url>https://img.witter.top/file/b037878209903b7d5bb17.jpg</url><title>avatar</title><link>https://blog.witter.top</link></image><lastBuildDate>Sun, 23 Jun 2024 14:59:45 +0000</lastBuildDate><managingEditor>V's Blog</managingEditor><ttl>60</ttl><webMaster>V's Blog</webMaster><item><title>0-1 部署监控告警系统(Prometheus)</title><link>https://blog.witter.top/post/0-1%20-bu-shu-jian-kong-gao-jing-xi-tong-%28Prometheus%29.html</link><description>**完整docker-compose.yml**&#13;
+<rss xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/" version="2.0"><channel><title>V's Blog</title><link>https://blog.witter.top</link><description>自有清风常载鹤，从无猜意不惊鸥。</description><copyright>V's Blog</copyright><docs>http://www.rssboard.org/rss-specification</docs><generator>python-feedgen</generator><image><url>https://img.witter.top/file/b037878209903b7d5bb17.jpg</url><title>avatar</title><link>https://blog.witter.top</link></image><lastBuildDate>Sun, 23 Jun 2024 15:01:47 +0000</lastBuildDate><managingEditor>V's Blog</managingEditor><ttl>60</ttl><webMaster>V's Blog</webMaster><item><title>0-1 部署监控告警系统(Prometheus)</title><link>https://blog.witter.top/post/0-1%20-bu-shu-jian-kong-gao-jing-xi-tong-%28Prometheus%29.html</link><description>**完整docker-compose.yml**&#13;
 &#13;
 ```yaml&#13;
 networks:&#13;
@@ -1049,5 +1049,6 @@ Type 'help', 'copyright', 'credits' or 'license' for more information.&#13;
 - [短链](https://surl.witter.top)&#13;
 - [监控](https://monit.witter.top)&#13;
 - [丑丑头像生成器](https://txstc55.github.io/ugly-avatar)&#13;
+- [People Die, but Long Live GitHub](https://laike9m.com/blog/people-die-but-long-live-github,122/)&#13;
 &#13;
 &lt;span id='busuanzi'&gt;:robot:感谢第&lt;span&gt;&lt;/span&gt;小伙伴的&lt;span&gt;&lt;/span&gt;次访问此页面。</description><guid isPermaLink="true">https://blog.witter.top/link.html</guid><pubDate>Fri, 21 Jun 2024 06:35:57 +0000</pubDate></item></channel></rss>
