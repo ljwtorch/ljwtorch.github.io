@@ -1,4 +1,3 @@
-
 **完整docker-compose.yml**
 
 ```yaml
@@ -111,7 +110,7 @@ nohup ./prometheus --config.file=prometheus.yml --storage.tsdb.retention.time=90
 #========================================
 #!/bin/bash
 # 定义Prometheus配置文件路径
-prometheus_config="/home/sonkwo/monitor/prometheus/prometheus.yml"
+prometheus_config="./prometheus/prometheus.yml"
 # 检查配置文件
 check_result=$(./promtool check config "$prometheus_config" 2>&1)
 if [[ $check_result =~ "FAILED" ]]; then
@@ -503,12 +502,12 @@ timeout = 10
 search_filter = "(uid=%s)"
 
 # An array of base dns to search through
-search_base_dns = ["cn=users,cn=accounts,dc=sonkwo,dc=cn"]
+search_base_dns = ["cn=users,cn=accounts,dc=xxx,dc=cn"]
 
 ## For Posix or LDAP setups that does not support member_of attribute you can define the below settings
 ## Please check grafana LDAP docs for examples
 #group_search_filter = "(&(objectClass=groupOfNames)(memberOf=%s))"
-#group_search_base_dns = ["cn=groups,cn=accounts,dc=sonkwo,dc=cn"]
+#group_search_base_dns = ["cn=groups,cn=accounts,dc=xxx,dc=cn"]
 #group_search_filter_user_attribute = "uid"
 
 # Specify names of the ldap attributes your ldap uses

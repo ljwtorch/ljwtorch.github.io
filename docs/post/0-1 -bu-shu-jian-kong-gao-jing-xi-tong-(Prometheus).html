@@ -9,8 +9,7 @@
         let theme = localStorage.getItem("meek_theme") || "light";
         document.documentElement.setAttribute("data-color-mode", theme);
     </script>
-<meta name="description" content="
-**完整docker-compose.yml**
+<meta name="description" content="**完整docker-compose.yml**
 
 ```yaml
 networks:
@@ -122,7 +121,7 @@ nohup ./prometheus --config.file=prometheus.yml --storage.tsdb.retention.time=90
 #========================================
 #!/bin/bash
 # 定义Prometheus配置文件路径
-prometheus_config='/home/sonkwo/monitor/prometheus/prometheus.yml'
+prometheus_config='./prometheus/prometheus.yml'
 # 检查配置文件
 check_result=$(./promtool check config '$prometheus_config' 2>&1)
 if [[ $check_result =~ 'FAILED' ]]; then
@@ -514,12 +513,12 @@ timeout = 10
 search_filter = '(uid=%s)'
 
 # An array of base dns to search through
-search_base_dns = ['cn=users,cn=accounts,dc=sonkwo,dc=cn']
+search_base_dns = ['cn=users,cn=accounts,dc=xxx,dc=cn']
 
 ## For Posix or LDAP setups that does not support member_of attribute you can define the below settings
 ## Please check grafana LDAP docs for examples
 #group_search_filter = '(&(objectClass=groupOfNames)(memberOf=%s))'
-#group_search_base_dns = ['cn=groups,cn=accounts,dc=sonkwo,dc=cn']
+#group_search_base_dns = ['cn=groups,cn=accounts,dc=xxx,dc=cn']
 #group_search_filter_user_attribute = 'uid'
 
 # Specify names of the ldap attributes your ldap uses
@@ -549,8 +548,7 @@ org_role = 'Editor'
 #org_role = 'Viewer'
 ```。">
 <meta property="og:title" content="0-1 部署监控告警系统(Prometheus)">
-<meta property="og:description" content="
-**完整docker-compose.yml**
+<meta property="og:description" content="**完整docker-compose.yml**
 
 ```yaml
 networks:
@@ -662,7 +660,7 @@ nohup ./prometheus --config.file=prometheus.yml --storage.tsdb.retention.time=90
 #========================================
 #!/bin/bash
 # 定义Prometheus配置文件路径
-prometheus_config='/home/sonkwo/monitor/prometheus/prometheus.yml'
+prometheus_config='./prometheus/prometheus.yml'
 # 检查配置文件
 check_result=$(./promtool check config '$prometheus_config' 2>&1)
 if [[ $check_result =~ 'FAILED' ]]; then
@@ -1054,12 +1052,12 @@ timeout = 10
 search_filter = '(uid=%s)'
 
 # An array of base dns to search through
-search_base_dns = ['cn=users,cn=accounts,dc=sonkwo,dc=cn']
+search_base_dns = ['cn=users,cn=accounts,dc=xxx,dc=cn']
 
 ## For Posix or LDAP setups that does not support member_of attribute you can define the below settings
 ## Please check grafana LDAP docs for examples
 #group_search_filter = '(&(objectClass=groupOfNames)(memberOf=%s))'
-#group_search_base_dns = ['cn=groups,cn=accounts,dc=sonkwo,dc=cn']
+#group_search_base_dns = ['cn=groups,cn=accounts,dc=xxx,dc=cn']
 #group_search_filter_user_attribute = 'uid'
 
 # Specify names of the ldap attributes your ldap uses
@@ -1250,7 +1248,7 @@ nohup ./prometheus --config.file=prometheus.yml --storage.tsdb.retention.time=90
 <span class="pl-c"><span class="pl-c">#</span>========================================</span>
 <span class="pl-c"><span class="pl-c">#!</span>/bin/bash</span>
 <span class="pl-c"><span class="pl-c">#</span> 定义Prometheus配置文件路径</span>
-prometheus_config=<span class="pl-s"><span class="pl-pds">"</span>/home/sonkwo/monitor/prometheus/prometheus.yml<span class="pl-pds">"</span></span>
+prometheus_config=<span class="pl-s"><span class="pl-pds">"</span>./prometheus/prometheus.yml<span class="pl-pds">"</span></span>
 <span class="pl-c"><span class="pl-c">#</span> 检查配置文件</span>
 check_result=<span class="pl-s"><span class="pl-pds">$(</span>./promtool check config <span class="pl-s"><span class="pl-pds">"</span><span class="pl-smi">$prometheus_config</span><span class="pl-pds">"</span></span> <span class="pl-k">2&gt;&amp;1</span><span class="pl-pds">)</span></span>
 <span class="pl-k">if</span> [[ <span class="pl-smi">$check_result</span> <span class="pl-k">=~</span> <span class="pl-s"><span class="pl-pds">"</span>FAILED<span class="pl-pds">"</span></span> ]]<span class="pl-k">;</span> <span class="pl-k">then</span>
@@ -1594,12 +1592,12 @@ sudo systemctl status prometheus</pre></div>
 <span class="pl-smi">search_filter</span> = <span class="pl-s"><span class="pl-pds">"</span>(uid=%s)<span class="pl-pds">"</span></span>
 
 <span class="pl-c"><span class="pl-c">#</span> An array of base dns to search through</span>
-<span class="pl-smi">search_base_dns</span> = [<span class="pl-s"><span class="pl-pds">"</span>cn=users,cn=accounts,dc=sonkwo,dc=cn<span class="pl-pds">"</span></span>]
+<span class="pl-smi">search_base_dns</span> = [<span class="pl-s"><span class="pl-pds">"</span>cn=users,cn=accounts,dc=xxx,dc=cn<span class="pl-pds">"</span></span>]
 
 <span class="pl-c"><span class="pl-c">#</span># For Posix or LDAP setups that does not support member_of attribute you can define the below settings</span>
 <span class="pl-c"><span class="pl-c">#</span># Please check grafana LDAP docs for examples</span>
 <span class="pl-c"><span class="pl-c">#</span>group_search_filter = "(&amp;(objectClass=groupOfNames)(memberOf=%s))"</span>
-<span class="pl-c"><span class="pl-c">#</span>group_search_base_dns = ["cn=groups,cn=accounts,dc=sonkwo,dc=cn"]</span>
+<span class="pl-c"><span class="pl-c">#</span>group_search_base_dns = ["cn=groups,cn=accounts,dc=xxx,dc=cn"]</span>
 <span class="pl-c"><span class="pl-c">#</span>group_search_filter_user_attribute = "uid"</span>
 
 <span class="pl-c"><span class="pl-c">#</span> Specify names of the ldap attributes your ldap uses</span>
