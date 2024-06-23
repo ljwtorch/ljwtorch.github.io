@@ -1,0 +1,1495 @@
+<!DOCTYPE html>
+<html data-color-mode="light" data-dark-theme="dark" data-light-theme="light" lang="zh-CN">
+<head>
+    <meta content="text/html; charset=utf-8" http-equiv="content-type" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <link href="//cdn.staticfile.net/Primer/21.0.7/primer.css" rel="stylesheet" />
+    <link rel="icon" href="https://img.witter.top/file/b037878209903b7d5bb17.jpg"><script>
+        let theme = localStorage.getItem("meek_theme") || "light";
+        document.documentElement.setAttribute("data-color-mode", theme);
+    </script>
+<meta name="description" content="## 1.初识Python
+
+1989 年，作者决心开发一个新的解释程序
+
+1991年，第一个Python解释器诞生
+
+## 2.安装Python
+
+官网下载：https://www.python.org/downloads/
+
+- 添加到path
+- 修改默认路径
+
+cmd 输入python
+
+```shell
+C:\Users\Lenovo>python
+Python 3.10.6 (tags/v3.10.6:9c7b4bd, Aug  1 2022, 21:53:49) [MSC v.1932 64 bit (AMD64)] on win32
+Type 'help', 'copyright', 'credits' or 'license' for more information.
+>>>
+```
+
+**Python解释器**：用来翻译Python代码，并提交给计算机执行。">
+<meta property="og:title" content="Python 小记">
+<meta property="og:description" content="## 1.初识Python
+
+1989 年，作者决心开发一个新的解释程序
+
+1991年，第一个Python解释器诞生
+
+## 2.安装Python
+
+官网下载：https://www.python.org/downloads/
+
+- 添加到path
+- 修改默认路径
+
+cmd 输入python
+
+```shell
+C:\Users\Lenovo>python
+Python 3.10.6 (tags/v3.10.6:9c7b4bd, Aug  1 2022, 21:53:49) [MSC v.1932 64 bit (AMD64)] on win32
+Type 'help', 'copyright', 'credits' or 'license' for more information.
+>>>
+```
+
+**Python解释器**：用来翻译Python代码，并提交给计算机执行。">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://blog.witter.top/post/Python%20-xiao-ji.html">
+<meta property="og:image" content="https://img.witter.top/file/b037878209903b7d5bb17.jpg">
+<title>Python 小记</title>
+<link href="//unpkg.com/@wooorm/starry-night@2.1.1/style/both.css" rel="stylesheet" />
+
+</head>
+<style>
+body{box-sizing: border-box;min-width: 200px;max-width: 900px;margin: 20px auto;padding: 45px;font-size: 16px;font-family: sans-serif;line-height: 1.25;}
+#header{display:flex;padding-bottom:8px;border-bottom: 1px solid var(--borderColor-muted, var(--color-border-muted));margin-bottom: 16px;}
+#footer {margin-top:64px; text-align: center;font-size: small;}
+
+</style>
+
+<style>
+.postTitle{margin: auto 0;font-size:40px;font-weight:bold;}
+.title-right{display:flex;margin:auto 0 0 auto;}
+.title-right .circle{padding: 14px 16px;margin-right:8px;}
+#postBody{border-bottom: 1px solid var(--color-border-default);padding-bottom:36px;}
+#postBody hr{height:2px;}
+#cmButton{height:48px;margin-top:48px;}
+#comments{margin-top:64px;}
+.g-emoji{font-size:24px;}
+@media (max-width: 600px) {
+    body {padding: 8px;}
+    .postTitle{font-size:24px;}
+}
+</style>
+
+
+
+
+<body>
+    <div id="header">
+<h1 class="postTitle">Python 小记</h1>
+<div class="title-right">
+    <a href="https://blog.witter.top" id="buttonHome" class="btn btn-invisible circle" title="首页">
+        <svg class="octicon" width="16" height="16">
+            <path id="pathHome" fill-rule="evenodd"></path>
+        </svg>
+    </a>
+    
+    <a href="https://github.com/ljwtorch/ljwtorch.github.io/issues/16" target="_blank" class="btn btn-invisible circle" title="Issue">
+        <svg class="octicon" width="16" height="16">
+            <path id="pathIssue" fill-rule="evenodd"></path>
+        </svg>
+    </a>
+    
+
+    <a class="btn btn-invisible circle" onclick="modeSwitch();" title="切换主题">
+        <svg class="octicon" width="16" height="16" >
+            <path id="themeSwitch" fill-rule="evenodd"></path>
+        </svg>
+    </a>
+
+</div>
+</div>
+    <div id="content">
+<div class="markdown-body" id="postBody"><h2>1.初识Python</h2>
+<p>1989 年，作者决心开发一个新的解释程序</p>
+<p>1991年，第一个Python解释器诞生</p>
+<h2>2.安装Python</h2>
+<p>官网下载：<a href="https://www.python.org/downloads/" rel="nofollow">https://www.python.org/downloads/</a></p>
+<ul>
+<li>添加到path</li>
+<li>修改默认路径</li>
+</ul>
+<p>cmd 输入python</p>
+<div class="highlight highlight-source-shell"><pre class="notranslate">C:<span class="pl-cce">\U</span>sers<span class="pl-cce">\L</span>enovo<span class="pl-k">&gt;</span>python
+Python 3.10.6 (tags/v3.10.6:9c7b4bd, Aug  1 2022, 21:53:49) [MSC v.1932 64 bit (AMD64)] on win32
+Type <span class="pl-s"><span class="pl-pds">"</span>help<span class="pl-pds">"</span></span>, <span class="pl-s"><span class="pl-pds">"</span>copyright<span class="pl-pds">"</span></span>, <span class="pl-s"><span class="pl-pds">"</span>credits<span class="pl-pds">"</span></span> or <span class="pl-s"><span class="pl-pds">"</span>license<span class="pl-pds">"</span></span> <span class="pl-k">for</span> more information.
+&gt;&gt;&gt;</pre></div>
+<p><strong>Python解释器</strong>：用来翻译Python代码，并提交给计算机执行。</p>
+<h3>2.1测试Python</h3>
+<div class="highlight highlight-source-shell"><pre class="notranslate">&gt;&gt;&gt; print(<span class="pl-s"><span class="pl-pds">"</span>hello world<span class="pl-pds">"</span></span>)
+hello world</pre></div>
+<h3>2.2安装Pycharm</h3>
+<p>官网：<a href="https://www.jetbrains.com/zh-cn/pycharm/" rel="nofollow">https://www.jetbrains.com/zh-cn/pycharm/</a></p>
+<p>安装完成记得主动配置一下编译器的位置！</p>
+<p>注：</p>
+<ol>
+<li>Python最常见的开发环境是：Pycharm</li>
+<li>Python需要以工程为单元，想要写代码，需要县创建一个工程</li>
+</ol>
+<h2>3.Python基础语法</h2>
+<h3>3.1 掌握字面量的含义</h3>
+<p><strong>字面量：在代码中，被写下来的固定的值，称之为字面量</strong></p>
+<h3>3.2 了解常见的字面量类型</h3>
+<p>六种数据类型：Number、String、List、Tuple、Set、Dictionary——数字、字符串、列表、元素、集合、字典</p>
+<p>数字支持：int、float、complex、bool——整数、浮点数、复数、布尔</p>
+<h3>3.3 基于print完成字面量的输出</h3>
+<div class="highlight highlight-source-python"><pre class="notranslate"><span class="pl-en">print</span>(<span class="pl-c1">10</span>)
+<span class="pl-en">print</span>(<span class="pl-s">"Strings"</span>)</pre></div>
+<h3>3.4 注释</h3>
+<ul>
+<li>单行注释：以 # 开头，一般和文字之间<strong>用一个空格隔开</strong></li>
+<li>多行注释：以<strong>一对三个双引号</strong>引起来的内容</li>
+</ul>
+<div class="highlight highlight-source-python"><pre class="notranslate"><span class="pl-s">"""</span>
+<span class="pl-s">这里就是注释了</span>
+<span class="pl-s">"""</span></pre></div>
+<h3>3.5 变量</h3>
+<p>**变量：**在程序运行时，能储存计算结果或能表示值的抽象概念（记录数据）	变量名称=变量的值</p>
+<div class="highlight highlight-source-python"><pre class="notranslate"><span class="pl-s1">money</span> <span class="pl-c1">=</span> <span class="pl-c1">50</span>
+<span class="pl-en">print</span>(<span class="pl-s1">money</span>)
+
+<span class="pl-s1">money</span> <span class="pl-c1">=</span> <span class="pl-s1">money</span><span class="pl-c1">-</span><span class="pl-c1">10</span>
+<span class="pl-en">print</span>(<span class="pl-s">"剩余:"</span>,<span class="pl-s1">money</span>)</pre></div>
+<h3>3.6 数据类型</h3>
+<p><strong>type()语句的使用方式：</strong></p>
+<div class="highlight highlight-source-python"><pre class="notranslate"><span class="pl-c"># 使用print直接输出类型信息</span>
+<span class="pl-en">print</span>(<span class="pl-en">type</span>(<span class="pl-s">"这是一句话"</span>))
+<span class="pl-en">print</span>(<span class="pl-en">type</span>(<span class="pl-c1">666</span>))
+<span class="pl-en">print</span>(<span class="pl-en">type</span>(<span class="pl-c1">12.234</span>))
+
+<span class="pl-c"># 使用变量存储type()语句的嗯结果</span>
+<span class="pl-s1">string_type</span> <span class="pl-c1">=</span> <span class="pl-en">type</span>(<span class="pl-s">"这是一句话"</span>)
+<span class="pl-s1">int_type</span> <span class="pl-c1">=</span> <span class="pl-en">type</span>(<span class="pl-c1">666</span>)
+<span class="pl-s1">float_type</span> <span class="pl-c1">=</span> <span class="pl-en">type</span>(<span class="pl-c1">12.345</span>)
+<span class="pl-en">print</span>(<span class="pl-s1">string_type</span>)
+<span class="pl-en">print</span>(<span class="pl-s1">int_type</span>)
+<span class="pl-en">print</span>(<span class="pl-s1">float_type</span>)
+
+<span class="pl-c"># 使用type()语句,查看变量中存储的数据类型信息</span>
+<span class="pl-s1">name</span> <span class="pl-c1">=</span> <span class="pl-s">"这是一句话"</span>
+<span class="pl-s1">name_type</span> <span class="pl-c1">=</span><span class="pl-en">type</span>(<span class="pl-s1">name</span>)
+<span class="pl-en">print</span>(<span class="pl-s1">name_type</span>)</pre></div>
+<p>**变量有没有类型？**我们通过type(变量)可以输出类型，这是查看变量的类型还是数据的类型？</p>
+<p>答：查看的是变量存储的数据类型，因为变量无类型，但是它存储的数据有。</p>
+<h3>3.7 数据类型转换</h3>
+<p><strong>为什么要转换数据类型：</strong></p>
+<ul>
+<li>从文件中读取的数字，默认是字符串，我们需要转换成数字类型</li>
+<li>input()语句，默认结果是字符串，若需要数字也需要转换</li>
+<li>将数字转换成字符串用以写出到外部系统</li>
+</ul>
+<p>**常见的转换语句：**转换语句都是带有结果的，可以用print直接输出或用变量存储值</p>
+<p>int(x)：将X转换为整数	float(x)：将x转换为浮点数	str(x)：将对象x转换为字符串</p>
+<div class="highlight highlight-source-python"><pre class="notranslate"><span class="pl-c"># 将数字类型转换字符串</span>
+<span class="pl-s1">num_str</span> <span class="pl-c1">=</span> <span class="pl-en">str</span>(<span class="pl-c1">11</span>)
+<span class="pl-en">print</span>(<span class="pl-en">type</span>(<span class="pl-s1">num_str</span>),<span class="pl-s1">num_str</span>)
+
+<span class="pl-s1">float_str</span> <span class="pl-c1">=</span> <span class="pl-en">str</span>(<span class="pl-c1">12.345</span>)
+<span class="pl-en">print</span>(<span class="pl-en">type</span>(<span class="pl-s1">float_str</span>),<span class="pl-s1">float_str</span>)
+
+<span class="pl-c"># 将字符串转换成数字</span>
+<span class="pl-s1">num</span> <span class="pl-c1">=</span> <span class="pl-en">int</span>(<span class="pl-s">"11"</span>)
+<span class="pl-en">print</span>(<span class="pl-en">type</span>(<span class="pl-s1">num</span>),<span class="pl-s1">num</span>)
+
+<span class="pl-s1">num2</span> <span class="pl-c1">=</span> <span class="pl-en">float</span>(<span class="pl-c1">12.345</span>)
+<span class="pl-en">print</span>(<span class="pl-en">type</span>(<span class="pl-s1">num2</span>),<span class="pl-s1">num2</span>)
+
+<span class="pl-c"># 整数转浮点数</span>
+<span class="pl-s1">float_num</span> <span class="pl-c1">=</span> <span class="pl-en">float</span>(<span class="pl-c1">11</span>)
+<span class="pl-en">print</span>(<span class="pl-en">type</span>(<span class="pl-s1">float_num</span>),<span class="pl-s1">float_num</span>)
+
+<span class="pl-c"># 浮点数转整数</span>
+<span class="pl-s1">int_num</span> <span class="pl-c1">=</span> <span class="pl-en">int</span>(<span class="pl-c1">12.345</span>)
+<span class="pl-en">print</span>(<span class="pl-en">type</span>(<span class="pl-s1">int_num</span>),<span class="pl-s1">int_num</span>)
+
+<span class="pl-s">"""</span>
+<span class="pl-s">&lt;class 'str'&gt; 11</span>
+<span class="pl-s">&lt;class 'str'&gt; 12.345</span>
+<span class="pl-s">&lt;class 'int'&gt; 11</span>
+<span class="pl-s">&lt;class 'float'&gt; 12.345</span>
+<span class="pl-s">&lt;class 'float'&gt; 11.0</span>
+<span class="pl-s">&lt;class 'int'&gt; 12</span>
+<span class="pl-s">"""</span></pre></div>
+<h3>3.8 标识符</h3>
+<p>**什么是标识符：**变量的名字、方法的名字、类的名字 等等</p>
+<p>**标识符命名规则：**英文、中文、数字、下划线、大小写敏感、不可使用关键字、<strong>不能以数字开头</strong></p>
+<p>**命名规范：**见名知意、下划线命名法、英文字母全小写</p>
+<h3>3.9 运算符</h3>
+<p><strong>算数运算符：</strong><code class="notranslate">+</code>加、<code class="notranslate">-</code>减、<code class="notranslate">*</code>乘、<code class="notranslate">/</code>除、<code class="notranslate">//</code>取整除、<code class="notranslate">%</code>取余、<code class="notranslate">**</code>指数</p>
+<p><strong>赋值运算符：</strong><code class="notranslate">+=</code>、<code class="notranslate">_=</code>、<code class="notranslate">*=</code>、<code class="notranslate">/=</code>、<code class="notranslate">%=</code>、<code class="notranslate">**=</code>、<code class="notranslate">//=</code></p>
+<h3>3.10 字符串扩展</h3>
+<h4>字符串定义</h4>
+<p><strong>字符串的三种定义方式：</strong></p>
+<ul>
+<li>单引号定义法</li>
+<li>双引号定义法</li>
+<li>三引号定义法：三引号定义法，和多行注释的写法一样，同样支持换行操作。使用变量接收它，它就是字符串，不使用变量接收它，就可以作为多行注释使用。</li>
+</ul>
+<div class="highlight highlight-source-python"><pre class="notranslate"><span class="pl-c"># 单引号定义法</span>
+<span class="pl-s1">name</span> <span class="pl-c1">=</span> <span class="pl-s">'torch'</span>
+<span class="pl-en">print</span>(<span class="pl-en">type</span>(<span class="pl-s1">name</span>))
+<span class="pl-c"># 双引号定义法</span>
+<span class="pl-s1">name</span> <span class="pl-c1">=</span> <span class="pl-s">"torch"</span>
+<span class="pl-en">print</span>(<span class="pl-en">type</span>(<span class="pl-s1">name</span>))
+<span class="pl-c"># 三引号定义法</span>
+<span class="pl-s1">name</span> <span class="pl-c1">=</span> <span class="pl-s">"""</span>
+<span class="pl-s">torch</span>
+<span class="pl-s">torch</span>
+<span class="pl-s">"""</span>
+<span class="pl-en">print</span>(<span class="pl-en">type</span>(<span class="pl-s1">name</span>))
+<span class="pl-s">"""</span>
+<span class="pl-s">&lt;class 'str'&gt;</span>
+<span class="pl-s">&lt;class 'str'&gt;</span>
+<span class="pl-s">&lt;class 'str'&gt;</span>
+<span class="pl-s">"""</span></pre></div>
+<p><strong>字符串的引号嵌套：</strong></p>
+<ul>
+<li>单引号定义法，可以内含双引号</li>
+<li>双引号定义法，可以内含单引号</li>
+<li>可以使用转义字符（\）来将引号接触效用，变成普通字符串</li>
+</ul>
+<p>==强烈建议习惯以双引号为字符串定义==</p>
+<h4>字符串拼接</h4>
+<p>一般，字面量和变量或变量和变量之间会只用拼接</p>
+<div class="highlight highlight-source-python"><pre class="notranslate"><span class="pl-s1">name</span><span class="pl-c1">=</span> <span class="pl-c1">=</span> “<span class="pl-s1">torch</span>”
+<span class="pl-en">print</span>(<span class="pl-s">"my name is:"</span><span class="pl-c1">+</span> <span class="pl-s1">name</span> <span class="pl-c1">+</span><span class="pl-s">"lee"</span>)</pre></div>
+<p><strong>注：无法和非字符串类型进行拼接</strong></p>
+<h4>字符串格式化</h4>
+<ul>
+<li>%表示：我要占位</li>
+<li>s表示：将变量变成字符串放入占位的地方</li>
+</ul>
+<p><strong>多个变量占位，要用括号括起来，并按照占位顺序填入</strong></p>
+<div class="highlight highlight-source-python"><pre class="notranslate"><span class="pl-s1">name</span> <span class="pl-c1">=</span> <span class="pl-s">"torch"</span>
+<span class="pl-s1">message</span> <span class="pl-c1">=</span> <span class="pl-s">"my name is %s"</span> <span class="pl-c1">%</span> <span class="pl-s1">name</span>
+<span class="pl-en">print</span>(<span class="pl-s1">message</span>)
+
+<span class="pl-s1">class_num</span> <span class="pl-c1">=</span> <span class="pl-c1">10</span>
+<span class="pl-s1">avg_sal</span> <span class="pl-c1">=</span> <span class="pl-c1">12345</span>
+<span class="pl-s1">message</span> <span class="pl-c1">=</span> <span class="pl-s">"班级为：%s，平均工资为：%s"</span> <span class="pl-c1">%</span> (<span class="pl-s1">class_num</span>,<span class="pl-s1">avg_sal</span>)
+<span class="pl-en">print</span>(<span class="pl-s1">message</span>)
+<span class="pl-s">"""</span>
+<span class="pl-s">my name is torch</span>
+<span class="pl-s">班级为：10，平均工资为：12345</span>
+<span class="pl-s">"""</span></pre></div>
+<p><strong>常用格式化符号：%s、%d、%f</strong>		转换字符串、转换整数、转换浮点数</p>
+<h4>格式化的精度控制</h4>
+<p>用辅助符号“m.n”来控制数据的宽度和精度</p>
+<ul>
+<li>m 控制宽度，要求是数字（很少使用），<strong>设置的宽度小于数字本身，不生效</strong></li>
+<li>.n 控制小数点精度，要求是数字，<strong>会进行小数的四舍五入</strong></li>
+</ul>
+<p>示例：</p>
+<ul>
+<li>%5d：表示将整数的宽度控制在5位，如数字11，被设置为5d，就会变成:空格空格空格11，用三个空格补足<br>
+宽度。</li>
+<li>%5.2f：表示将宽度控制为5，将小数点精度设置为2<br>
+小数点和小数部分也算入宽度计算。如，对11.345设置了%7.2f后，结果是:空格空格11.35。2个空格补足宽度，小数部分限制2位精度后，四舍五入为.35</li>
+<li>%.2f：表示不限制宽度，只设置小数点精度为2，如11.345设置%.2f后，结果是11.35</li>
+</ul>
+<h4>字符串格式化方法2</h4>
+<p>**快速写法：**f"内容{变量}"的格式来快速格式化，==不理会类型，不做精度控制==，原样输出	format</p>
+<h4>对表达式进行格式化</h4>
+<p>**表达式：**一条具有明确执行结果的代码语句</p>
+<p>==在无须使用变量进行数据存储的时候，可以直接格式化表达式，简化代码==</p>
+<div class="highlight highlight-source-python"><pre class="notranslate"><span class="pl-en">print</span>(<span class="pl-s">"1 * 1 的结果是：%d"</span> <span class="pl-c1">%</span> (<span class="pl-c1">1</span> <span class="pl-c1">*</span> <span class="pl-c1">1</span>))
+<span class="pl-en">print</span>(<span class="pl-s">f"1 * 1 的结果是：<span class="pl-s1"><span class="pl-kos">{</span><span class="pl-c1">1</span> <span class="pl-c1">*</span> <span class="pl-c1">2</span><span class="pl-kos">}</span></span>"</span>)</pre></div>
+<h4>练习</h4>
+<div class="highlight highlight-source-python"><pre class="notranslate"><span class="pl-s">"""</span>
+<span class="pl-s">练习题：股价计算小程序</span>
+<span class="pl-s">"""</span>
+<span class="pl-s1">name</span> <span class="pl-c1">=</span> <span class="pl-s">"例子公司"</span>
+<span class="pl-c"># 当前股价</span>
+<span class="pl-s1">stock_price</span> <span class="pl-c1">=</span> <span class="pl-c1">19.99</span>
+<span class="pl-c"># 股票代码</span>
+<span class="pl-s1">stock_code</span> <span class="pl-c1">=</span> <span class="pl-s">"003032"</span>
+<span class="pl-c"># 每日增长系数</span>
+<span class="pl-s1">stock_price_daily_growth_factor</span> <span class="pl-c1">=</span> <span class="pl-c1">1.2</span>
+<span class="pl-c"># 增长天数</span>
+<span class="pl-s1">growth_days</span> <span class="pl-c1">=</span> <span class="pl-c1">7</span>
+
+<span class="pl-en">print</span>(<span class="pl-s">f"公司:<span class="pl-s1"><span class="pl-kos">{</span><span class="pl-s1">name</span><span class="pl-kos">}</span></span>,股票代码:<span class="pl-s1"><span class="pl-kos">{</span><span class="pl-s1">stock_code</span><span class="pl-kos">}</span></span>,当前股价:<span class="pl-s1"><span class="pl-kos">{</span><span class="pl-s1">stock_price</span><span class="pl-kos">}</span></span>"</span>)
+<span class="pl-en">print</span>(<span class="pl-s">"每日增长系数是:%.1f,经过%d天的增长后,股价达到了:%.2f"</span> <span class="pl-c1">%</span> (<span class="pl-s1">stock_price_daily_growth_factor</span>,<span class="pl-s1">growth_days</span>,<span class="pl-s1">stock_price</span><span class="pl-c1">*</span><span class="pl-s1">stock_price_daily_growth_factor</span><span class="pl-c1">**</span><span class="pl-s1">growth_days</span>))
+
+<span class="pl-s">"""</span>
+<span class="pl-s">公司:例子公司,股票代码:003032,当前股价:19.99</span>
+<span class="pl-s">每日增长系数是:1.2,经过7天的增长后,股价达到了:71.63</span>
+<span class="pl-s">"""</span></pre></div>
+<h3>3.11 数据输入</h3>
+<h4>获取键盘输入</h4>
+<ul>
+<li>数据输入：input	数据输出：print</li>
+<li>使用input()语句可以从键盘获取输入</li>
+<li>使用一个变量接收（存储)input语句获取的键盘输入数据即可</li>
+</ul>
+<div class="highlight highlight-source-python"><pre class="notranslate"><span class="pl-s1">sth</span> <span class="pl-c1">=</span> <span class="pl-en">input</span>(<span class="pl-s">"input sth here:"</span>)
+<span class="pl-en">print</span>(<span class="pl-s">f"you input:<span class="pl-s1"><span class="pl-kos">{</span><span class="pl-s1">sth</span><span class="pl-kos">}</span></span>"</span>)
+<span class="pl-s">"""</span>
+<span class="pl-s">input sth here:123</span>
+<span class="pl-s">you input:123</span>
+<span class="pl-s">"""</span></pre></div>
+<p>注：无论输入什么内容，不转换，获取到的数据永远都是字符串类型！</p>
+<h2>4.Python判断语句</h2>
+<h3>4.1 布尔类型和比较运算符</h3>
+<p>**布尔类型：**是和否	true 1 false 0</p>
+<p>定义变量存储布尔类型数据：变量名称 = 布尔类型字面量</p>
+<p><strong>比较运算符：</strong>&gt;  &lt;  ==  !=</p>
+<h3>4.2 if语句的基本格式</h3>
+<div class="highlight highlight-source-python"><pre class="notranslate"><span class="pl-s1">age</span> <span class="pl-c1">=</span> <span class="pl-c1">22</span>
+<span class="pl-k">if</span> <span class="pl-s1">age</span> <span class="pl-c1">&gt;=</span> <span class="pl-c1">18</span>:
+    <span class="pl-en">print</span>(<span class="pl-s">"我成年了"</span>)
+    <span class="pl-en">print</span>(<span class="pl-s">"即将步入大学生活"</span>)	<span class="pl-c"># 注意缩进 四空格缩进的为if中的条件执行语句 平齐的为正常语句</span>
+<span class="pl-en">print</span>(<span class="pl-s">"时间过的真快"</span>)
+<span class="pl-s">"""</span>
+<span class="pl-s">我成年了</span>
+<span class="pl-s">即将步入大学生活</span>
+<span class="pl-s">时间过的真快</span>
+<span class="pl-s">"""</span></pre></div>
+<p>练习:</p>
+<div class="highlight highlight-source-python"><pre class="notranslate"><span class="pl-s1">price</span> <span class="pl-c1">=</span> <span class="pl-c1">10</span>
+<span class="pl-en">print</span>(<span class="pl-s">"欢迎来到儿童游乐场，儿童免费，成人收费"</span>)
+<span class="pl-s1">age</span> <span class="pl-c1">=</span> <span class="pl-en">int</span>(<span class="pl-en">input</span>(<span class="pl-s">"请输入你的年龄:"</span>))
+<span class="pl-k">if</span> <span class="pl-s1">age</span> <span class="pl-c1">&gt;=</span> <span class="pl-c1">18</span>:
+    <span class="pl-en">print</span>(<span class="pl-s">f"您已成年，游玩需要补票<span class="pl-s1"><span class="pl-kos">{</span><span class="pl-s1">price</span><span class="pl-kos">}</span></span>元"</span>)
+<span class="pl-en">print</span>(<span class="pl-s">"祝您游玩愉快"</span>)
+
+<span class="pl-s">"""</span>
+<span class="pl-s">欢迎来到儿童游乐场，儿童免费，成人收费</span>
+<span class="pl-s">请输入你的年龄:30</span>
+<span class="pl-s">您已成年，游玩需要补票10元</span>
+<span class="pl-s">祝您游玩愉快</span>
+<span class="pl-s">"""</span></pre></div>
+<h3>4.3 if else语句</h3>
+<p>注：执行语句缩进！==可以直接把input放入if的条件中进行判断==</p>
+<div class="highlight highlight-source-python"><pre class="notranslate"><span class="pl-s1">price</span> <span class="pl-c1">=</span> <span class="pl-c1">10</span>
+<span class="pl-en">print</span>(<span class="pl-s">"欢迎来到儿童游乐场，儿童免费，成人收费"</span>)
+<span class="pl-s1">age</span> <span class="pl-c1">=</span> <span class="pl-en">int</span>(<span class="pl-en">input</span>(<span class="pl-s">"请输入你的年龄:"</span>))
+<span class="pl-k">if</span> <span class="pl-s1">age</span> <span class="pl-c1">&gt;=</span> <span class="pl-c1">18</span>:
+    <span class="pl-en">print</span>(<span class="pl-s">f"您已成年，游玩需要补票<span class="pl-s1"><span class="pl-kos">{</span><span class="pl-s1">price</span><span class="pl-kos">}</span></span>元"</span>)
+<span class="pl-k">else</span>:
+    <span class="pl-en">print</span>(<span class="pl-s">"你可以免费游玩"</span>)
+<span class="pl-en">print</span>(<span class="pl-s">"祝您游玩愉快"</span>)
+<span class="pl-s">"""</span>
+<span class="pl-s">欢迎来到儿童游乐场，儿童免费，成人收费</span>
+<span class="pl-s">请输入你的年龄:5</span>
+<span class="pl-s">你可以免费游玩</span>
+<span class="pl-s">祝您游玩愉快</span>
+<span class="pl-s">"""</span></pre></div>
+<h3>4.4 if elif else 语句</h3>
+<div class="highlight highlight-source-python"><pre class="notranslate"><span class="pl-s1">price</span> <span class="pl-c1">=</span> <span class="pl-c1">10</span>
+<span class="pl-k">if</span> <span class="pl-en">int</span>(<span class="pl-en">input</span>(<span class="pl-s">"输入身高(cm):"</span>)) <span class="pl-c1">&lt;</span> <span class="pl-c1">120</span>:
+    <span class="pl-en">print</span>(<span class="pl-s">"身高小于120cm，可以免费。"</span>)
+<span class="pl-k">elif</span> <span class="pl-en">int</span>(<span class="pl-en">input</span>(<span class="pl-s">"输入VIP等级(1-5):"</span>)) <span class="pl-c1">&gt;</span><span class="pl-c1">3</span>:
+    <span class="pl-en">print</span>(<span class="pl-s">"vip等级大于3，可以免费"</span>)
+<span class="pl-k">elif</span> <span class="pl-en">int</span>(<span class="pl-en">input</span>(<span class="pl-s">"输入今天是几号:"</span>)) <span class="pl-c1">==</span> <span class="pl-c1">1</span>:
+    <span class="pl-en">print</span>(<span class="pl-s">"今天1号，免费玩"</span>)
+<span class="pl-k">else</span>:
+    <span class="pl-en">print</span>(<span class="pl-s">f"不满足免费，交钱<span class="pl-s1"><span class="pl-kos">{</span><span class="pl-s1">price</span><span class="pl-kos">}</span></span>！"</span>)
+<span class="pl-s">"""</span>
+<span class="pl-s">输入身高(cm):135</span>
+<span class="pl-s">输入VIP等级(1-5):3</span>
+<span class="pl-s">输入今天是几号:1</span>
+<span class="pl-s">今天1号，免费玩</span>
+<span class="pl-s">"""</span></pre></div>
+<p>练习：</p>
+<div class="highlight highlight-source-python"><pre class="notranslate"><span class="pl-s1">final</span> <span class="pl-c1">=</span> <span class="pl-c1">10</span>
+<span class="pl-k">if</span> <span class="pl-en">int</span>(<span class="pl-en">input</span>(<span class="pl-s">"请输入第一次猜想的数字："</span>)) <span class="pl-c1">==</span> <span class="pl-s1">final</span>:
+    <span class="pl-en">print</span>(<span class="pl-s">"一次猜对！"</span>)
+<span class="pl-k">elif</span> <span class="pl-en">int</span>(<span class="pl-en">input</span>(<span class="pl-s">"不对，再猜一次："</span>)) <span class="pl-c1">==</span> <span class="pl-s1">final</span>:
+    <span class="pl-en">print</span>(<span class="pl-s">"两次猜对"</span>)
+<span class="pl-k">elif</span> <span class="pl-en">int</span>(<span class="pl-en">input</span>(<span class="pl-s">"不对，最后一次："</span>)) <span class="pl-c1">==</span> <span class="pl-s1">final</span>:
+    <span class="pl-en">print</span>(<span class="pl-s">"三次猜对"</span>)
+<span class="pl-k">else</span>:
+    <span class="pl-en">print</span>(<span class="pl-s">f"全部猜错了，我想的是<span class="pl-s1"><span class="pl-kos">{</span><span class="pl-s1">final</span><span class="pl-kos">}</span></span>"</span>)
+<span class="pl-s">"""</span>
+<span class="pl-s">请输入第一次猜想的数字：1</span>
+<span class="pl-s">不对，再猜一次：2</span>
+<span class="pl-s">不对，最后一次：3</span>
+<span class="pl-s">"""</span></pre></div>
+<h3>4.5 判断语句的嵌套</h3>
+<p>嵌套的关键点，在于<strong>空格缩进</strong></p>
+<p>通过空格缩进，来决定语句之间的<strong>层次关系</strong></p>
+<h3>4.6 判断语句案例</h3>
+<div class="highlight highlight-source-python"><pre class="notranslate"><span class="pl-k">import</span> <span class="pl-s1">random</span>
+
+<span class="pl-s1">num</span> <span class="pl-c1">=</span> <span class="pl-s1">random</span>.<span class="pl-en">randint</span>(<span class="pl-c1">1</span>,<span class="pl-c1">10</span>)
+<span class="pl-s1">guess_num</span> <span class="pl-c1">=</span> <span class="pl-en">int</span>(<span class="pl-en">input</span>(<span class="pl-s">"输入你要猜测的数字："</span>))
+
+<span class="pl-k">if</span> <span class="pl-s1">guess_num</span> <span class="pl-c1">==</span> <span class="pl-s1">num</span>:
+    <span class="pl-en">print</span>(<span class="pl-s">"一次猜中！"</span>)
+<span class="pl-k">else</span>:
+    <span class="pl-k">if</span> <span class="pl-s1">guess_num</span> <span class="pl-c1">&gt;</span> <span class="pl-s1">num</span>:
+        <span class="pl-en">print</span>(<span class="pl-s">"猜大了"</span>)
+    <span class="pl-k">else</span>:
+        <span class="pl-en">print</span>(<span class="pl-s">"猜小了"</span>)
+    <span class="pl-s1">guess_num</span> <span class="pl-c1">=</span> <span class="pl-en">int</span>(<span class="pl-en">input</span>(<span class="pl-s">"第二次输入猜测的数字："</span>))
+
+    <span class="pl-k">if</span> <span class="pl-s1">guess_num</span> <span class="pl-c1">==</span> <span class="pl-s1">num</span>:
+        <span class="pl-en">print</span>(<span class="pl-s">"两次猜中！"</span>)
+    <span class="pl-k">else</span>:
+        <span class="pl-k">if</span> <span class="pl-s1">guess_num</span> <span class="pl-c1">&gt;</span> <span class="pl-s1">num</span>:
+            <span class="pl-en">print</span>(<span class="pl-s">"猜大了"</span>)
+        <span class="pl-k">else</span>:
+            <span class="pl-en">print</span>(<span class="pl-s">"猜小了"</span>)
+        <span class="pl-s1">guess_num</span> <span class="pl-c1">=</span> <span class="pl-en">int</span>(<span class="pl-en">input</span>(<span class="pl-s">"第三次输入猜测的数字："</span>))
+
+        <span class="pl-k">if</span> <span class="pl-s1">guess_num</span> <span class="pl-c1">==</span> <span class="pl-s1">num</span>:
+            <span class="pl-en">print</span>(<span class="pl-s">"三次次猜中！"</span>)
+        <span class="pl-k">else</span>:
+            <span class="pl-en">print</span>(<span class="pl-s">"未猜中，结束"</span>)
+<span class="pl-s">"""</span>
+<span class="pl-s">输入你要猜测的数字：5</span>
+<span class="pl-s">猜小了</span>
+<span class="pl-s">第二次输入猜测的数字：6</span>
+<span class="pl-s">两次猜中！</span>
+<span class="pl-s">"""</span></pre></div>
+<h2>5.Python循环语句</h2>
+<h3>5.1 while循环的基础语法</h3>
+<div class="highlight highlight-source-python"><pre class="notranslate"><span class="pl-c"># 死循环！</span>
+<span class="pl-s1">i</span> <span class="pl-c1">=</span> <span class="pl-c1">1</span>
+<span class="pl-k">while</span> <span class="pl-c1">True</span>:
+    <span class="pl-s1">i</span> <span class="pl-c1">*=</span> <span class="pl-c1">2</span>
+    <span class="pl-en">print</span>(<span class="pl-s">f"<span class="pl-s1"><span class="pl-kos">{</span><span class="pl-s1">i</span><span class="pl-kos">}</span></span>"</span>)</pre></div>
+<p>注：条件需要提供布尔型结果；空格缩进；规划好终止条件</p>
+<p><strong>练习：1加到100的和</strong></p>
+<div class="highlight highlight-source-python"><pre class="notranslate"><span class="pl-s1">i</span> <span class="pl-c1">=</span> <span class="pl-c1">1</span>
+<span class="pl-s1">final</span> <span class="pl-c1">=</span> <span class="pl-c1">0</span>
+<span class="pl-k">while</span> <span class="pl-s1">i</span> <span class="pl-c1">&lt;=</span> <span class="pl-c1">100</span>:
+    <span class="pl-s1">final</span> <span class="pl-c1">+=</span> <span class="pl-s1">i</span>
+    <span class="pl-s1">i</span> <span class="pl-c1">+=</span> <span class="pl-c1">1</span>
+<span class="pl-en">print</span>(<span class="pl-s">f"<span class="pl-s1"><span class="pl-kos">{</span><span class="pl-s1">final</span><span class="pl-kos">}</span></span>"</span>)
+<span class="pl-s">"""</span>
+<span class="pl-s">5050</span>
+<span class="pl-s">"""</span></pre></div>
+<h3>5.2 while循环的基础案例</h3>
+<div class="highlight highlight-source-python"><pre class="notranslate"><span class="pl-k">import</span> <span class="pl-s1">random</span>
+<span class="pl-s1">num</span> <span class="pl-c1">=</span> <span class="pl-s1">random</span>.<span class="pl-en">randint</span>(<span class="pl-c1">1</span>,<span class="pl-c1">100</span>)
+<span class="pl-s1">count</span> <span class="pl-c1">=</span> <span class="pl-c1">0</span>
+<span class="pl-s1">flag</span> <span class="pl-c1">=</span> <span class="pl-c1">True</span>
+<span class="pl-k">while</span> <span class="pl-s1">flag</span>:
+    <span class="pl-s1">guess_sum</span> <span class="pl-c1">=</span> <span class="pl-en">int</span>(<span class="pl-en">input</span>(<span class="pl-s">"请输入你猜测的数字："</span>))
+    <span class="pl-s1">count</span> <span class="pl-c1">+=</span> <span class="pl-c1">1</span>
+    <span class="pl-k">if</span> <span class="pl-s1">guess_sum</span> <span class="pl-c1">==</span> <span class="pl-s1">num</span>:
+        <span class="pl-en">print</span>(<span class="pl-s">"猜中了！"</span>)
+        <span class="pl-s1">flag</span> <span class="pl-c1">=</span> <span class="pl-c1">False</span>
+    <span class="pl-k">else</span>:
+        <span class="pl-k">if</span> <span class="pl-s1">guess_sum</span> <span class="pl-c1">&gt;</span> <span class="pl-s1">num</span>:
+            <span class="pl-en">print</span>(<span class="pl-s">"猜大了"</span>)
+        <span class="pl-k">else</span>:
+            <span class="pl-en">print</span>(<span class="pl-s">"猜小了"</span>)
+<span class="pl-en">print</span>(<span class="pl-s">f"你一共猜了<span class="pl-s1"><span class="pl-kos">{</span><span class="pl-s1">count</span><span class="pl-kos">}</span></span>次"</span>)
+<span class="pl-s">"""</span>
+<span class="pl-s">请输入你猜测的数字：50</span>
+<span class="pl-s">猜小了</span>
+<span class="pl-s">请输入你猜测的数字：75</span>
+<span class="pl-s">猜大了</span>
+<span class="pl-s">请输入你猜测的数字：65</span>
+<span class="pl-s">猜小了</span>
+<span class="pl-s">请输入你猜测的数字：70</span>
+<span class="pl-s">猜大了</span>
+<span class="pl-s">请输入你猜测的数字：68</span>
+<span class="pl-s">猜大了</span>
+<span class="pl-s">请输入你猜测的数字：66</span>
+<span class="pl-s">猜中了！</span>
+<span class="pl-s">你一共猜了6次</span>
+<span class="pl-s"></span>
+<span class="pl-s">进程已结束,退出代码0</span>
+<span class="pl-s">"""</span></pre></div>
+<h3>5.3 while的嵌套应用</h3>
+<p>同判断语句的嵌套一样，循环语句的嵌套，要注意空格缩进。</p>
+<h3>5.4 while循环案例——九九乘法表</h3>
+<p><strong>在print语句中，加上end=''即可输出不换行</strong></p>
+<p><strong>制表符 \t 用来对齐单词或者字符</strong></p>
+<div class="highlight highlight-source-python"><pre class="notranslate"><span class="pl-c"># 定义外部循环</span>
+<span class="pl-s1">i</span> <span class="pl-c1">=</span> <span class="pl-c1">1</span>
+<span class="pl-k">while</span> <span class="pl-s1">i</span> <span class="pl-c1">&lt;=</span> <span class="pl-c1">9</span>:
+    <span class="pl-c"># 定义内部循环的控制变量</span>
+    <span class="pl-s1">j</span> <span class="pl-c1">=</span> <span class="pl-c1">1</span>
+    <span class="pl-k">while</span> <span class="pl-s1">j</span> <span class="pl-c1">&lt;=</span> <span class="pl-s1">i</span>:
+        <span class="pl-en">print</span>(<span class="pl-s">f"<span class="pl-s1"><span class="pl-kos">{</span><span class="pl-s1">j</span><span class="pl-kos">}</span></span>*<span class="pl-s1"><span class="pl-kos">{</span><span class="pl-s1">i</span><span class="pl-kos">}</span></span>=<span class="pl-s1"><span class="pl-kos">{</span><span class="pl-s1">j</span><span class="pl-c1">*</span><span class="pl-s1">i</span><span class="pl-kos">}</span></span><span class="pl-cce">\t</span>"</span>,<span class="pl-s1">end</span><span class="pl-c1">=</span><span class="pl-s">''</span>)
+        <span class="pl-s1">j</span> <span class="pl-c1">+=</span> <span class="pl-c1">1</span>
+    <span class="pl-s1">i</span> <span class="pl-c1">+=</span> <span class="pl-c1">1</span>
+    <span class="pl-en">print</span>()  <span class="pl-c"># 仅仅输出一个换行</span>
+<span class="pl-s">"""</span>
+<span class="pl-s">1*1=1	</span>
+<span class="pl-s">1*2=2	2*2=4	</span>
+<span class="pl-s">1*3=3	2*3=6	3*3=9	</span>
+<span class="pl-s">1*4=4	2*4=8	3*4=12	4*4=16	</span>
+<span class="pl-s">1*5=5	2*5=10	3*5=15	4*5=20	5*5=25	</span>
+<span class="pl-s">1*6=6	2*6=12	3*6=18	4*6=24	5*6=30	6*6=36	</span>
+<span class="pl-s">1*7=7	2*7=14	3*7=21	4*7=28	5*7=35	6*7=42	7*7=49	</span>
+<span class="pl-s">1*8=8	2*8=16	3*8=24	4*8=32	5*8=40	6*8=48	7*8=56	8*8=64	</span>
+<span class="pl-s">1*9=9	2*9=18	3*9=27	4*9=36	5*9=45	6*9=54	7*9=63	8*9=72	9*9=81	</span>
+<span class="pl-s">"""</span></pre></div>
+<h3>5.5 for循环的基础语法</h3>
+<h4>基础语法</h4>
+<p><strong>for循环是一种轮询机制，是对一批内容进行逐个处理</strong></p>
+<p>如果在for循环外部访问临时变量：</p>
+<ul>
+<li>实际上是可以访问到的</li>
+<li>在编程规范上，是不允许，不建议这么做的，必要的话需要在for循环外部定义一个全局变量</li>
+</ul>
+<p>遍历字符串，依次取出，遍历循环，<strong>理论上讲Python的for循环无法构建无限循环</strong>，无法定义循环条件，只能被动取出数据处理</p>
+<div class="highlight highlight-source-python"><pre class="notranslate"><span class="pl-s1">name</span> <span class="pl-c1">=</span> <span class="pl-s">"i am torch"</span>
+<span class="pl-k">for</span> <span class="pl-s1">x</span> <span class="pl-c1">in</span> <span class="pl-s1">name</span>:
+    <span class="pl-en">print</span>(<span class="pl-s1">x</span>)
+<span class="pl-s">"""</span>
+<span class="pl-s">i</span>
+<span class="pl-s"> </span>
+<span class="pl-s">a</span>
+<span class="pl-s">m</span>
+<span class="pl-s"> </span>
+<span class="pl-s">t</span>
+<span class="pl-s">o</span>
+<span class="pl-s">r</span>
+<span class="pl-s">c</span>
+<span class="pl-s">h</span>
+<span class="pl-s">"""</span></pre></div>
+<p><strong>练习：统计字符串中字母出现的次数</strong></p>
+<div class="highlight highlight-source-python"><pre class="notranslate"><span class="pl-s1">name</span> <span class="pl-c1">=</span> <span class="pl-s">"torch is a good student"</span>
+<span class="pl-s1">count</span> <span class="pl-c1">=</span> <span class="pl-c1">0</span>
+<span class="pl-k">for</span> <span class="pl-s1">x</span> <span class="pl-c1">in</span> <span class="pl-s1">name</span>:
+    <span class="pl-k">if</span> <span class="pl-s1">x</span> <span class="pl-c1">==</span> <span class="pl-s">"o"</span>:
+        <span class="pl-s1">count</span> <span class="pl-c1">+=</span> <span class="pl-c1">1</span>
+<span class="pl-en">print</span>(<span class="pl-s">f"字符串中一共有<span class="pl-s1"><span class="pl-kos">{</span><span class="pl-s1">count</span><span class="pl-kos">}</span></span>个o"</span>)    
+<span class="pl-s">"""</span>
+<span class="pl-s">字符串中一共有3个o</span>
+<span class="pl-s">"""</span></pre></div>
+<h4>range语句</h4>
+<p>语法中的：待处理数据集，严格来说，称之为“序列类型”，<strong>序列类型：其内容可以一个个一次取出的一种类型</strong></p>
+<p>语法：</p>
+<ol>
+<li>range(num)：从0开始，到num结束（不含num本身）</li>
+<li>range(num1,num2)：从num1开始，到num2结束（不含num2本身）</li>
+<li>range(num1,num2,step)  step为步长，从num1开始，到num2结束（不含num2本身），步长以step值为准</li>
+</ol>
+<p>练习：</p>
+<div class="highlight highlight-source-python"><pre class="notranslate"><span class="pl-s1">count</span> <span class="pl-c1">=</span> <span class="pl-c1">0</span>
+<span class="pl-k">for</span> <span class="pl-s1">x</span> <span class="pl-c1">in</span> <span class="pl-en">range</span>(<span class="pl-c1">1</span>, <span class="pl-c1">100</span>):
+    <span class="pl-k">if</span> <span class="pl-s1">x</span> <span class="pl-c1">%</span> <span class="pl-c1">2</span> <span class="pl-c1">==</span> <span class="pl-c1">0</span>:
+        <span class="pl-s1">count</span> <span class="pl-c1">+=</span> <span class="pl-c1">1</span>
+<span class="pl-en">print</span>(<span class="pl-s">f"1到100(不含100本身)范围内，有<span class="pl-s1"><span class="pl-kos">{</span><span class="pl-s1">count</span><span class="pl-kos">}</span></span>个偶数"</span>)
+<span class="pl-s">"""</span>
+<span class="pl-s">1到100(不含100本身)范围内，有49个偶数</span>
+<span class="pl-s">"""</span></pre></div>
+<h3>5.6 for循环的嵌套使用</h3>
+<p>**注意：**while和for循环是可以嵌套的</p>
+<p>练习：嵌套九九乘法表</p>
+<div class="highlight highlight-source-python"><pre class="notranslate"><span class="pl-k">for</span> <span class="pl-s1">x</span> <span class="pl-c1">in</span> <span class="pl-en">range</span>(<span class="pl-c1">1</span>, <span class="pl-c1">10</span>):
+    <span class="pl-k">for</span> <span class="pl-s1">y</span> <span class="pl-c1">in</span> <span class="pl-en">range</span>(<span class="pl-c1">1</span>, <span class="pl-s1">x</span><span class="pl-c1">+</span><span class="pl-c1">1</span>):
+        <span class="pl-en">print</span>(<span class="pl-s">f"<span class="pl-s1"><span class="pl-kos">{</span><span class="pl-s1">y</span><span class="pl-kos">}</span></span>*<span class="pl-s1"><span class="pl-kos">{</span><span class="pl-s1">x</span><span class="pl-kos">}</span></span>=<span class="pl-s1"><span class="pl-kos">{</span><span class="pl-s1">x</span><span class="pl-c1">*</span><span class="pl-s1">y</span><span class="pl-kos">}</span></span><span class="pl-cce">\t</span>"</span>, <span class="pl-s1">end</span><span class="pl-c1">=</span><span class="pl-s">''</span>)
+    <span class="pl-en">print</span>()
+<span class="pl-s">"""</span>
+<span class="pl-s">1*1=1	</span>
+<span class="pl-s">1*2=2	2*2=4	</span>
+<span class="pl-s">1*3=3	2*3=6	3*3=9	</span>
+<span class="pl-s">1*4=4	2*4=8	3*4=12	4*4=16	</span>
+<span class="pl-s">1*5=5	2*5=10	3*5=15	4*5=20	5*5=25	</span>
+<span class="pl-s">1*6=6	2*6=12	3*6=18	4*6=24	5*6=30	6*6=36	</span>
+<span class="pl-s">1*7=7	2*7=14	3*7=21	4*7=28	5*7=35	6*7=42	7*7=49	</span>
+<span class="pl-s">1*8=8	2*8=16	3*8=24	4*8=32	5*8=40	6*8=48	7*8=56	8*8=64	</span>
+<span class="pl-s">1*9=9	2*9=18	3*9=27	4*9=36	5*9=45	6*9=54	7*9=63	8*9=72	9*9=81</span>
+<span class="pl-s">"""</span></pre></div>
+<h3>5.7 循环中断：break和continue</h3>
+<p><strong>应用场景：在循环中，因为某些原因，临时结束本次循环</strong></p>
+<ul>
+<li><strong>continue关键字</strong>用于：中断本次循环，直接进入下一次循环；可以用于for循环和while循环，效果一致</li>
+<li><strong>break关键字</strong>用于：直接结束循环；可以用于for循环和while循环，效果一致</li>
+</ul>
+<p>在嵌套循环中，只能作用在所在的循环上，无法对上层循环起作用！</p>
+<h3>5.8 综合案例</h3>
+<p>发工资：某公司账户余额有1W元，给20名员工发工资</p>
+<ul>
+<li>员工编号1-20，从编号1开始，依次领取工资每人可以领取1000元；</li>
+<li>领工资时，财务判断员工的绩效分（1-10随机生成），如果低于5，不发工资，换下一位</li>
+<li>如果工资发完了，结束发工资</li>
+</ul>
+<div class="highlight highlight-source-python"><pre class="notranslate"><span class="pl-k">import</span> <span class="pl-s1">random</span>
+
+<span class="pl-s1">salary</span> <span class="pl-c1">=</span> <span class="pl-c1">10000</span>
+<span class="pl-k">for</span> <span class="pl-s1">i</span> <span class="pl-c1">in</span> <span class="pl-en">range</span>(<span class="pl-c1">1</span>,<span class="pl-c1">21</span>):
+    <span class="pl-s1">num</span> <span class="pl-c1">=</span> <span class="pl-s1">random</span>.<span class="pl-en">randint</span>(<span class="pl-c1">1</span>, <span class="pl-c1">10</span>)
+    <span class="pl-k">if</span> <span class="pl-s1">num</span> <span class="pl-c1">&lt;</span> <span class="pl-c1">5</span>:
+        <span class="pl-en">print</span>(<span class="pl-s">f"员工<span class="pl-s1"><span class="pl-kos">{</span><span class="pl-s1">i</span><span class="pl-kos">}</span></span>,绩效分<span class="pl-s1"><span class="pl-kos">{</span><span class="pl-s1">num</span><span class="pl-kos">}</span></span>,低于5，不发工资，下一位"</span>)
+        <span class="pl-k">continue</span>
+    <span class="pl-k">if</span> <span class="pl-s1">salary</span> <span class="pl-c1">&gt;=</span> <span class="pl-c1">1000</span>:
+        <span class="pl-s1">salary</span> <span class="pl-c1">-=</span> <span class="pl-c1">1000</span>
+        <span class="pl-en">print</span>(<span class="pl-s">f"向员工<span class="pl-s1"><span class="pl-kos">{</span><span class="pl-s1">i</span><span class="pl-kos">}</span></span>发工资1000元，账户余额还剩<span class="pl-s1"><span class="pl-kos">{</span><span class="pl-s1">salary</span><span class="pl-kos">}</span></span>元"</span>)
+    <span class="pl-k">else</span>:
+        <span class="pl-en">print</span>(<span class="pl-s">f"余额不足,当前余额<span class="pl-s1"><span class="pl-kos">{</span><span class="pl-s1">salary</span><span class="pl-kos">}</span></span>元，不足以发工资，下个月再来"</span>)
+        <span class="pl-k">break</span>
+<span class="pl-s">"""</span>
+<span class="pl-s">向员工1发工资1000元，账户余额还剩9000元</span>
+<span class="pl-s">向员工2发工资1000元，账户余额还剩8000元</span>
+<span class="pl-s">向员工3发工资1000元，账户余额还剩7000元</span>
+<span class="pl-s">向员工4发工资1000元，账户余额还剩6000元</span>
+<span class="pl-s">向员工5发工资1000元，账户余额还剩5000元</span>
+<span class="pl-s">向员工6发工资1000元，账户余额还剩4000元</span>
+<span class="pl-s">向员工7发工资1000元，账户余额还剩3000元</span>
+<span class="pl-s">员工8,绩效分3,低于5，不发工资，下一位</span>
+<span class="pl-s">向员工9发工资1000元，账户余额还剩2000元</span>
+<span class="pl-s">员工10,绩效分1,低于5，不发工资，下一位</span>
+<span class="pl-s">向员工11发工资1000元，账户余额还剩1000元</span>
+<span class="pl-s">向员工12发工资1000元，账户余额还剩0元</span>
+<span class="pl-s">余额不足,当前余额0元，不足以发工资，下个月再来</span>
+<span class="pl-s">"""</span></pre></div>
+<h2>6.函数</h2>
+<h3>6.1 函数体验</h3>
+<p>函数：是组织好的，可重复使用的，用来实现特定功能的代码段；提高代码的复用性，减少重复代码，提高开发效率</p>
+<div class="highlight highlight-source-python"><pre class="notranslate"><span class="pl-c"># 统计字符串的长度，不使用内置函数len</span>
+<span class="pl-s1">str1</span> <span class="pl-c1">=</span> <span class="pl-s">"torch"</span>
+<span class="pl-s1">str2</span> <span class="pl-c1">=</span> <span class="pl-s">"torchlee"</span>
+<span class="pl-s1">str3</span> <span class="pl-c1">=</span> <span class="pl-s">"python"</span>
+
+
+<span class="pl-c"># 用函数来优化过程</span>
+<span class="pl-k">def</span> <span class="pl-en">my_len</span>(<span class="pl-s1">data</span>):
+    <span class="pl-s1">count</span> <span class="pl-c1">=</span> <span class="pl-c1">0</span>
+    <span class="pl-k">for</span> <span class="pl-s1">i</span> <span class="pl-c1">in</span> <span class="pl-s1">data</span>:
+        <span class="pl-s1">count</span> <span class="pl-c1">+=</span> <span class="pl-c1">1</span>
+    <span class="pl-en">print</span>(<span class="pl-s">f"字符串<span class="pl-s1"><span class="pl-kos">{</span><span class="pl-s1">data</span><span class="pl-kos">}</span></span>的长度是:<span class="pl-s1"><span class="pl-kos">{</span><span class="pl-s1">count</span><span class="pl-kos">}</span></span>"</span>)
+
+<span class="pl-en">my_len</span>(<span class="pl-s1">str1</span>)
+<span class="pl-en">my_len</span>(<span class="pl-s1">str2</span>)
+<span class="pl-en">my_len</span>(<span class="pl-s1">str3</span>)
+
+<span class="pl-s">"""</span>
+<span class="pl-s">字符串torch的长度是:5</span>
+<span class="pl-s">字符串torchlee的长度是:8</span>
+<span class="pl-s">字符串python的长度是:6</span>
+<span class="pl-s">"""</span></pre></div>
+<h3>6.2 函数的基础定义语法</h3>
+<p>函数的定义：</p>
+<div class="highlight highlight-source-python"><pre class="notranslate"><span class="pl-k">def</span> <span class="pl-en">函数名</span>(<span class="pl-s1">传入参数</span>):
+    <span class="pl-s1">函数体</span>
+    <span class="pl-k">return</span> <span class="pl-s1">返回值</span></pre></div>
+<p>注意：</p>
+<ol>
+<li>参数如果不需要，可以省略</li>
+<li>返回值如果不需要，可以省略</li>
+<li>函数必须先定义后使用</li>
+</ol>
+<h3>6.3 函数的传入参数</h3>
+<p>传入参数的功能是：在函数进行计算的时候，接受外部（调用时）提供的数据</p>
+<div class="highlight highlight-source-python"><pre class="notranslate"><span class="pl-k">def</span> <span class="pl-en">add</span>(<span class="pl-s1">x</span>, <span class="pl-s1">y</span>):
+    <span class="pl-s1">result</span> <span class="pl-c1">=</span> <span class="pl-s1">x</span> <span class="pl-c1">+</span> <span class="pl-s1">y</span>
+    <span class="pl-en">print</span>(<span class="pl-s">f"<span class="pl-s1"><span class="pl-kos">{</span><span class="pl-s1">x</span><span class="pl-kos">}</span></span> + <span class="pl-s1"><span class="pl-kos">{</span><span class="pl-s1">y</span><span class="pl-kos">}</span></span>的计算结果是:<span class="pl-s1"><span class="pl-kos">{</span><span class="pl-s1">result</span><span class="pl-kos">}</span></span>"</span>)
+
+<span class="pl-en">add</span>(<span class="pl-c1">100</span>,<span class="pl-c1">500</span>)</pre></div>
+<ul>
+<li>函数定义中，提供的x和y称之为：形式参数（形参），表示函数声明将要使用2个参数
+<ul>
+<li>参数之间使用逗号进行分割</li>
+</ul>
+</li>
+<li>参数调用中提供的数据，称之为：实际参数（实参），表示函数执行时真正使用的参数值
+<ul>
+<li>传入的时候按照顺序传入数据，使用逗号分隔</li>
+</ul>
+</li>
+<li><strong>传入参数的数量是不受限制的</strong>
+<ul>
+<li>可以不使用参数</li>
+<li>也可以仅使用任意n个参数</li>
+</ul>
+</li>
+</ul>
+<h3>6.4 函数练习题</h3>
+<div class="highlight highlight-source-python"><pre class="notranslate"><span class="pl-k">def</span> <span class="pl-en">temperature</span>(<span class="pl-s1">data</span>):
+    <span class="pl-k">if</span> <span class="pl-s1">data</span> <span class="pl-c1">&lt;</span> <span class="pl-c1">37.5</span>:
+        <span class="pl-en">print</span>(<span class="pl-s">f"您的体温是<span class="pl-s1"><span class="pl-kos">{</span><span class="pl-s1">data</span><span class="pl-kos">}</span></span>,体温正常，请进！"</span>)
+    <span class="pl-k">elif</span> <span class="pl-s1">data</span> <span class="pl-c1">&gt;=</span> <span class="pl-c1">37.5</span>:
+        <span class="pl-en">print</span>(<span class="pl-s">f"您的体温是<span class="pl-s1"><span class="pl-kos">{</span><span class="pl-s1">data</span><span class="pl-kos">}</span></span>,体温异常!"</span>)
+
+<span class="pl-en">temperature</span>(<span class="pl-c1">39</span>)</pre></div>
+<h3>6.5 函数的返回值定义语法</h3>
+<div class="highlight highlight-source-python"><pre class="notranslate"><span class="pl-k">def</span> <span class="pl-en">函数名</span>(<span class="pl-s1">传入参数</span>):
+    <span class="pl-s1">函数体</span>
+    <span class="pl-k">return</span> <span class="pl-s1">返回值</span>
+<span class="pl-s1">变量</span> <span class="pl-c1">=</span> <span class="pl-en">函数</span>(<span class="pl-s1">参数</span>)
+
+<span class="pl-k">def</span> <span class="pl-en">add</span>(<span class="pl-s1">a</span>, <span class="pl-s1">b</span>):
+    <span class="pl-s1">result</span> <span class="pl-c1">=</span> <span class="pl-s1">a</span> <span class="pl-c1">+</span> <span class="pl-s1">b</span>
+    <span class="pl-k">return</span> <span class="pl-s1">result</span>
+
+<span class="pl-s1">r</span> <span class="pl-c1">=</span> <span class="pl-en">add</span>(<span class="pl-c1">5</span>, <span class="pl-c1">6</span>)
+<span class="pl-en">print</span>(<span class="pl-s1">r</span>)</pre></div>
+<p><strong>注：函数体在遇到return后就结束了，所以写在return后的代码不会执行</strong></p>
+<h3>6.6 函数返回值之Note类型</h3>
+<div class="highlight highlight-source-python"><pre class="notranslate"><span class="pl-k">def</span> <span class="pl-en">say_hi</span>():
+    <span class="pl-en">print</span>(<span class="pl-s">"hello"</span>)
+
+<span class="pl-s1">result</span> <span class="pl-c1">=</span> <span class="pl-en">say_hi</span>()
+<span class="pl-en">print</span>(<span class="pl-s">f"无返回值函数，返回的内容是：<span class="pl-s1"><span class="pl-kos">{</span><span class="pl-s1">result</span><span class="pl-kos">}</span></span>"</span>)
+<span class="pl-en">print</span>(<span class="pl-s">f"无返回值函数，返回的内容类型是：<span class="pl-s1"><span class="pl-kos">{</span><span class="pl-en">type</span>(<span class="pl-s1">result</span>)<span class="pl-kos">}</span></span>"</span>)
+
+<span class="pl-s">"""</span>
+<span class="pl-s">hello</span>
+<span class="pl-s">无返回值函数，返回的内容是：None</span>
+<span class="pl-s">无返回值函数，返回的内容类型是：&lt;class 'NoneType'&gt;</span>
+<span class="pl-s">"""</span></pre></div>
+<p>None作为一个特殊的字面量，用于表示：空、无意义，有其非常多的应用场景。</p>
+<ul>
+<li>用在函数无返回值上</li>
+<li>用在if判断上
+<ul>
+<li>在if判断中，None等同于False</li>
+<li>一般用于在函数中主动返回None，配合if判断做相关处理</li>
+</ul>
+</li>
+<li>用于声明无内容的变量上
+<ul>
+<li>定义变量，但暂时不需要变量有具体值，可以用None来代替</li>
+</ul>
+</li>
+</ul>
+<h3>6.7 函数的说明文档</h3>
+<div class="highlight highlight-source-python"><pre class="notranslate"><span class="pl-k">def</span> <span class="pl-en">add</span>(<span class="pl-s1">x</span>, <span class="pl-s1">y</span>):
+    <span class="pl-s">"""</span>
+<span class="pl-s">    add函数可以接收两个参数，进行相加的功能</span>
+<span class="pl-s">    :param x: 数字1</span>
+<span class="pl-s">    :param y: 数字2</span>
+<span class="pl-s">    :return: 返回相加的结果</span>
+<span class="pl-s">    """</span>
+    <span class="pl-s1">result</span> <span class="pl-c1">=</span> <span class="pl-s1">x</span> <span class="pl-c1">+</span> <span class="pl-s1">y</span>
+    <span class="pl-en">print</span>(<span class="pl-s">f"相加的结果是：<span class="pl-s1"><span class="pl-kos">{</span><span class="pl-s1">result</span><span class="pl-kos">}</span></span>"</span>)
+    <span class="pl-k">return</span> <span class="pl-s1">result</span></pre></div>
+<ul>
+<li>param用于解释参数</li>
+<li>return用于解释返回值</li>
+</ul>
+<h3>6.8 函数的嵌套调用</h3>
+<div class="highlight highlight-source-python"><pre class="notranslate"><span class="pl-k">def</span> <span class="pl-en">func_b</span>():
+    <span class="pl-en">print</span>(<span class="pl-s">"---2---"</span>)
+
+<span class="pl-k">def</span> <span class="pl-en">func_a</span>():
+    <span class="pl-en">print</span>(<span class="pl-s">"---1---"</span>)
+    <span class="pl-en">func_b</span>()
+    <span class="pl-en">print</span>(<span class="pl-s">"---3---"</span>)
+
+<span class="pl-en">func_a</span>()
+
+<span class="pl-s">"""</span>
+<span class="pl-s">---1---</span>
+<span class="pl-s">---2---</span>
+<span class="pl-s">---3---</span>
+<span class="pl-s">"""</span></pre></div>
+<h3>6.9 变量在函数中的作用域</h3>
+<ul>
+<li>局部变量的作用：在函数体内部，临时保存数据，调用完成之后立即销毁变量</li>
+<li>全局变量的作用：在函数体内外都能生效的变量</li>
+<li><strong>使用 global + 全局变量 的定义，可以使函数内的局部变量和全局变量联系在一起</strong></li>
+</ul>
+<h3>6.10 函数综合案例</h3>
+<div class="highlight highlight-source-python"><pre class="notranslate"><span class="pl-c"># 定义全局变量money name</span>
+<span class="pl-s1">money</span> <span class="pl-c1">=</span> <span class="pl-c1">5000000</span>
+<span class="pl-s1">name</span> <span class="pl-c1">=</span> <span class="pl-c1">None</span>
+
+<span class="pl-c"># 要求输入姓名</span>
+<span class="pl-s1">name</span> <span class="pl-c1">=</span> <span class="pl-en">input</span>(<span class="pl-s">"请输入姓名："</span>)
+
+
+<span class="pl-c"># 定义查询函数</span>
+<span class="pl-k">def</span> <span class="pl-en">query</span>(<span class="pl-s1">show</span>):
+    <span class="pl-k">if</span> <span class="pl-s1">show</span>:
+        <span class="pl-en">print</span>(<span class="pl-s">"----------查询余额----------"</span>)
+    <span class="pl-en">print</span>(<span class="pl-s">f"<span class="pl-s1"><span class="pl-kos">{</span><span class="pl-s1">name</span><span class="pl-kos">}</span></span>,您好，您的余额为：<span class="pl-s1"><span class="pl-kos">{</span><span class="pl-s1">money</span><span class="pl-kos">}</span></span>元。"</span>)
+
+
+<span class="pl-c"># 定义存款函数</span>
+<span class="pl-k">def</span> <span class="pl-en">saving</span>(<span class="pl-s1">num</span>):
+    <span class="pl-k">global</span> <span class="pl-s1">money</span>  <span class="pl-c"># money定义为全局变量</span>
+    <span class="pl-s1">money</span> <span class="pl-c1">+=</span> <span class="pl-s1">num</span>
+    <span class="pl-en">print</span>(<span class="pl-s">"----------存款----------"</span>)
+    <span class="pl-en">print</span>(<span class="pl-s">f"<span class="pl-s1"><span class="pl-kos">{</span><span class="pl-s1">name</span><span class="pl-kos">}</span></span>,您好，存款<span class="pl-s1"><span class="pl-kos">{</span><span class="pl-s1">money</span><span class="pl-kos">}</span></span>元成功。"</span>)
+    <span class="pl-c"># 调用查询余额函数</span>
+    <span class="pl-en">query</span>(<span class="pl-c1">False</span>)
+
+
+<span class="pl-c"># 定义取款函数</span>
+<span class="pl-k">def</span> <span class="pl-en">get_money</span>(<span class="pl-s1">num</span>):
+    <span class="pl-k">global</span> <span class="pl-s1">money</span>
+    <span class="pl-s1">money</span> <span class="pl-c1">-=</span> <span class="pl-s1">num</span>
+    <span class="pl-en">print</span>(<span class="pl-s">f"<span class="pl-s1"><span class="pl-kos">{</span><span class="pl-s1">name</span><span class="pl-kos">}</span></span>,您好，取款<span class="pl-s1"><span class="pl-kos">{</span><span class="pl-s1">num</span><span class="pl-kos">}</span></span>元成功。"</span>)
+    <span class="pl-en">query</span>(<span class="pl-c1">False</span>)
+
+
+<span class="pl-k">def</span> <span class="pl-en">main</span>():
+    <span class="pl-en">print</span>(<span class="pl-s">"----------主菜单----------"</span>)
+    <span class="pl-en">print</span>(<span class="pl-s">f"<span class="pl-s1"><span class="pl-kos">{</span><span class="pl-s1">name</span><span class="pl-kos">}</span></span>,您好，欢迎来到ATM，请选择操作："</span>)
+    <span class="pl-en">print</span>(<span class="pl-s">"1.查询余额"</span>)
+    <span class="pl-en">print</span>(<span class="pl-s">"2.存款"</span>)
+    <span class="pl-en">print</span>(<span class="pl-s">"3.取款"</span>)
+    <span class="pl-en">print</span>(<span class="pl-s">"4.退出"</span>)
+    <span class="pl-k">return</span> <span class="pl-en">input</span>(<span class="pl-s">"请输入您的选择："</span>)
+
+
+<span class="pl-k">while</span> <span class="pl-c1">True</span>:
+    <span class="pl-v">Keyboard_input</span> <span class="pl-c1">=</span> <span class="pl-en">main</span>()
+    <span class="pl-k">if</span> <span class="pl-v">Keyboard_input</span> <span class="pl-c1">==</span> <span class="pl-s">"1"</span>:
+        <span class="pl-en">query</span>(<span class="pl-c1">True</span>)
+        <span class="pl-k">continue</span>  <span class="pl-c"># 通过continue进行下一次循环</span>
+    <span class="pl-k">elif</span> <span class="pl-v">Keyboard_input</span> <span class="pl-c1">==</span> <span class="pl-s">"2"</span>:
+        <span class="pl-s1">num</span> <span class="pl-c1">=</span> <span class="pl-en">int</span>(<span class="pl-en">input</span>(<span class="pl-s">"输入您想存入的金额："</span>))
+        <span class="pl-en">saving</span>(<span class="pl-s1">num</span>)
+        <span class="pl-k">continue</span>
+    <span class="pl-k">elif</span> <span class="pl-v">Keyboard_input</span> <span class="pl-c1">==</span> <span class="pl-s">"3"</span>:
+        <span class="pl-s1">num</span> <span class="pl-c1">=</span> <span class="pl-en">int</span>(<span class="pl-en">input</span>(<span class="pl-s">"输入您想取出的金额："</span>))
+        <span class="pl-en">get_money</span>(<span class="pl-s1">num</span>)
+        <span class="pl-k">continue</span>
+    <span class="pl-k">else</span>:
+        <span class="pl-en">print</span>(<span class="pl-s">"退出程序……"</span>)
+        <span class="pl-k">break</span></pre></div>
+<h2>7.数据容器</h2>
+<h3>7.1 数据容器入门</h3>
+<p><strong>数据容器：一种可以容纳多分数据的数据类型，容纳每一份数据称之为1个元素；每一个元素，可以是任意类型的数据，如字符串，数字，布尔等。</strong></p>
+<p>数据容器根据特点的不同：</p>
+<ul>
+<li>是否支持重复元素</li>
+<li>是否可以修改</li>
+<li>是否有序等</li>
+</ul>
+<p><strong>分为五类：列表（list）、元组（tuple）、字符串（str）、集合（set）、字典（dict）</strong></p>
+<h3>7.2 list列表的定义语法</h3>
+<p>列表的定义：</p>
+<div class="highlight highlight-source-python"><pre class="notranslate"><span class="pl-c"># 字面量</span>
+<span class="pl-s1">变量名称</span> <span class="pl-c1">=</span> [<span class="pl-s1">元素1</span>, <span class="pl-s1">元素2</span>,...]
+
+<span class="pl-c"># 定义空列表</span>
+<span class="pl-s1">变量名</span> <span class="pl-c1">=</span> []
+<span class="pl-s1">变量名</span> <span class="pl-c1">=</span> <span class="pl-en">list</span>()</pre></div>
+<p>列表内的没一个数据，称之为元素：</p>
+<ul>
+<li>以[]为表示</li>
+<li>列表内每一个元素之间用逗号隔开</li>
+</ul>
+<div class="highlight highlight-source-python"><pre class="notranslate"><span class="pl-s1">temp_list</span> <span class="pl-c1">=</span> [<span class="pl-s">'no1'</span>,<span class="pl-s">'no2'</span>]
+<span class="pl-s1">my_list</span> <span class="pl-c1">=</span> [<span class="pl-s">'torch'</span>,<span class="pl-s">'tom'</span>,<span class="pl-s">'john'</span>,<span class="pl-c1">123</span>,<span class="pl-c1">666</span>,<span class="pl-c1">True</span>,<span class="pl-s1">temp_list</span>]
+<span class="pl-en">print</span>(<span class="pl-s1">my_list</span>)
+<span class="pl-en">print</span>(<span class="pl-en">type</span>(<span class="pl-s1">my_list</span>))
+
+
+<span class="pl-s">"""</span>
+<span class="pl-s">['torch', 'tom', 'john', 123, 666, True, ['no1', 'no2']]</span>
+<span class="pl-s">&lt;class 'list'&gt;</span>
+<span class="pl-s">"""</span></pre></div>
+<p>注意：列表可以一次存储多个数据，且可以为不同的数据类型，支持嵌套</p>
+<h3>7.3 列表的下标索引</h3>
+<p><strong>使用下标索引，从列表中取出特定的数据</strong></p>
+<div class="highlight highlight-source-python"><pre class="notranslate"><span class="pl-s1">my_list</span> <span class="pl-c1">=</span> [<span class="pl-s">'torch'</span>,<span class="pl-s">'tom'</span>,<span class="pl-s">'john'</span>,<span class="pl-c1">123</span>,<span class="pl-c1">666</span>,<span class="pl-c1">True</span>,<span class="pl-s1">temp_list</span>]
+<span class="pl-en">print</span>(<span class="pl-s1">my_list</span>[<span class="pl-c1">0</span>])
+<span class="pl-en">print</span>(<span class="pl-s1">my_list</span>[<span class="pl-c1">2</span>])
+<span class="pl-en">print</span>(<span class="pl-s1">my_list</span>[<span class="pl-c1">4</span>])
+<span class="pl-c"># 负数是倒序输出</span>
+<span class="pl-en">print</span>(<span class="pl-s1">my_list</span>[<span class="pl-c1">-</span><span class="pl-c1">2</span>])
+<span class="pl-en">print</span>(<span class="pl-s1">my_list</span>[<span class="pl-c1">-</span><span class="pl-c1">4</span>])
+<span class="pl-en">print</span>(<span class="pl-s1">my_list</span>[<span class="pl-c1">-</span><span class="pl-c1">6</span>])
+<span class="pl-s">"""</span>
+<span class="pl-s">torch</span>
+<span class="pl-s">john</span>
+<span class="pl-s">666</span>
+<span class="pl-s">True</span>
+<span class="pl-s">123</span>
+<span class="pl-s">tom</span>
+<span class="pl-s">"""</span></pre></div>
+<h3>7.4 列表的常用操作方法</h3>
+<p>列表方法：</p>
+<ul>
+<li>定义</li>
+<li>用下标索引获取值</li>
+<li>插入元素</li>
+<li>删除元素</li>
+<li>清空列表</li>
+<li>修改元素</li>
+<li>统计元素个数</li>
+</ul>
+<p><strong>列表的查询功能（方法）</strong>：函数是一个封装的代码单元，可以提供特定功能，如果将函数定义为class，那么函数会称之为：方法</p>
+<p><strong>方法和函数功能一样，有传参和返回值，只是方法的使用格式不同：</strong></p>
+<p>函数：num = add(1,2)</p>
+<p>方法：student = Student()	num = student.add()</p>
+<div class="highlight highlight-source-python"><pre class="notranslate"><span class="pl-s1">temp_list</span> <span class="pl-c1">=</span> [<span class="pl-s">'no1'</span>, <span class="pl-s">'no2'</span>]
+<span class="pl-s1">my_list</span> <span class="pl-c1">=</span> [<span class="pl-s">'torch'</span>, <span class="pl-s">'tom'</span>, <span class="pl-s">'john'</span>, <span class="pl-c1">123</span>, <span class="pl-c1">666</span>, <span class="pl-c1">True</span>]
+
+<span class="pl-c"># 查找元素在列表内的下标索引值，如果不存在会报错ValueError</span>
+<span class="pl-s1">index</span> <span class="pl-c1">=</span> <span class="pl-s1">my_list</span>.<span class="pl-en">index</span>(<span class="pl-s">'tom'</span>)
+<span class="pl-en">print</span>(<span class="pl-s1">index</span>)
+
+<span class="pl-c"># 修改特定下标索引的值</span>
+<span class="pl-s1">my_list</span>[<span class="pl-c1">2</span>] <span class="pl-c1">=</span> <span class="pl-s">"newName"</span>
+<span class="pl-en">print</span>(<span class="pl-s">f"修改后的列表<span class="pl-s1"><span class="pl-kos">{</span><span class="pl-s1">my_list</span><span class="pl-kos">}</span></span>"</span>)
+
+<span class="pl-c"># 指定下标位置插入新元素</span>
+<span class="pl-s1">my_list</span>.<span class="pl-en">insert</span>(<span class="pl-c1">1</span>, <span class="pl-s">"insertName"</span>)
+<span class="pl-en">print</span>(<span class="pl-s">f"插入后的列表<span class="pl-s1"><span class="pl-kos">{</span><span class="pl-s1">my_list</span><span class="pl-kos">}</span></span>"</span>)
+
+<span class="pl-c"># 在列表的尾部追加 单个 新元素</span>
+<span class="pl-s1">my_list</span>.<span class="pl-en">append</span>(<span class="pl-s">"appendName"</span>)
+<span class="pl-en">print</span>(<span class="pl-s">f"追加后的列表<span class="pl-s1"><span class="pl-kos">{</span><span class="pl-s1">my_list</span><span class="pl-kos">}</span></span>"</span>)
+
+<span class="pl-c"># 在列表的尾部追加 一批 元素</span>
+<span class="pl-s1">my_list</span>.<span class="pl-en">extend</span>(<span class="pl-s1">temp_list</span>)
+<span class="pl-en">print</span>(<span class="pl-s">f"追加新列表后的列表<span class="pl-s1"><span class="pl-kos">{</span><span class="pl-s1">my_list</span><span class="pl-kos">}</span></span>"</span>)
+
+<span class="pl-c"># 删除指定下标的元素</span>
+<span class="pl-s1">del_list</span> <span class="pl-c1">=</span> [<span class="pl-s">'no1'</span>,<span class="pl-s">'no2'</span>,<span class="pl-s">'no3'</span>,<span class="pl-s">'no4'</span>,<span class="pl-s">'no5'</span>]
+<span class="pl-en">print</span>(<span class="pl-s">f"原始列表<span class="pl-s1"><span class="pl-kos">{</span><span class="pl-s1">del_list</span><span class="pl-kos">}</span></span>"</span>)
+<span class="pl-k">del</span> <span class="pl-s1">del_list</span>[<span class="pl-c1">2</span>]
+<span class="pl-en">print</span>(<span class="pl-s">f"删除元素后的列表<span class="pl-s1"><span class="pl-kos">{</span><span class="pl-s1">del_list</span><span class="pl-kos">}</span></span>"</span>)
+
+<span class="pl-s1">element</span> <span class="pl-c1">=</span> <span class="pl-s1">del_list</span>.<span class="pl-en">pop</span>(<span class="pl-c1">2</span>)
+<span class="pl-en">print</span>(<span class="pl-s">f"通过pop删除了<span class="pl-s1"><span class="pl-kos">{</span><span class="pl-s1">element</span><span class="pl-kos">}</span></span>元素，删除后的列表<span class="pl-s1"><span class="pl-kos">{</span><span class="pl-s1">del_list</span><span class="pl-kos">}</span></span>"</span>)
+
+<span class="pl-c"># 删除元素在列表中第一个匹配项 remove相当于从前往后去搜索，只能删除一个符合的元素！！</span>
+<span class="pl-s1">del_list</span>.<span class="pl-en">remove</span>(<span class="pl-s">"no5"</span>)
+<span class="pl-en">print</span>(<span class="pl-s">f"定向删除后的列表<span class="pl-s1"><span class="pl-kos">{</span><span class="pl-s1">del_list</span><span class="pl-kos">}</span></span>"</span>)
+
+<span class="pl-c"># 清空列表</span>
+<span class="pl-s1">del_list</span>.<span class="pl-en">clear</span>()
+<span class="pl-en">print</span>(<span class="pl-s">f"清空后的列表<span class="pl-s1"><span class="pl-kos">{</span><span class="pl-s1">del_list</span><span class="pl-kos">}</span></span>"</span>)
+
+<span class="pl-c"># 统计列表中某个元素的数量</span>
+<span class="pl-s1">count_list</span> <span class="pl-c1">=</span> [<span class="pl-s">'no1'</span>,<span class="pl-s">'no1'</span>,<span class="pl-s">'no1'</span>,<span class="pl-s">'no2'</span>,<span class="pl-s">'no2'</span>,<span class="pl-s">'no3'</span>]
+<span class="pl-s1">count</span> <span class="pl-c1">=</span> <span class="pl-s1">count_list</span>.<span class="pl-en">count</span>(<span class="pl-s">"no1"</span>)
+<span class="pl-en">print</span>(<span class="pl-s">f"列表中 no1 的数量为:<span class="pl-s1"><span class="pl-kos">{</span><span class="pl-s1">count</span><span class="pl-kos">}</span></span>"</span>)
+
+<span class="pl-c"># 统计列表中全部元素的数量</span>
+<span class="pl-s1">all</span> <span class="pl-c1">=</span> <span class="pl-en">len</span>(<span class="pl-s1">count_list</span>)
+<span class="pl-en">print</span>(<span class="pl-s">f"<span class="pl-s1"><span class="pl-kos">{</span><span class="pl-s1">count_list</span><span class="pl-kos">}</span></span>列表一共有<span class="pl-s1"><span class="pl-kos">{</span><span class="pl-s1">all</span><span class="pl-kos">}</span></span>个元素"</span>)
+
+<span class="pl-s">"""</span>
+<span class="pl-s">1</span>
+<span class="pl-s">修改后的列表['torch', 'tom', 'newName', 123, 666, True]</span>
+<span class="pl-s">插入后的列表['torch', 'insertName', 'tom', 'newName', 123, 666, True]</span>
+<span class="pl-s">追加后的列表['torch', 'insertName', 'tom', 'newName', 123, 666, True, 'appendName']</span>
+<span class="pl-s">追加新列表后的列表['torch', 'insertName', 'tom', 'newName', 123, 666, True, 'appendName', 'no1', 'no2']</span>
+<span class="pl-s">原始列表['no1', 'no2', 'no3', 'no4', 'no5']</span>
+<span class="pl-s">删除元素后的列表['no1', 'no2', 'no4', 'no5']</span>
+<span class="pl-s">通过pop删除了no4元素，删除后的列表['no1', 'no2', 'no5']</span>
+<span class="pl-s">定向删除后的列表['no1', 'no2']</span>
+<span class="pl-s">清空后的列表[]</span>
+<span class="pl-s">列表中 no1 的数量为:3</span>
+<span class="pl-s">['no1', 'no1', 'no1', 'no2', 'no2', 'no3']列表一共有6个元素</span>
+<span class="pl-s">"""</span></pre></div>
+<table role="table">
+<thead>
+<tr>
+<th align="center">使用方式</th>
+<th align="center">作用</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="center">list.append(元素)</td>
+<td align="center">向列表追加一个元素</td>
+</tr>
+<tr>
+<td align="center">list.extend(容器)</td>
+<td align="center">将数据容器内容依次取出，追加到列表尾部</td>
+</tr>
+<tr>
+<td align="center">list.insert(下标，元素)</td>
+<td align="center">在指定下标 插入指定的元素</td>
+</tr>
+<tr>
+<td align="center">del list[下标]</td>
+<td align="center">删除列表指定下标元素</td>
+</tr>
+<tr>
+<td align="center">list.pop(下标)</td>
+<td align="center">删除列表指定下标元素</td>
+</tr>
+<tr>
+<td align="center">list.remove(元素)</td>
+<td align="center">从前往后，删除此元素的第一个匹配项</td>
+</tr>
+<tr>
+<td align="center">list.clear()</td>
+<td align="center">清空列表</td>
+</tr>
+<tr>
+<td align="center">list.count(元素)</td>
+<td align="center">统计此元素在列表中出现的次数</td>
+</tr>
+<tr>
+<td align="center">list.index(元素)</td>
+<td align="center">查找指定元素在列表的下标，找不到报错ValueError</td>
+</tr>
+<tr>
+<td align="center">len(list)</td>
+<td align="center">统计容器内有多少元素</td>
+</tr>
+</tbody>
+</table>
+<p><strong>列表的特点：</strong></p>
+<ul>
+<li>可以容纳多个元素（上限为2的63次方减一）</li>
+<li>可以容纳不同类型的元素</li>
+<li>数据是有序存储的</li>
+<li>允许重复数据存在</li>
+<li>可以修改</li>
+</ul>
+<h3>7.5 列表的常用功能练习</h3>
+<div class="highlight highlight-source-python"><pre class="notranslate"><span class="pl-s1">age_list</span> <span class="pl-c1">=</span> [<span class="pl-c1">21</span>,<span class="pl-c1">25</span>,<span class="pl-c1">21</span>,<span class="pl-c1">23</span>,<span class="pl-c1">22</span>,<span class="pl-c1">20</span>]
+
+<span class="pl-s1">age_list</span>.<span class="pl-en">append</span>(<span class="pl-c1">31</span>)
+<span class="pl-s1">age_list</span>.<span class="pl-en">append</span>([<span class="pl-c1">29</span>,<span class="pl-c1">33</span>,<span class="pl-c1">30</span>])
+<span class="pl-s1">age_list</span>.<span class="pl-en">pop</span>(<span class="pl-c1">0</span>)
+<span class="pl-s1">age_list</span>.<span class="pl-en">pop</span>(<span class="pl-c1">-</span><span class="pl-c1">1</span>)
+<span class="pl-s1">age_list</span>.<span class="pl-en">index</span>(<span class="pl-c1">31</span>)</pre></div>
+<h3>7.6 列表的循环遍历</h3>
+<p><strong>while循环：</strong></p>
+<div class="highlight highlight-source-python"><pre class="notranslate"><span class="pl-s1">indes</span> <span class="pl-c1">=</span> <span class="pl-c1">0</span>
+<span class="pl-k">while</span> <span class="pl-s1">index</span> <span class="pl-c1">&lt;</span> <span class="pl-en">len</span>(<span class="pl-s1">列表</span>)
+	<span class="pl-s1">元素</span> <span class="pl-c1">=</span> <span class="pl-s1">列表</span>[<span class="pl-s1">index</span>]
+    <span class="pl-s1">对元素进行处理</span>
+    <span class="pl-s1">index</span> <span class="pl-c1">+=</span> <span class="pl-c1">1</span></pre></div>
+<p><strong>for循环：</strong></p>
+<div class="highlight highlight-source-python"><pre class="notranslate"><span class="pl-k">for</span> <span class="pl-s1">临时变量</span> <span class="pl-c1">in</span> <span class="pl-s1">数据容器</span>:
+    <span class="pl-s1">处理</span></pre></div>
+<div class="highlight highlight-source-python"><pre class="notranslate"><span class="pl-k">def</span> <span class="pl-en">list_while_func</span>():
+    <span class="pl-s">"""</span>
+<span class="pl-s">    使用while循环遍历列表的演示函数</span>
+<span class="pl-s">    :return:</span>
+<span class="pl-s">    """</span>
+    <span class="pl-s1">my_list</span> <span class="pl-c1">=</span> [<span class="pl-s">"torch"</span>,<span class="pl-s">"torchlee"</span>,<span class="pl-s">"hello"</span>]
+    <span class="pl-s1">index</span> <span class="pl-c1">=</span> <span class="pl-c1">0</span>
+    <span class="pl-k">while</span> <span class="pl-s1">index</span> <span class="pl-c1">&lt;</span> <span class="pl-en">len</span>(<span class="pl-s1">my_list</span>):
+        <span class="pl-s1">element</span> <span class="pl-c1">=</span> <span class="pl-s1">my_list</span>[<span class="pl-s1">index</span>]
+        <span class="pl-en">print</span>(<span class="pl-s">f"列表的元素:<span class="pl-s1"><span class="pl-kos">{</span><span class="pl-s1">element</span><span class="pl-kos">}</span></span>"</span>)
+        <span class="pl-s1">index</span> <span class="pl-c1">+=</span> <span class="pl-c1">1</span>
+
+
+<span class="pl-k">def</span> <span class="pl-en">list_for_func</span>():
+    <span class="pl-s">"""</span>
+<span class="pl-s">    使用for循环遍历列表的演示函数</span>
+<span class="pl-s">    :return:</span>
+<span class="pl-s">    """</span>
+    <span class="pl-s1">my_list</span> <span class="pl-c1">=</span> [<span class="pl-c1">1</span>,<span class="pl-c1">2</span>,<span class="pl-c1">3</span>,<span class="pl-c1">4</span>,<span class="pl-c1">5</span>]
+    <span class="pl-k">for</span> <span class="pl-s1">element</span> <span class="pl-c1">in</span> <span class="pl-s1">my_list</span>:
+        <span class="pl-en">print</span>(<span class="pl-s">f"列表的元素有：<span class="pl-s1"><span class="pl-kos">{</span><span class="pl-s1">element</span><span class="pl-kos">}</span></span>"</span>)
+
+
+<span class="pl-en">list_while_func</span>()
+<span class="pl-en">list_for_func</span>()
+<span class="pl-s">"""</span>
+<span class="pl-s">列表的元素:torch</span>
+<span class="pl-s">列表的元素:torchlee</span>
+<span class="pl-s">列表的元素:hello</span>
+<span class="pl-s">列表的元素有：1</span>
+<span class="pl-s">列表的元素有：2</span>
+<span class="pl-s">列表的元素有：3</span>
+<span class="pl-s">列表的元素有：4</span>
+<span class="pl-s">列表的元素有：5</span>
+<span class="pl-s">"""</span></pre></div>
+<p><strong>while循环和for循环的对比：</strong></p>
+<ul>
+<li>在循环控制上：
+<ul>
+<li>while循环可以自定循环条件，并自行控制</li>
+<li>for循环不可以自定循环条件，只可以一个个从容器内取出数据</li>
+</ul>
+</li>
+<li>在无限循环上：
+<ul>
+<li>while循环可以通过条件控制做到无限循环</li>
+<li>for循环理论上不可以，因为被遍历的容器容量不是无限的</li>
+</ul>
+</li>
+<li>在使用场景上：
+<ul>
+<li>while循环适用于任何想要循环的场景</li>
+<li>for循环适用于，遍历数据容器的场景或简单的固定次数循环场景</li>
+</ul>
+</li>
+</ul>
+<p>取出列表内的偶数</p>
+<div class="highlight highlight-source-python"><pre class="notranslate"><span class="pl-s1">my_list</span> <span class="pl-c1">=</span> [<span class="pl-c1">1</span>,<span class="pl-c1">2</span>,<span class="pl-c1">3</span>,<span class="pl-c1">4</span>,<span class="pl-c1">5</span>,<span class="pl-c1">6</span>,<span class="pl-c1">7</span>,<span class="pl-c1">8</span>,<span class="pl-c1">9</span>,<span class="pl-c1">10</span>]
+<span class="pl-s1">final_list</span> <span class="pl-c1">=</span> []
+
+<span class="pl-s1">index</span> <span class="pl-c1">=</span> <span class="pl-c1">0</span>
+<span class="pl-k">while</span> <span class="pl-s1">index</span> <span class="pl-c1">&lt;</span> <span class="pl-en">len</span>(<span class="pl-s1">my_list</span>):
+    <span class="pl-k">if</span> <span class="pl-s1">my_list</span>[<span class="pl-s1">index</span>] <span class="pl-c1">%</span> <span class="pl-c1">2</span> <span class="pl-c1">==</span> <span class="pl-c1">0</span>:
+        <span class="pl-s1">final_list</span>.<span class="pl-en">append</span>(<span class="pl-s1">my_list</span>[<span class="pl-s1">index</span>])
+    <span class="pl-s1">index</span> <span class="pl-c1">+=</span> <span class="pl-c1">1</span>
+
+<span class="pl-en">print</span>(<span class="pl-s1">final_list</span>)
+<span class="pl-s">"""</span>
+<span class="pl-s">[2, 4, 6, 8, 10]</span>
+<span class="pl-s">"""</span></pre></div>
+<h3>7.7 元组的定义和操作</h3>
+<p><strong>定义元组：定义元组使用小括号，且使用逗号隔开各个数据，数据可以是不同的数据类型</strong></p>
+<div class="highlight highlight-source-python"><pre class="notranslate">(<span class="pl-s1">元素</span>,<span class="pl-s1">元素</span>,……….<span class="pl-s1">元素</span>)
+<span class="pl-s1">变量名</span> <span class="pl-c1">=</span> ()
+<span class="pl-s1">变量名</span> <span class="pl-c1">=</span> <span class="pl-en">tuple</span>()</pre></div>
+<div class="highlight highlight-source-python"><pre class="notranslate"><span class="pl-c"># 定义元组</span>
+<span class="pl-s1">t1</span> <span class="pl-c1">=</span> (<span class="pl-c1">1</span>, <span class="pl-s">"Hello"</span>, <span class="pl-c1">True</span>)
+<span class="pl-s1">t2</span> <span class="pl-c1">=</span> ()
+<span class="pl-s1">t3</span> <span class="pl-c1">=</span> <span class="pl-en">tuple</span>()
+<span class="pl-en">print</span>(<span class="pl-s">f"t1的类型是<span class="pl-s1"><span class="pl-kos">{</span><span class="pl-en">type</span>(<span class="pl-s1">t1</span>)<span class="pl-kos">}</span></span>,内容是<span class="pl-s1"><span class="pl-kos">{</span><span class="pl-s1">t1</span><span class="pl-kos">}</span></span>"</span>)
+<span class="pl-en">print</span>(<span class="pl-s">f"t2的类型是<span class="pl-s1"><span class="pl-kos">{</span><span class="pl-en">type</span>(<span class="pl-s1">t2</span>)<span class="pl-kos">}</span></span>,内容是<span class="pl-s1"><span class="pl-kos">{</span><span class="pl-s1">t2</span><span class="pl-kos">}</span></span>"</span>)
+<span class="pl-en">print</span>(<span class="pl-s">f"t3的类型是<span class="pl-s1"><span class="pl-kos">{</span><span class="pl-en">type</span>(<span class="pl-s1">t3</span>)<span class="pl-kos">}</span></span>,内容是<span class="pl-s1"><span class="pl-kos">{</span><span class="pl-s1">t3</span><span class="pl-kos">}</span></span>"</span>)
+
+
+<span class="pl-c"># 定义单个元素的元组 注意一个数据的元组后面一定要加逗号！！</span>
+<span class="pl-s1">t4</span> <span class="pl-c1">=</span> (<span class="pl-s">"hello"</span>, )
+<span class="pl-en">print</span>(<span class="pl-s">f"t4的类型是<span class="pl-s1"><span class="pl-kos">{</span><span class="pl-en">type</span>(<span class="pl-s1">t4</span>)<span class="pl-kos">}</span></span>,内容是<span class="pl-s1"><span class="pl-kos">{</span><span class="pl-s1">t4</span><span class="pl-kos">}</span></span>"</span>)
+
+<span class="pl-c"># 元组的嵌套</span>
+<span class="pl-s1">t5</span> <span class="pl-c1">=</span> ((<span class="pl-c1">1</span>,<span class="pl-c1">2</span>,<span class="pl-c1">3</span>),(<span class="pl-c1">4</span>,<span class="pl-c1">5</span>,<span class="pl-c1">6</span>))
+<span class="pl-en">print</span>(<span class="pl-s">f"t5的类型是<span class="pl-s1"><span class="pl-kos">{</span><span class="pl-en">type</span>(<span class="pl-s1">t5</span>)<span class="pl-kos">}</span></span>,内容是<span class="pl-s1"><span class="pl-kos">{</span><span class="pl-s1">t5</span><span class="pl-kos">}</span></span>"</span>)
+
+<span class="pl-c"># 下标索引取出内容</span>
+<span class="pl-s1">num</span> <span class="pl-c1">=</span> <span class="pl-s1">t5</span>[<span class="pl-c1">1</span>][<span class="pl-c1">2</span>]
+<span class="pl-en">print</span>(<span class="pl-s">f"从元组中取出了:<span class="pl-s1"><span class="pl-kos">{</span><span class="pl-s1">num</span><span class="pl-kos">}</span></span>"</span>)
+
+<span class="pl-c"># 元组的操作：index</span>
+<span class="pl-s1">t6</span> <span class="pl-c1">=</span> (<span class="pl-s">"no1"</span>,<span class="pl-s">"no2"</span>,<span class="pl-s">"no3"</span>)
+<span class="pl-s1">index</span> <span class="pl-c1">=</span> <span class="pl-s1">t6</span>.<span class="pl-en">index</span>(<span class="pl-s">"no3"</span>)
+<span class="pl-en">print</span>(<span class="pl-s">f"在元组t6中查找“no3”的下标是：<span class="pl-s1"><span class="pl-kos">{</span><span class="pl-s1">index</span><span class="pl-kos">}</span></span>"</span>)
+
+<span class="pl-c"># 元组的操作：count</span>
+<span class="pl-s1">t7</span> <span class="pl-c1">=</span> (<span class="pl-s">"no1"</span>,<span class="pl-s">"no2"</span>,<span class="pl-s">"no2"</span>,<span class="pl-s">"no2"</span>,<span class="pl-s">"no2"</span>,<span class="pl-s">"no3"</span>)
+<span class="pl-s1">num</span> <span class="pl-c1">=</span> <span class="pl-s1">t7</span>.<span class="pl-en">count</span>(<span class="pl-s">"no2"</span>)
+<span class="pl-en">print</span>(<span class="pl-s">f"在元组t7中统计“no2”的数量为：<span class="pl-s1"><span class="pl-kos">{</span><span class="pl-s1">num</span><span class="pl-kos">}</span></span>"</span>)
+
+<span class="pl-c"># 元组的操作：len函数统计元组元素数量</span>
+<span class="pl-s1">t8</span> <span class="pl-c1">=</span> (<span class="pl-s">"no1"</span>,<span class="pl-s">"no2"</span>,<span class="pl-s">"no2"</span>,<span class="pl-s">"no2"</span>,<span class="pl-s">"no2"</span>,<span class="pl-s">"no3"</span>)
+<span class="pl-en">print</span>(<span class="pl-s">f"t8元组中的元素有<span class="pl-s1"><span class="pl-kos">{</span><span class="pl-en">len</span>(<span class="pl-s1">t8</span>)<span class="pl-kos">}</span></span>个"</span>)
+
+<span class="pl-c"># 元组的遍历：while</span>
+<span class="pl-s1">index</span> <span class="pl-c1">=</span> <span class="pl-c1">0</span>
+<span class="pl-k">while</span> <span class="pl-s1">index</span> <span class="pl-c1">&lt;</span> <span class="pl-en">len</span>(<span class="pl-s1">t8</span>):
+    <span class="pl-en">print</span>(<span class="pl-s">f"t8的元素有：<span class="pl-s1"><span class="pl-kos">{</span><span class="pl-s1">t8</span>[<span class="pl-s1">index</span>]<span class="pl-kos">}</span></span>"</span>)
+    <span class="pl-s1">index</span> <span class="pl-c1">+=</span> <span class="pl-c1">1</span>
+
+<span class="pl-c"># 元组的遍历：for</span>
+<span class="pl-k">for</span> <span class="pl-s1">element</span> <span class="pl-c1">in</span> <span class="pl-s1">t8</span>:
+    <span class="pl-en">print</span>(<span class="pl-s">f"t8的元素有：<span class="pl-s1"><span class="pl-kos">{</span><span class="pl-s1">element</span><span class="pl-kos">}</span></span>"</span>)
+
+<span class="pl-s">"""</span>
+<span class="pl-s">t1的类型是&lt;class 'tuple'&gt;,内容是(1, 'Hello', True)</span>
+<span class="pl-s">t2的类型是&lt;class 'tuple'&gt;,内容是()</span>
+<span class="pl-s">t3的类型是&lt;class 'tuple'&gt;,内容是()</span>
+<span class="pl-s">t4的类型是&lt;class 'tuple'&gt;,内容是('hello',)</span>
+<span class="pl-s">t5的类型是&lt;class 'tuple'&gt;,内容是((1, 2, 3), (4, 5, 6))</span>
+<span class="pl-s">从元组中取出了:6</span>
+<span class="pl-s">在元组t6中查找“no3”的下标是：2</span>
+<span class="pl-s">在元组t7中统计“no2”的数量为：4</span>
+<span class="pl-s">t8元组中的元素有6个</span>
+<span class="pl-s">t8的元素有：no1</span>
+<span class="pl-s">t8的元素有：no2</span>
+<span class="pl-s">t8的元素有：no2</span>
+<span class="pl-s">t8的元素有：no2</span>
+<span class="pl-s">t8的元素有：no2</span>
+<span class="pl-s">t8的元素有：no3</span>
+<span class="pl-s">t8的元素有：no1</span>
+<span class="pl-s">t8的元素有：no2</span>
+<span class="pl-s">t8的元素有：no2</span>
+<span class="pl-s">t8的元素有：no2</span>
+<span class="pl-s">t8的元素有：no2</span>
+<span class="pl-s">t8的元素有：no3</span>
+<span class="pl-s">"""</span></pre></div>
+<p><strong>注意事项：</strong></p>
+<ul>
+<li>不可以修改元组的数据，会报错！</li>
+<li>可以修改元组内list的内容（修改元素、增加、删除、反转等）</li>
+</ul>
+<p><strong>元组的特点：</strong></p>
+<ul>
+<li>可以容纳多个数据</li>
+<li>可以容纳不同类型的数据</li>
+<li>数据使有序存储的</li>
+<li>允许重复数据存在</li>
+<li>不可以修改</li>
+<li>支持for循环</li>
+</ul>
+<div class="highlight highlight-source-python"><pre class="notranslate"><span class="pl-c"># 定义一个元组</span>
+<span class="pl-s1">stu_info</span> <span class="pl-c1">=</span> (<span class="pl-s">'torch'</span>,<span class="pl-c1">11</span>,[<span class="pl-s">'football'</span>,<span class="pl-s">'music'</span>])
+
+<span class="pl-c"># 查询年龄下标位置</span>
+<span class="pl-s1">age</span> <span class="pl-c1">=</span> <span class="pl-s1">stu_info</span>.<span class="pl-en">index</span>(<span class="pl-c1">11</span>)
+<span class="pl-en">print</span>(<span class="pl-s">f"年龄下标位置为<span class="pl-s1"><span class="pl-kos">{</span><span class="pl-s1">age</span><span class="pl-kos">}</span></span>"</span>)
+
+<span class="pl-c"># 查询姓名</span>
+<span class="pl-en">print</span>(<span class="pl-s">f"姓名：<span class="pl-s1"><span class="pl-kos">{</span><span class="pl-s1">stu_info</span>[<span class="pl-c1">0</span>]<span class="pl-kos">}</span></span>"</span>)
+
+<span class="pl-c"># 删除football</span>
+<span class="pl-s1">stu_info</span>[<span class="pl-c1">2</span>].<span class="pl-en">remove</span>(<span class="pl-s">'football'</span>)
+
+<span class="pl-c"># 增加coding爱好</span>
+<span class="pl-s1">stu_info</span>[<span class="pl-c1">2</span>].<span class="pl-en">append</span>(<span class="pl-s">'coding'</span>)
+<span class="pl-en">print</span>(<span class="pl-s1">stu_info</span>)
+
+<span class="pl-s">"""</span>
+<span class="pl-s">年龄下标位置为1</span>
+<span class="pl-s">姓名：torch</span>
+<span class="pl-s">('torch', 11, ['music', 'coding'])</span>
+<span class="pl-s">"""</span></pre></div>
+<h3>7.8 字符串的定义和操作</h3>
+<p><strong>字符串的下标（索引）</strong></p>
+<p>和其他容器，列表、元组一样，字符串也可以通过下标进行访问</p>
+<ul>
+<li>从前向后，下标从0开始</li>
+<li>从后向前，下标从-1开始</li>
+</ul>
+<p><strong>同元组一样，字符串也是一个无法修改的数据容器</strong></p>
+<p><strong>字符串的替换：</strong></p>
+<ul>
+<li>语法：字符串.replace(字符串1，字符串2)</li>
+<li>功能：将字符串内的全部：字符串1，替换为字符串2</li>
+<li>注意：不是修改字符串本身，而是<strong>得到了一个新字符串</strong></li>
+</ul>
+<p><strong>字符串的分隔：</strong></p>
+<ul>
+<li>语法：字符串.split(分隔符字符串)</li>
+<li>功能：按照指定的分隔符字符串，将字符串划分为多个字符串，并存入列表对象中</li>
+<li>注意：字符串本身不变，而是得到了一个列表对象</li>
+</ul>
+<p><strong>字符串的规整操作：</strong></p>
+<ul>
+<li>去前后空格：语法：字符串.strip()</li>
+<li>去前后指定字符串：字符串.strip(字符串)</li>
+</ul>
+<p><strong>其他操作：</strong></p>
+<ul>
+<li>统计字符串内某字符串的出现次数：字符串.count(字符串)</li>
+<li>统计字符串的字符个数：len(字符串)</li>
+</ul>
+<p><strong>字符串的遍历：仍然是通过while和for来进行遍历</strong></p>
+<div class="highlight highlight-source-python"><pre class="notranslate"><span class="pl-c"># 练习：分割字符串</span>
+<span class="pl-s1">str</span> <span class="pl-c1">=</span> <span class="pl-s">"torch is a king king king"</span>
+<span class="pl-en">print</span>(<span class="pl-s1">str</span>.<span class="pl-en">count</span>(<span class="pl-s">"king"</span>))
+<span class="pl-en">print</span>(<span class="pl-s1">str</span>.<span class="pl-en">replace</span>(<span class="pl-s">" "</span>, <span class="pl-s">"|"</span>))
+<span class="pl-en">print</span>(<span class="pl-s1">str</span>.<span class="pl-en">split</span>(<span class="pl-s">"|"</span>))</pre></div>
+<h3>7.9 数据容器（序列）的切片</h3>
+<p>序列的常用操作——切片</p>
+<p>序列支持切片，即：列表、元组、字符串，均支持进行切片操作</p>
+<p>切片：从一个序列中，取出一个子序列</p>
+<p><strong>语法：序列[起始下标:结束下标:步长]</strong></p>
+<p>表示从序列中，从指定位置开始，依次取出元素，到指定位置结束，得到一个新序列：</p>
+<ul>
+<li>起始下标表示从何处开始，可以留空，留空视作从头开始</li>
+<li>结束下标（不含）表示何处结束，可以留空，留空视作截取到结尾</li>
+<li>步长表示，依次取元素的间隔
+<ul>
+<li>步长1表示，一个个取元素</li>
+<li>步长2表示，每次跳过一个元素取</li>
+<li>步长N表示，每次跳过N-1个元素取</li>
+<li>步长为负数表示，反向取（注意，起始下标和结束下标也要反向标记）</li>
+</ul>
+</li>
+</ul>
+<div class="highlight highlight-source-python"><pre class="notranslate"><span class="pl-c"># 对list进行切片，从1开始，4结束，步长1</span>
+<span class="pl-s1">my_list</span> <span class="pl-c1">=</span> [<span class="pl-c1">0</span>, <span class="pl-c1">1</span>, <span class="pl-c1">2</span>, <span class="pl-c1">3</span>, <span class="pl-c1">4</span>, <span class="pl-c1">5</span>, <span class="pl-c1">6</span>]
+<span class="pl-s1">result</span> <span class="pl-c1">=</span> <span class="pl-s1">my_list</span>[<span class="pl-c1">1</span>:<span class="pl-c1">4</span>]
+<span class="pl-en">print</span>(<span class="pl-s">f"结果1：<span class="pl-s1"><span class="pl-kos">{</span><span class="pl-s1">result</span><span class="pl-kos">}</span></span>"</span>)
+
+<span class="pl-c"># 对tuple进行切片</span>
+<span class="pl-s1">my_tuple</span> <span class="pl-c1">=</span> (<span class="pl-c1">0</span>, <span class="pl-c1">1</span>, <span class="pl-c1">2</span>, <span class="pl-c1">3</span>, <span class="pl-c1">4</span>, <span class="pl-c1">5</span>, <span class="pl-c1">6</span>)
+<span class="pl-en">print</span>(<span class="pl-s">f"结果2：<span class="pl-s1"><span class="pl-kos">{</span><span class="pl-s1">my_tuple</span>[:]<span class="pl-kos">}</span></span>"</span>)
+
+<span class="pl-c"># 对str进行切片</span>
+<span class="pl-s1">my_str</span> <span class="pl-c1">=</span> <span class="pl-s">"0123456"</span>
+<span class="pl-en">print</span>(<span class="pl-s">f"结果3：<span class="pl-s1"><span class="pl-kos">{</span><span class="pl-s1">my_str</span>[::<span class="pl-c1">2</span>]<span class="pl-kos">}</span></span>"</span>)
+<span class="pl-en">print</span>(<span class="pl-s">f"结果4：<span class="pl-s1"><span class="pl-kos">{</span><span class="pl-s1">my_str</span>[::<span class="pl-c1">-</span><span class="pl-c1">1</span>]<span class="pl-kos">}</span></span>"</span>)
+
+<span class="pl-c"># 对列表进行切片</span>
+<span class="pl-s1">my_list</span> <span class="pl-c1">=</span> [<span class="pl-c1">0</span>, <span class="pl-c1">1</span>, <span class="pl-c1">2</span>, <span class="pl-c1">3</span>, <span class="pl-c1">4</span>, <span class="pl-c1">5</span>, <span class="pl-c1">6</span>]
+<span class="pl-en">print</span>(<span class="pl-s">f"结果5：<span class="pl-s1"><span class="pl-kos">{</span><span class="pl-s1">my_list</span>[<span class="pl-c1">3</span>:<span class="pl-c1">1</span>:<span class="pl-c1">-</span><span class="pl-c1">1</span>]<span class="pl-kos">}</span></span>"</span>)
+
+<span class="pl-c"># 对元组进行切片</span>
+<span class="pl-s1">my_tuple</span> <span class="pl-c1">=</span> (<span class="pl-c1">0</span>, <span class="pl-c1">1</span>, <span class="pl-c1">2</span>, <span class="pl-c1">3</span>, <span class="pl-c1">4</span>, <span class="pl-c1">5</span>, <span class="pl-c1">6</span>)
+<span class="pl-en">print</span>(<span class="pl-s">f"结果6：<span class="pl-s1"><span class="pl-kos">{</span><span class="pl-s1">my_tuple</span>[::<span class="pl-c1">-</span><span class="pl-c1">2</span>]<span class="pl-kos">}</span></span>"</span>)
+
+<span class="pl-s">"""</span>
+<span class="pl-s">结果1：[1, 2, 3]</span>
+<span class="pl-s">结果2：(0, 1, 2, 3, 4, 5, 6)</span>
+<span class="pl-s">结果3：0246</span>
+<span class="pl-s">结果4：6543210</span>
+<span class="pl-s">结果5：[3, 2]</span>
+<span class="pl-s">结果6：(6, 4, 2, 0)</span>
+<span class="pl-s">"""</span></pre></div>
+<h3>7.10 集合的定义和操作</h3>
+<div class="highlight highlight-source-python"><pre class="notranslate"><span class="pl-c"># 定义集合</span>
+<span class="pl-s1">my_set</span> <span class="pl-c1">=</span> {<span class="pl-s">"no1"</span>,<span class="pl-s">"no2"</span>,<span class="pl-s">"no3"</span>,<span class="pl-s">"no1"</span>,<span class="pl-s">"no2"</span>,<span class="pl-s">"no3"</span>,<span class="pl-s">"no1"</span>,<span class="pl-s">"no2"</span>,<span class="pl-s">"no3"</span>}
+<span class="pl-s1">my_set_empty</span> <span class="pl-c1">=</span> <span class="pl-en">set</span>()
+<span class="pl-en">print</span>(<span class="pl-s">f"my_set的内容是：<span class="pl-s1"><span class="pl-kos">{</span><span class="pl-s1">my_set</span><span class="pl-kos">}</span></span>,类型是<span class="pl-s1"><span class="pl-kos">{</span><span class="pl-en">type</span>(<span class="pl-s1">my_set</span>)<span class="pl-kos">}</span></span>"</span>)
+<span class="pl-en">print</span>(<span class="pl-s">f"my_set_empty的内容是：<span class="pl-s1"><span class="pl-kos">{</span><span class="pl-s1">my_set_empty</span><span class="pl-kos">}</span></span>,类型是<span class="pl-s1"><span class="pl-kos">{</span><span class="pl-en">type</span>(<span class="pl-s1">my_set_empty</span>)<span class="pl-kos">}</span></span>"</span>)
+
+<span class="pl-s1">my_set</span>.<span class="pl-en">add</span>(<span class="pl-s">"no4"</span>)
+<span class="pl-s1">my_set</span>.<span class="pl-en">remove</span>(<span class="pl-s">"no1"</span>)
+<span class="pl-en">print</span>(<span class="pl-s">f"取出了：<span class="pl-s1"><span class="pl-kos">{</span><span class="pl-s1">my_set</span>.<span class="pl-en">pop</span>()<span class="pl-kos">}</span></span>"</span>)
+<span class="pl-s1">my_set</span>.<span class="pl-en">clear</span>()
+
+
+<span class="pl-s">"""</span>
+<span class="pl-s">my_set的内容是：{'no1', 'no3', 'no2'},类型是&lt;class 'set'&gt;</span>
+<span class="pl-s">my_set_empty的内容是：set(),类型是&lt;class 'set'&gt;</span>
+<span class="pl-s">"""</span></pre></div>
+<p><strong>集合的常用操作——修改：</strong></p>
+<p>首先，因为集合是无序的，所以集合不支持：下标索引访问，但是集合和列表一样，是允许修改的，所以我们来看看集合的修改方法</p>
+<ul>
+<li>添加新元素：
+<ul>
+<li>语法：集合.add(元素)，将指定元素添加到集合内</li>
+<li>结果：集合本身被修改，添加了新元素</li>
+</ul>
+</li>
+<li>移除元素：
+<ul>
+<li>语法：集合.remove(元素)</li>
+<li>集合本身被修改，移除了元素</li>
+</ul>
+</li>
+<li>从集合中随机取出元素：
+<ul>
+<li>语法：集合.pop(功能)，从集合中随机取出一个元素</li>
+<li>会得到一个元素的结果，同时集合本身被修改，元素被移除</li>
+</ul>
+</li>
+<li>清空集合：
+<ul>
+<li>语法：集合.clear()</li>
+</ul>
+</li>
+<li>取两个集合的差集：
+<ul>
+<li>语法：集合1.difference(集合2)，功能：取出集合1和集合2 的差集（集合1有而集合2没有的）</li>
+<li>得到一个新集合，集合1和集合2不变</li>
+</ul>
+</li>
+<li>消除两个集合的差集：
+<ul>
+<li>语法：集合1.difference_update(集合2)</li>
+<li>集合1被修改，集合2不变</li>
+</ul>
+</li>
+<li>两个集合合并：
+<ul>
+<li>语法：集合1.union(集合2)</li>
+<li>将集合1和集合2组成新集合，得到新集合，集合1和集合2不变</li>
+</ul>
+</li>
+<li>统计集合元素数量：len()</li>
+<li><strong>集合的遍历：可以用for循环</strong></li>
+</ul>
+<p>集合的特点：</p>
+<ul>
+<li>可以容纳多个数据</li>
+<li>可以容纳不同类型的数据</li>
+<li>数据是无序存储的</li>
+<li>不允许重复数据存在</li>
+<li>可以修改（增加或删除元素等）</li>
+<li>支持for循环</li>
+</ul></div>
+<div style="font-size:small;margin-top:8px;float:right;">🍺转载文章请注明出处，谢谢！🍺</div>
+<button class="btn btn-block" type="button" onclick="openComments()" id="cmButton">评论</button>
+<div class="comments" id="comments"></div>
+</div>
+    <div id="footer">Copyright © <span id="year"></span><a href="https://blog.witter.top"> V's Blog </a>
+<p><a href="https://beian.miit.gov.cn/" target="_blank">冀ICP备2022019998号</a>
+<span id="runday"></span>Powered by <a href="https://meekdai.com/Gmeek.html" target="_blank">Gmeek</a>
+</p>
+
+<script>
+if("06/20/2024"!=""){
+    var now=new Date();
+    var startSite=new Date("06/20/2024");
+    var diff=now.getTime()-startSite.getTime();
+    var diffDay=Math.floor(diff/(1000*60*60*24));
+    document.getElementById("year").innerHTML=now.getFullYear();
+    if("冀ICP备2022019998号"!=""){document.getElementById("runday").innerHTML=" • "+"网站运行"+diffDay+"天"+" • ";}
+    else{document.getElementById("runday").innerHTML="网站运行"+diffDay+"天"+" • ";}
+}
+</script>
+</div>
+</body>
+<script>
+var IconList={'sun': 'M8 10.5a2.5 2.5 0 100-5 2.5 2.5 0 000 5zM8 12a4 4 0 100-8 4 4 0 000 8zM8 0a.75.75 0 01.75.75v1.5a.75.75 0 01-1.5 0V.75A.75.75 0 018 0zm0 13a.75.75 0 01.75.75v1.5a.75.75 0 01-1.5 0v-1.5A.75.75 0 018 13zM2.343 2.343a.75.75 0 011.061 0l1.06 1.061a.75.75 0 01-1.06 1.06l-1.06-1.06a.75.75 0 010-1.06zm9.193 9.193a.75.75 0 011.06 0l1.061 1.06a.75.75 0 01-1.06 1.061l-1.061-1.06a.75.75 0 010-1.061zM16 8a.75.75 0 01-.75.75h-1.5a.75.75 0 010-1.5h1.5A.75.75 0 0116 8zM3 8a.75.75 0 01-.75.75H.75a.75.75 0 010-1.5h1.5A.75.75 0 013 8zm10.657-5.657a.75.75 0 010 1.061l-1.061 1.06a.75.75 0 11-1.06-1.06l1.06-1.06a.75.75 0 011.06 0zm-9.193 9.193a.75.75 0 010 1.06l-1.06 1.061a.75.75 0 11-1.061-1.06l1.06-1.061a.75.75 0 011.061 0z', 'moon': 'M9.598 1.591a.75.75 0 01.785-.175 7 7 0 11-8.967 8.967.75.75 0 01.961-.96 5.5 5.5 0 007.046-7.046.75.75 0 01.175-.786zm1.616 1.945a7 7 0 01-7.678 7.678 5.5 5.5 0 107.678-7.678z', 'sync': 'M1.705 8.005a.75.75 0 0 1 .834.656 5.5 5.5 0 0 0 9.592 2.97l-1.204-1.204a.25.25 0 0 1 .177-.427h3.646a.25.25 0 0 1 .25.25v3.646a.25.25 0 0 1-.427.177l-1.38-1.38A7.002 7.002 0 0 1 1.05 8.84a.75.75 0 0 1 .656-.834ZM8 2.5a5.487 5.487 0 0 0-4.131 1.869l1.204 1.204A.25.25 0 0 1 4.896 6H1.25A.25.25 0 0 1 1 5.75V2.104a.25.25 0 0 1 .427-.177l1.38 1.38A7.002 7.002 0 0 1 14.95 7.16a.75.75 0 0 1-1.49.178A5.5 5.5 0 0 0 8 2.5Z', 'home': 'M6.906.664a1.749 1.749 0 0 1 2.187 0l5.25 4.2c.415.332.657.835.657 1.367v7.019A1.75 1.75 0 0 1 13.25 15h-3.5a.75.75 0 0 1-.75-.75V9H7v5.25a.75.75 0 0 1-.75.75h-3.5A1.75 1.75 0 0 1 1 13.25V6.23c0-.531.242-1.034.657-1.366l5.25-4.2Zm1.25 1.171a.25.25 0 0 0-.312 0l-5.25 4.2a.25.25 0 0 0-.094.196v7.019c0 .138.112.25.25.25H5.5V8.25a.75.75 0 0 1 .75-.75h3.5a.75.75 0 0 1 .75.75v5.25h2.75a.25.25 0 0 0 .25-.25V6.23a.25.25 0 0 0-.094-.195Z', 'github': 'M8 0c4.42 0 8 3.58 8 8a8.013 8.013 0 0 1-5.45 7.59c-.4.08-.55-.17-.55-.38 0-.27.01-1.13.01-2.2 0-.75-.25-1.23-.54-1.48 1.78-.2 3.65-.88 3.65-3.95 0-.88-.31-1.59-.82-2.15.08-.2.36-1.02-.08-2.12 0 0-.67-.22-2.2.82-.64-.18-1.32-.27-2-.27-.68 0-1.36.09-2 .27-1.53-1.03-2.2-.82-2.2-.82-.44 1.1-.16 1.92-.08 2.12-.51.56-.82 1.28-.82 2.15 0 3.06 1.86 3.75 3.64 3.95-.23.2-.44.55-.51 1.07-.46.21-1.61.55-2.33-.66-.15-.24-.6-.83-1.23-.82-.67.01-.27.38.01.53.34.19.73.9.82 1.13.16.45.68 1.31 2.69.94 0 .67.01 1.3.01 1.49 0 .21-.15.45-.55.38A7.995 7.995 0 0 1 0 8c0-4.42 3.58-8 8-8Z'};
+var utterancesLoad=0;
+
+let themeSettings={
+    "dark": ["dark","moon","#00f0ff","dark-blue"],
+    "light": ["light","sun","#ff5000","github-light"],
+    "auto": ["auto","sync","","preferred-color-scheme"]
+};
+function changeTheme(mode, icon, color, utheme){
+    document.documentElement.setAttribute("data-color-mode",mode);
+    document.getElementById("themeSwitch").setAttribute("d",value=IconList[icon]);
+    document.getElementById("themeSwitch").parentNode.style.color=color;
+    if(utterancesLoad==1){utterancesTheme(utheme);}
+}
+function modeSwitch(){
+    let currentMode=document.documentElement.getAttribute('data-color-mode');
+    let newMode = currentMode === "light" ? "dark" : currentMode === "dark" ? "auto" : "light";
+    localStorage.setItem("meek_theme", newMode);
+    if(themeSettings[newMode]){
+        changeTheme(...themeSettings[newMode]);
+    }
+}
+function utterancesTheme(theme){
+    const message={type:'set-theme',theme: theme};
+    const iframe=document.getElementsByClassName('utterances-frame')[0];
+    iframe.contentWindow.postMessage(message,'https://utteranc.es');
+}
+if(themeSettings[theme]){changeTheme(...themeSettings[theme]);}
+console.log("\n %c Gmeek last https://github.com/Meekdai/Gmeek \n\n","padding:5px 0;background:#02d81d;color:#fff");
+</script>
+
+<script>
+document.getElementById("pathHome").setAttribute("d",IconList["home"]);
+document.getElementById("pathIssue").setAttribute("d",IconList["github"]);
+
+function openComments(){
+    cm=document.getElementById("comments");
+    cmButton=document.getElementById("cmButton");
+    cmButton.innerHTML="loading";
+    span=document.createElement("span");
+    span.setAttribute("class","AnimatedEllipsis");
+    cmButton.appendChild(span);
+
+    script=document.createElement("script");
+    script.setAttribute("src","https://utteranc.es/client.js");
+    script.setAttribute("repo","ljwtorch/ljwtorch.github.io");
+    script.setAttribute("issue-term","title");
+    
+    if(localStorage.getItem("meek_theme")=="dark"){script.setAttribute("theme","dark-blue");}
+    else if(localStorage.getItem("meek_theme")=="light") {script.setAttribute("theme","github-light");}
+    else{script.setAttribute("theme","preferred-color-scheme");}
+    
+    script.setAttribute("crossorigin","anonymous");
+    script.setAttribute("async","");
+    cm.appendChild(script);
+
+    int=self.setInterval("iFrameLoading()",200);
+}
+
+function iFrameLoading(){
+    var utterances=document.getElementsByClassName('utterances');
+    if(utterances.length==1){
+        if(utterances[0].style.height!=""){
+            utterancesLoad=1;
+            int=window.clearInterval(int);
+            document.getElementById("cmButton").style.display="none";
+            console.log("utterances Load OK");
+        }
+    }
+}
+</script>
+
+
+</html>
