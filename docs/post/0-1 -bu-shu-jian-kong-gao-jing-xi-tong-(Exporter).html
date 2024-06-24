@@ -1,0 +1,1172 @@
+<!DOCTYPE html>
+<html data-color-mode="light" data-dark-theme="dark" data-light-theme="light" lang="zh-CN">
+<head>
+    <meta content="text/html; charset=utf-8" http-equiv="content-type" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <link href="//cdn.staticfile.net/Primer/21.0.7/primer.css" rel="stylesheet" />
+    <link rel="icon" href="https://img.witter.top/file/b037878209903b7d5bb17.jpg"><script>
+        let theme = localStorage.getItem("meek_theme") || "light";
+        document.documentElement.setAttribute("data-color-mode", theme);
+    </script>
+<meta name="description" content="> [!TIP]
+> 下方采集指标内容只写正在使用的一些指标名称，其他部分自行搭建后进行了解！
+
+## 1.node-exporter
+
+### 1.1 部署方式
+
+**单机部署**
+
+```shell
+docker run -d --name node-exporter --restart=always --net='host' --pid='host' -v '/:/host:ro,rslave' quay.io/prometheus/node-exporter:latest --path.rootfs=/host
+```
+
+**docker compose 部署**
+
+```yaml
+  node-exporter:
+    image: quay.io/prometheus/node-exporter:latest
+    container_name: node-exporter
+    restart: always
+    network_mode: host
+    pid: host
+    volumes:
+      - /:/host:ro,rslave
+    command: --path.rootfs=/host
+    depends_on:
+      - prometheus
+```
+
+访问 ip:9100
+
+### 1.2 采集指标
+
+1. CPU使用率：`round((1 - avg(rate(node_cpu_seconds_total{instance='instance:9100',mode='idle'}[1m])) by (instance)) * 100, 0.01)`
+2. RAM使用率：`round((1 - (node_memory_MemAvailable_bytes{instance='instance:9100'} / (node_memory_MemTotal_bytes{instance='instance:9100'})))* 100,0.01)`
+3. 磁盘使用率：`round((node_filesystem_size_bytes{instance='instance:9100',mountpoint='/'}-node_filesystem_free_bytes{instance='instance:9100',mountpoint='/'})*100/(node_filesystem_avail_bytes{instance='instance:9100',mountpoint='/'}+(node_filesystem_size_bytes{instance='instance:9100',mountpoint='/'}-node_filesystem_free_bytes{instance='instance:9100',mountpoint='/'})),0.01)`
+4. 网络连接数使用量：`node_netstat_Tcp_CurrEstab{instance='instance:9100'}`
+
+
+
+## 2.blackbox-exporter
+
+### 2.1 部署方式
+
+**docker compose部署**
+
+```yaml
+  blackbox-exporter:
+    image: quay.io/prometheus/blackbox-exporter:latest
+    container_name: blackbox-exporter
+    restart: always
+    ports:
+      - '9115:9115'
+    volumes:
+      - ./blackbox-exporter/:/config
+    command: --config.file=/config/blackbox.yml
+    depends_on:
+      - prometheus
+```
+
+### 2.2 配置文件
+
+```yaml
+modules:
+  http_2xx:
+    prober: http
+  http_post_2xx:
+    prober: http
+    http:
+      method: POST
+  tcp_connect:
+    prober: tcp
+  pop3s_banner:
+    prober: tcp
+    tcp:
+      query_response:
+      - expect: '^+OK'
+      tls: true
+      tls_config:
+        insecure_skip_verify: false
+  ssh_banner:
+    prober: tcp
+    tcp:
+      query_response:
+      - expect: '^SSH-2.0-'
+  irc_banner:
+    prober: tcp
+    tcp:
+      query_response:
+      - send: 'NICK prober'
+      - send: 'USER prober prober prober :prober'
+      - expect: 'PING :([^ ]+)'
+        send: 'PONG ${1}'
+      - expect: '^:[^ ]+ 001'
+  icmp:
+    prober: icmp 
+  http_2xx_java: # 自定义状态码200的匹配规则
+    prober: http
+    http:
+      method: GET
+      fail_if_body_not_matches_regexp:
+      - ''status':'UP''
+```
+
+### 2.3 采集指标
+
+1. 状态码：`probe_http_status_code`
+2. ping延时：`probe_icmp_duration_seconds`
+3. tcp连接：`probe_success`
+
+## 3.jmx-exporter
+
+> 目前只用来监控kafka实例
+
+### 3.1 部署方式
+
+**本地部署**  [[下载链接](https://github.com/prometheus/jmx_exporter/tree/release-0.20.0)](https://github.com/prometheus/jmx_exporter/tree/release-0.20.0)
+
+监控kafka批量启动脚本：`bash jmx_kafka.sh status`
+
+```shell
+#!/bin/bash
+
+# 定义一个函数来处理不同的 jmx 实例
+manage_jmx_instance() {
+  local instance='$1'
+  local port=$((9800 + ${instance#kafka})) # 提取实例名称后的数字并加9800作为端口
+  local pid_file='/var/run/jmx_${instance}_httpserver.pid'
+  local log_file='/root/monitor/log/${instance}.log'
+
+  case '$2' in
+    start)
+      if [ -f '$pid_file' ]; then
+        echo 'jmx_${instance}_httpserver is already running.'
+      else
+        # 使用对应的端口号启动 jmx_prometheus_httpserver
+        nohup java -jar /root/monitor/jmx_prometheus_httpserver-0.20.0.jar $port /root/monitor/${instance}.yml >> '$log_file' 2>&1 &
+        echo $! > '$pid_file'
+        echo 'jmx_${instance}_httpserver on port $port started.'
+      fi
+      ;;
+    status)
+      if [ -f '$pid_file' ]; then
+        PID=$(cat '$pid_file')
+        ps -p $PID > /dev/null 2>&1
+        if [ $? -eq 0 ]; then
+          echo 'jmx_${instance}_httpserver is running (PID $PID).'
+        else
+          echo 'jmx_${instance}_httpserver is not running but PID file exists.'
+        fi
+      else
+        echo 'jmx_${instance}_httpserver is not running.'
+      fi
+      ;;
+    stop)
+      if [ -f '$pid_file' ]; then
+        PID=$(cat '$pid_file')
+        # 使用 kill 而不是 kill -9 以避免过于激进地终止进程
+        kill $PID
+        rm -f '$pid_file'
+        echo 'jmx_${instance}_httpserver stopped.'
+      else
+        echo 'jmx_${instance}_httpserver is not running.'
+      fi
+      ;;
+    *)
+      echo 'Usage: $0 {start|status|stop}'
+      exit 1
+      ;;
+  esac
+}
+
+# 根据提供的选项调用函数来管理不同的 jmx 实例,同目录下存放了三个kafka1-3.yml配置文件供exporter使用
+for instance in kafka1 kafka2 kafka3; do
+  manage_jmx_instance '$instance' '$1'
+done
+
+exit 0
+```
+
+### 3.2 配置文件
+
+`kafka1.yml`
+
+```yaml
+lowercaseOutputName: true
+hostPort: kafka_ip:9999
+rules:
+# Special cases and very specific rules
+- pattern : kafka.server<type=(.+), name=(.+), clientId=(.+), topic=(.+), partition=(.*)><>Value
+  name: kafka_server_$1_$2
+  type: GAUGE
+  labels:
+    clientId: '$3'
+    topic: '$4'
+    partition: '$5'
+- pattern : kafka.server<type=(.+), name=(.+), clientId=(.+), brokerHost=(.+), brokerPort=(.+)><>Value
+  name: kafka_server_$1_$2
+  type: GAUGE
+  labels:
+    clientId: '$3'
+    broker: '$4:$5'
+- pattern : kafka.coordinator.(\w+)<type=(.+), name=(.+)><>Value
+  name: kafka_coordinator_$1_$2_$3
+  type: GAUGE
+
+# Generic per-second counters with 0-2 key/value pairs
+- pattern: kafka.(\w+)<type=(.+), name=(.+)PerSec\w*, (.+)=(.+), (.+)=(.+)><>Count
+  name: kafka_$1_$2_$3_total
+  type: COUNTER
+  labels:
+    '$4': '$5'
+    '$6': '$7'
+- pattern: kafka.(\w+)<type=(.+), name=(.+)PerSec\w*, (.+)=(.+)><>Count
+  name: kafka_$1_$2_$3_total
+  type: COUNTER
+  labels:
+    '$4': '$5'
+- pattern: kafka.(\w+)<type=(.+), name=(.+)PerSec\w*><>Count
+  name: kafka_$1_$2_$3_total
+  type: COUNTER
+
+# Quota specific rules
+- pattern: kafka.server<type=(.+), user=(.+), client-id=(.+)><>([a-z-]+)
+  name: kafka_server_quota_$4
+  type: GAUGE
+  labels:
+    resource: '$1'
+    user: '$2'
+    clientId: '$3'
+- pattern: kafka.server<type=(.+), client-id=(.+)><>([a-z-]+)
+  name: kafka_server_quota_$3
+  type: GAUGE
+  labels:
+    resource: '$1'
+    clientId: '$2'
+- pattern: kafka.server<type=(.+), user=(.+)><>([a-z-]+)
+  name: kafka_server_quota_$3
+  type: GAUGE
+  labels:
+    resource: '$1'
+    user: '$2'
+
+# Generic gauges with 0-2 key/value pairs
+- pattern: kafka.(\w+)<type=(.+), name=(.+), (.+)=(.+), (.+)=(.+)><>Value
+  name: kafka_$1_$2_$3
+  type: GAUGE
+  labels:
+    '$4': '$5'
+    '$6': '$7'
+- pattern: kafka.(\w+)<type=(.+), name=(.+), (.+)=(.+)><>Value
+  name: kafka_$1_$2_$3
+  type: GAUGE
+  labels:
+    '$4': '$5'
+- pattern: kafka.(\w+)<type=(.+), name=(.+)><>Value
+  name: kafka_$1_$2_$3
+  type: GAUGE
+
+# Emulate Prometheus 'Summary' metrics for the exported 'Histogram's.
+#
+# Note that these are missing the '_sum' metric!
+- pattern: kafka.(\w+)<type=(.+), name=(.+), (.+)=(.+), (.+)=(.+)><>Count
+  name: kafka_$1_$2_$3_count
+  type: COUNTER
+  labels:
+    '$4': '$5'
+    '$6': '$7'
+- pattern: kafka.(\w+)<type=(.+), name=(.+), (.+)=(.*), (.+)=(.+)><>(\d+)thPercentile
+  name: kafka_$1_$2_$3
+  type: GAUGE
+  labels:
+    '$4': '$5'
+    '$6': '$7'
+    quantile: '0.$8'
+- pattern: kafka.(\w+)<type=(.+), name=(.+), (.+)=(.+)><>Count
+  name: kafka_$1_$2_$3_count
+  type: COUNTER
+  labels:
+    '$4': '$5'
+- pattern: kafka.(\w+)<type=(.+), name=(.+), (.+)=(.*)><>(\d+)thPercentile
+  name: kafka_$1_$2_$3
+  type: GAUGE
+  labels:
+    '$4': '$5'
+    quantile: '0.$6'
+- pattern: kafka.(\w+)<type=(.+), name=(.+)><>Count
+  name: kafka_$1_$2_$3_count
+  type: COUNTER
+- pattern: kafka.(\w+)<type=(.+), name=(.+)><>(\d+)thPercentile
+  name: kafka_$1_$2_$3
+  type: GAUGE
+  labels:
+    quantile: '0.$4'
+
+# Generic gauges for MeanRate Percent
+# Ex) kafka.server<type=KafkaRequestHandlerPool, name=RequestHandlerAvgIdlePercent><>MeanRate
+- pattern: kafka.(\w+)<type=(.+), name=(.+)Percent\w*><>MeanRate
+  name: kafka_$1_$2_$3_percent
+  type: GAUGE
+- pattern: kafka.(\w+)<type=(.+), name=(.+)Percent\w*><>Value
+  name: kafka_$1_$2_$3_percent
+  type: GAUGE
+- pattern: kafka.(\w+)<type=(.+), name=(.+)Percent\w*, (.+)=(.+)><>Value
+  name: kafka_$1_$2_$3_percent
+  type: GAUGE
+  labels:
+    '$4': '$5'
+```
+
+### 3.3 采集指标
+
+1. 指定kafka-topic消息数量：`round(increase(kafka_server_brokertopicmetrics_messagesin_total{topic='kafka_topic'}[1h]),0.01)`
+
+## 4.mysql-exporter
+
+### 4.1 部署方式
+
+```shell
+docker run -d --name mysql-exporter --restart always -p 9104:9104 -e DATA_SOURCE_NAME='user:passwd@(ip:3306)/' prom/mysqld-exporter
+```
+
+### 4.2 指标名称
+
+1. Mysql监控agent存活：mysql_up
+2. 连接数：mysql_global_status_threads_connected
+3. 文件打开数：mysql_global_status_innodb_num_open_files
+4. 从库只读：mysql_global_variables_read_only
+5. 主从延迟：mysql_slave_status_seconds_behind_master
+6. sql线程：mysql_slave_status_slave_sql_running
+7. IO线程：mysql_slave_status_slave_io_running
+8. 入口流量：mysql_global_status_bytes_received
+9. 出口流量：mysql_global_status_bytes_sent
+10. 写操作速率：mysql_global_status_commands_total
+11. 慢查询：mysql_global_status_slow_queries
+12. 查询速率：mysql_global_status_questions
+13. 可用连接数：mysql_global_variables_max_connections
+14. 缓冲池利用率：mysql_global_status_buffer_pool_pages
+15. 打开文件数量限制：mysql_global_variables_open_files_limit
+16. 启用了InnoDB强制恢复功能：mysql_global_variables_innodb_force_recovery
+17. InnoDB日志文件大小：mysql_global_variables_innodb_log_file_size
+18. InnoDB插件已启用：mysql_global_variables_ignore_builtin_innodb
+19. Binary Log状态：mysql_global_variables_log_bin
+20. Binlog缓存大小：mysql_global_variables_binlog_cache_size
+21. 同步Binlog状态：mysql_global_variables_sync_binlog
+22. IO线程状态：mysql_slave_status_slave_io_running
+23. sql线程状态：mysql_slave_status_slave_sql_running
+24. InnoDB日志等待量：mysql_global_status_innodb_log_waits （不为0的话，InnoDB log buffer因空间不足而等待）。">
+<meta property="og:title" content="0-1 部署监控告警系统(Exporter)">
+<meta property="og:description" content="> [!TIP]
+> 下方采集指标内容只写正在使用的一些指标名称，其他部分自行搭建后进行了解！
+
+## 1.node-exporter
+
+### 1.1 部署方式
+
+**单机部署**
+
+```shell
+docker run -d --name node-exporter --restart=always --net='host' --pid='host' -v '/:/host:ro,rslave' quay.io/prometheus/node-exporter:latest --path.rootfs=/host
+```
+
+**docker compose 部署**
+
+```yaml
+  node-exporter:
+    image: quay.io/prometheus/node-exporter:latest
+    container_name: node-exporter
+    restart: always
+    network_mode: host
+    pid: host
+    volumes:
+      - /:/host:ro,rslave
+    command: --path.rootfs=/host
+    depends_on:
+      - prometheus
+```
+
+访问 ip:9100
+
+### 1.2 采集指标
+
+1. CPU使用率：`round((1 - avg(rate(node_cpu_seconds_total{instance='instance:9100',mode='idle'}[1m])) by (instance)) * 100, 0.01)`
+2. RAM使用率：`round((1 - (node_memory_MemAvailable_bytes{instance='instance:9100'} / (node_memory_MemTotal_bytes{instance='instance:9100'})))* 100,0.01)`
+3. 磁盘使用率：`round((node_filesystem_size_bytes{instance='instance:9100',mountpoint='/'}-node_filesystem_free_bytes{instance='instance:9100',mountpoint='/'})*100/(node_filesystem_avail_bytes{instance='instance:9100',mountpoint='/'}+(node_filesystem_size_bytes{instance='instance:9100',mountpoint='/'}-node_filesystem_free_bytes{instance='instance:9100',mountpoint='/'})),0.01)`
+4. 网络连接数使用量：`node_netstat_Tcp_CurrEstab{instance='instance:9100'}`
+
+
+
+## 2.blackbox-exporter
+
+### 2.1 部署方式
+
+**docker compose部署**
+
+```yaml
+  blackbox-exporter:
+    image: quay.io/prometheus/blackbox-exporter:latest
+    container_name: blackbox-exporter
+    restart: always
+    ports:
+      - '9115:9115'
+    volumes:
+      - ./blackbox-exporter/:/config
+    command: --config.file=/config/blackbox.yml
+    depends_on:
+      - prometheus
+```
+
+### 2.2 配置文件
+
+```yaml
+modules:
+  http_2xx:
+    prober: http
+  http_post_2xx:
+    prober: http
+    http:
+      method: POST
+  tcp_connect:
+    prober: tcp
+  pop3s_banner:
+    prober: tcp
+    tcp:
+      query_response:
+      - expect: '^+OK'
+      tls: true
+      tls_config:
+        insecure_skip_verify: false
+  ssh_banner:
+    prober: tcp
+    tcp:
+      query_response:
+      - expect: '^SSH-2.0-'
+  irc_banner:
+    prober: tcp
+    tcp:
+      query_response:
+      - send: 'NICK prober'
+      - send: 'USER prober prober prober :prober'
+      - expect: 'PING :([^ ]+)'
+        send: 'PONG ${1}'
+      - expect: '^:[^ ]+ 001'
+  icmp:
+    prober: icmp 
+  http_2xx_java: # 自定义状态码200的匹配规则
+    prober: http
+    http:
+      method: GET
+      fail_if_body_not_matches_regexp:
+      - ''status':'UP''
+```
+
+### 2.3 采集指标
+
+1. 状态码：`probe_http_status_code`
+2. ping延时：`probe_icmp_duration_seconds`
+3. tcp连接：`probe_success`
+
+## 3.jmx-exporter
+
+> 目前只用来监控kafka实例
+
+### 3.1 部署方式
+
+**本地部署**  [[下载链接](https://github.com/prometheus/jmx_exporter/tree/release-0.20.0)](https://github.com/prometheus/jmx_exporter/tree/release-0.20.0)
+
+监控kafka批量启动脚本：`bash jmx_kafka.sh status`
+
+```shell
+#!/bin/bash
+
+# 定义一个函数来处理不同的 jmx 实例
+manage_jmx_instance() {
+  local instance='$1'
+  local port=$((9800 + ${instance#kafka})) # 提取实例名称后的数字并加9800作为端口
+  local pid_file='/var/run/jmx_${instance}_httpserver.pid'
+  local log_file='/root/monitor/log/${instance}.log'
+
+  case '$2' in
+    start)
+      if [ -f '$pid_file' ]; then
+        echo 'jmx_${instance}_httpserver is already running.'
+      else
+        # 使用对应的端口号启动 jmx_prometheus_httpserver
+        nohup java -jar /root/monitor/jmx_prometheus_httpserver-0.20.0.jar $port /root/monitor/${instance}.yml >> '$log_file' 2>&1 &
+        echo $! > '$pid_file'
+        echo 'jmx_${instance}_httpserver on port $port started.'
+      fi
+      ;;
+    status)
+      if [ -f '$pid_file' ]; then
+        PID=$(cat '$pid_file')
+        ps -p $PID > /dev/null 2>&1
+        if [ $? -eq 0 ]; then
+          echo 'jmx_${instance}_httpserver is running (PID $PID).'
+        else
+          echo 'jmx_${instance}_httpserver is not running but PID file exists.'
+        fi
+      else
+        echo 'jmx_${instance}_httpserver is not running.'
+      fi
+      ;;
+    stop)
+      if [ -f '$pid_file' ]; then
+        PID=$(cat '$pid_file')
+        # 使用 kill 而不是 kill -9 以避免过于激进地终止进程
+        kill $PID
+        rm -f '$pid_file'
+        echo 'jmx_${instance}_httpserver stopped.'
+      else
+        echo 'jmx_${instance}_httpserver is not running.'
+      fi
+      ;;
+    *)
+      echo 'Usage: $0 {start|status|stop}'
+      exit 1
+      ;;
+  esac
+}
+
+# 根据提供的选项调用函数来管理不同的 jmx 实例,同目录下存放了三个kafka1-3.yml配置文件供exporter使用
+for instance in kafka1 kafka2 kafka3; do
+  manage_jmx_instance '$instance' '$1'
+done
+
+exit 0
+```
+
+### 3.2 配置文件
+
+`kafka1.yml`
+
+```yaml
+lowercaseOutputName: true
+hostPort: kafka_ip:9999
+rules:
+# Special cases and very specific rules
+- pattern : kafka.server<type=(.+), name=(.+), clientId=(.+), topic=(.+), partition=(.*)><>Value
+  name: kafka_server_$1_$2
+  type: GAUGE
+  labels:
+    clientId: '$3'
+    topic: '$4'
+    partition: '$5'
+- pattern : kafka.server<type=(.+), name=(.+), clientId=(.+), brokerHost=(.+), brokerPort=(.+)><>Value
+  name: kafka_server_$1_$2
+  type: GAUGE
+  labels:
+    clientId: '$3'
+    broker: '$4:$5'
+- pattern : kafka.coordinator.(\w+)<type=(.+), name=(.+)><>Value
+  name: kafka_coordinator_$1_$2_$3
+  type: GAUGE
+
+# Generic per-second counters with 0-2 key/value pairs
+- pattern: kafka.(\w+)<type=(.+), name=(.+)PerSec\w*, (.+)=(.+), (.+)=(.+)><>Count
+  name: kafka_$1_$2_$3_total
+  type: COUNTER
+  labels:
+    '$4': '$5'
+    '$6': '$7'
+- pattern: kafka.(\w+)<type=(.+), name=(.+)PerSec\w*, (.+)=(.+)><>Count
+  name: kafka_$1_$2_$3_total
+  type: COUNTER
+  labels:
+    '$4': '$5'
+- pattern: kafka.(\w+)<type=(.+), name=(.+)PerSec\w*><>Count
+  name: kafka_$1_$2_$3_total
+  type: COUNTER
+
+# Quota specific rules
+- pattern: kafka.server<type=(.+), user=(.+), client-id=(.+)><>([a-z-]+)
+  name: kafka_server_quota_$4
+  type: GAUGE
+  labels:
+    resource: '$1'
+    user: '$2'
+    clientId: '$3'
+- pattern: kafka.server<type=(.+), client-id=(.+)><>([a-z-]+)
+  name: kafka_server_quota_$3
+  type: GAUGE
+  labels:
+    resource: '$1'
+    clientId: '$2'
+- pattern: kafka.server<type=(.+), user=(.+)><>([a-z-]+)
+  name: kafka_server_quota_$3
+  type: GAUGE
+  labels:
+    resource: '$1'
+    user: '$2'
+
+# Generic gauges with 0-2 key/value pairs
+- pattern: kafka.(\w+)<type=(.+), name=(.+), (.+)=(.+), (.+)=(.+)><>Value
+  name: kafka_$1_$2_$3
+  type: GAUGE
+  labels:
+    '$4': '$5'
+    '$6': '$7'
+- pattern: kafka.(\w+)<type=(.+), name=(.+), (.+)=(.+)><>Value
+  name: kafka_$1_$2_$3
+  type: GAUGE
+  labels:
+    '$4': '$5'
+- pattern: kafka.(\w+)<type=(.+), name=(.+)><>Value
+  name: kafka_$1_$2_$3
+  type: GAUGE
+
+# Emulate Prometheus 'Summary' metrics for the exported 'Histogram's.
+#
+# Note that these are missing the '_sum' metric!
+- pattern: kafka.(\w+)<type=(.+), name=(.+), (.+)=(.+), (.+)=(.+)><>Count
+  name: kafka_$1_$2_$3_count
+  type: COUNTER
+  labels:
+    '$4': '$5'
+    '$6': '$7'
+- pattern: kafka.(\w+)<type=(.+), name=(.+), (.+)=(.*), (.+)=(.+)><>(\d+)thPercentile
+  name: kafka_$1_$2_$3
+  type: GAUGE
+  labels:
+    '$4': '$5'
+    '$6': '$7'
+    quantile: '0.$8'
+- pattern: kafka.(\w+)<type=(.+), name=(.+), (.+)=(.+)><>Count
+  name: kafka_$1_$2_$3_count
+  type: COUNTER
+  labels:
+    '$4': '$5'
+- pattern: kafka.(\w+)<type=(.+), name=(.+), (.+)=(.*)><>(\d+)thPercentile
+  name: kafka_$1_$2_$3
+  type: GAUGE
+  labels:
+    '$4': '$5'
+    quantile: '0.$6'
+- pattern: kafka.(\w+)<type=(.+), name=(.+)><>Count
+  name: kafka_$1_$2_$3_count
+  type: COUNTER
+- pattern: kafka.(\w+)<type=(.+), name=(.+)><>(\d+)thPercentile
+  name: kafka_$1_$2_$3
+  type: GAUGE
+  labels:
+    quantile: '0.$4'
+
+# Generic gauges for MeanRate Percent
+# Ex) kafka.server<type=KafkaRequestHandlerPool, name=RequestHandlerAvgIdlePercent><>MeanRate
+- pattern: kafka.(\w+)<type=(.+), name=(.+)Percent\w*><>MeanRate
+  name: kafka_$1_$2_$3_percent
+  type: GAUGE
+- pattern: kafka.(\w+)<type=(.+), name=(.+)Percent\w*><>Value
+  name: kafka_$1_$2_$3_percent
+  type: GAUGE
+- pattern: kafka.(\w+)<type=(.+), name=(.+)Percent\w*, (.+)=(.+)><>Value
+  name: kafka_$1_$2_$3_percent
+  type: GAUGE
+  labels:
+    '$4': '$5'
+```
+
+### 3.3 采集指标
+
+1. 指定kafka-topic消息数量：`round(increase(kafka_server_brokertopicmetrics_messagesin_total{topic='kafka_topic'}[1h]),0.01)`
+
+## 4.mysql-exporter
+
+### 4.1 部署方式
+
+```shell
+docker run -d --name mysql-exporter --restart always -p 9104:9104 -e DATA_SOURCE_NAME='user:passwd@(ip:3306)/' prom/mysqld-exporter
+```
+
+### 4.2 指标名称
+
+1. Mysql监控agent存活：mysql_up
+2. 连接数：mysql_global_status_threads_connected
+3. 文件打开数：mysql_global_status_innodb_num_open_files
+4. 从库只读：mysql_global_variables_read_only
+5. 主从延迟：mysql_slave_status_seconds_behind_master
+6. sql线程：mysql_slave_status_slave_sql_running
+7. IO线程：mysql_slave_status_slave_io_running
+8. 入口流量：mysql_global_status_bytes_received
+9. 出口流量：mysql_global_status_bytes_sent
+10. 写操作速率：mysql_global_status_commands_total
+11. 慢查询：mysql_global_status_slow_queries
+12. 查询速率：mysql_global_status_questions
+13. 可用连接数：mysql_global_variables_max_connections
+14. 缓冲池利用率：mysql_global_status_buffer_pool_pages
+15. 打开文件数量限制：mysql_global_variables_open_files_limit
+16. 启用了InnoDB强制恢复功能：mysql_global_variables_innodb_force_recovery
+17. InnoDB日志文件大小：mysql_global_variables_innodb_log_file_size
+18. InnoDB插件已启用：mysql_global_variables_ignore_builtin_innodb
+19. Binary Log状态：mysql_global_variables_log_bin
+20. Binlog缓存大小：mysql_global_variables_binlog_cache_size
+21. 同步Binlog状态：mysql_global_variables_sync_binlog
+22. IO线程状态：mysql_slave_status_slave_io_running
+23. sql线程状态：mysql_slave_status_slave_sql_running
+24. InnoDB日志等待量：mysql_global_status_innodb_log_waits （不为0的话，InnoDB log buffer因空间不足而等待）。">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://blog.witter.top/post/0-1%20-bu-shu-jian-kong-gao-jing-xi-tong-%28Exporter%29.html">
+<meta property="og:image" content="https://img.witter.top/file/b037878209903b7d5bb17.jpg">
+<title>0-1 部署监控告警系统(Exporter)</title>
+<link href="//unpkg.com/@wooorm/starry-night@2.1.1/style/both.css" rel="stylesheet" />
+
+</head>
+<style>
+body{box-sizing: border-box;min-width: 200px;max-width: 900px;margin: 20px auto;padding: 45px;font-size: 16px;font-family: sans-serif;line-height: 1.25;}
+#header{display:flex;padding-bottom:8px;border-bottom: 1px solid var(--borderColor-muted, var(--color-border-muted));margin-bottom: 16px;}
+#footer {margin-top:64px; text-align: center;font-size: small;}
+
+</style>
+
+<style>
+.postTitle{margin: auto 0;font-size:40px;font-weight:bold;}
+.title-right{display:flex;margin:auto 0 0 auto;}
+.title-right .circle{padding: 14px 16px;margin-right:8px;}
+#postBody{border-bottom: 1px solid var(--color-border-default);padding-bottom:36px;}
+#postBody hr{height:2px;}
+#cmButton{height:48px;margin-top:48px;}
+#comments{margin-top:64px;}
+.g-emoji{font-size:24px;}
+@media (max-width: 600px) {
+    body {padding: 8px;}
+    .postTitle{font-size:24px;}
+}
+</style>
+<style>.markdown-alert{padding:0.5rem 1rem;margin-bottom:1rem;border-left:.25em solid var(--borderColor-default,var(--color-border-default));}.markdown-alert .markdown-alert-title {display:flex;font-weight:var(--base-text-weight-medium,500);align-items:center;line-height:1;}.markdown-alert>:first-child {margin-top:0;}.markdown-alert>:last-child {margin-bottom:0;}</style><style>.markdown-alert.markdown-alert-tip {border-left-color:var(--borderColor-success-emphasis, var(--color-success-emphasis));background-color:var(--color-success-subtle);}.markdown-alert.markdown-alert-tip .markdown-alert-title {color: var(--fgColor-success,var(--color-success-fg));}</style>
+
+
+
+<body>
+    <div id="header">
+<h1 class="postTitle">0-1 部署监控告警系统(Exporter)</h1>
+<div class="title-right">
+    <a href="https://blog.witter.top" id="buttonHome" class="btn btn-invisible circle" title="首页">
+        <svg class="octicon" width="16" height="16">
+            <path id="pathHome" fill-rule="evenodd"></path>
+        </svg>
+    </a>
+    
+    <a href="https://github.com/ljwtorch/ljwtorch.github.io/issues/18" target="_blank" class="btn btn-invisible circle" title="Issue">
+        <svg class="octicon" width="16" height="16">
+            <path id="pathIssue" fill-rule="evenodd"></path>
+        </svg>
+    </a>
+    
+
+    <a class="btn btn-invisible circle" onclick="modeSwitch();" title="切换主题">
+        <svg class="octicon" width="16" height="16" >
+            <path id="themeSwitch" fill-rule="evenodd"></path>
+        </svg>
+    </a>
+
+</div>
+</div>
+    <div id="content">
+<div class="markdown-body" id="postBody"><div class="markdown-alert markdown-alert-tip"><p class="markdown-alert-title"><svg class="octicon octicon-light-bulb mr-2" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="M8 1.5c-2.363 0-4 1.69-4 3.75 0 .984.424 1.625.984 2.304l.214.253c.223.264.47.556.673.848.284.411.537.896.621 1.49a.75.75 0 0 1-1.484.211c-.04-.282-.163-.547-.37-.847a8.456 8.456 0 0 0-.542-.68c-.084-.1-.173-.205-.268-.32C3.201 7.75 2.5 6.766 2.5 5.25 2.5 2.31 4.863 0 8 0s5.5 2.31 5.5 5.25c0 1.516-.701 2.5-1.328 3.259-.095.115-.184.22-.268.319-.207.245-.383.453-.541.681-.208.3-.33.565-.37.847a.751.751 0 0 1-1.485-.212c.084-.593.337-1.078.621-1.489.203-.292.45-.584.673-.848.075-.088.147-.173.213-.253.561-.679.985-1.32.985-2.304 0-2.06-1.637-3.75-4-3.75ZM5.75 12h4.5a.75.75 0 0 1 0 1.5h-4.5a.75.75 0 0 1 0-1.5ZM6 15.25a.75.75 0 0 1 .75-.75h2.5a.75.75 0 0 1 0 1.5h-2.5a.75.75 0 0 1-.75-.75Z"></path></svg>Tip</p><p>下方采集指标内容只写正在使用的一些指标名称，其他部分自行搭建后进行了解！</p>
+</div>
+<h2>1.node-exporter</h2>
+<h3>1.1 部署方式</h3>
+<p><strong>单机部署</strong></p>
+<div class="highlight highlight-source-shell"><pre class="notranslate">docker run -d --name node-exporter --restart=always --net=<span class="pl-s"><span class="pl-pds">"</span>host<span class="pl-pds">"</span></span> --pid=<span class="pl-s"><span class="pl-pds">"</span>host<span class="pl-pds">"</span></span> -v <span class="pl-s"><span class="pl-pds">"</span>/:/host:ro,rslave<span class="pl-pds">"</span></span> quay.io/prometheus/node-exporter:latest --path.rootfs=/host</pre></div>
+<p><strong>docker compose 部署</strong></p>
+<div class="highlight highlight-source-yaml"><pre class="notranslate">  <span class="pl-ent">node-exporter</span>:
+    <span class="pl-ent">image</span>: <span class="pl-s">quay.io/prometheus/node-exporter:latest</span>
+    <span class="pl-ent">container_name</span>: <span class="pl-s">node-exporter</span>
+    <span class="pl-ent">restart</span>: <span class="pl-s">always</span>
+    <span class="pl-ent">network_mode</span>: <span class="pl-s">host</span>
+    <span class="pl-ent">pid</span>: <span class="pl-s">host</span>
+    <span class="pl-ent">volumes</span>:
+      - <span class="pl-s">/:/host:ro,rslave</span>
+    <span class="pl-ent">command</span>: <span class="pl-s">--path.rootfs=/host</span>
+    <span class="pl-ent">depends_on</span>:
+      - <span class="pl-s">prometheus</span></pre></div>
+<p>访问 ip:9100</p>
+<h3>1.2 采集指标</h3>
+<ol>
+<li>CPU使用率：<code class="notranslate">round((1 - avg(rate(node_cpu_seconds_total{instance="instance:9100",mode="idle"}[1m])) by (instance)) * 100, 0.01)</code></li>
+<li>RAM使用率：<code class="notranslate">round((1 - (node_memory_MemAvailable_bytes{instance="instance:9100"} / (node_memory_MemTotal_bytes{instance="instance:9100"})))* 100,0.01)</code></li>
+<li>磁盘使用率：<code class="notranslate">round((node_filesystem_size_bytes{instance="instance:9100",mountpoint="/"}-node_filesystem_free_bytes{instance="instance:9100",mountpoint="/"})*100/(node_filesystem_avail_bytes{instance="instance:9100",mountpoint="/"}+(node_filesystem_size_bytes{instance="instance:9100",mountpoint="/"}-node_filesystem_free_bytes{instance="instance:9100",mountpoint="/"})),0.01)</code></li>
+<li>网络连接数使用量：<code class="notranslate">node_netstat_Tcp_CurrEstab{instance="instance:9100"}</code></li>
+</ol>
+<h2>2.blackbox-exporter</h2>
+<h3>2.1 部署方式</h3>
+<p><strong>docker compose部署</strong></p>
+<div class="highlight highlight-source-yaml"><pre class="notranslate">  <span class="pl-ent">blackbox-exporter</span>:
+    <span class="pl-ent">image</span>: <span class="pl-s">quay.io/prometheus/blackbox-exporter:latest</span>
+    <span class="pl-ent">container_name</span>: <span class="pl-s">blackbox-exporter</span>
+    <span class="pl-ent">restart</span>: <span class="pl-s">always</span>
+    <span class="pl-ent">ports</span>:
+      - <span class="pl-s"><span class="pl-pds">"</span>9115:9115<span class="pl-pds">"</span></span>
+    <span class="pl-ent">volumes</span>:
+      - <span class="pl-s">./blackbox-exporter/:/config</span>
+    <span class="pl-ent">command</span>: <span class="pl-s">--config.file=/config/blackbox.yml</span>
+    <span class="pl-ent">depends_on</span>:
+      - <span class="pl-s">prometheus</span></pre></div>
+<h3>2.2 配置文件</h3>
+<div class="highlight highlight-source-yaml"><pre class="notranslate"><span class="pl-ent">modules</span>:
+  <span class="pl-ent">http_2xx</span>:
+    <span class="pl-ent">prober</span>: <span class="pl-s">http</span>
+  <span class="pl-ent">http_post_2xx</span>:
+    <span class="pl-ent">prober</span>: <span class="pl-s">http</span>
+    <span class="pl-ent">http</span>:
+      <span class="pl-ent">method</span>: <span class="pl-s">POST</span>
+  <span class="pl-ent">tcp_connect</span>:
+    <span class="pl-ent">prober</span>: <span class="pl-s">tcp</span>
+  <span class="pl-ent">pop3s_banner</span>:
+    <span class="pl-ent">prober</span>: <span class="pl-s">tcp</span>
+    <span class="pl-ent">tcp</span>:
+      <span class="pl-ent">query_response</span>:
+      - <span class="pl-ent">expect</span>: <span class="pl-s"><span class="pl-pds">"</span>^+OK<span class="pl-pds">"</span></span>
+      <span class="pl-ent">tls</span>: <span class="pl-c1">true</span>
+      <span class="pl-ent">tls_config</span>:
+        <span class="pl-ent">insecure_skip_verify</span>: <span class="pl-c1">false</span>
+  <span class="pl-ent">ssh_banner</span>:
+    <span class="pl-ent">prober</span>: <span class="pl-s">tcp</span>
+    <span class="pl-ent">tcp</span>:
+      <span class="pl-ent">query_response</span>:
+      - <span class="pl-ent">expect</span>: <span class="pl-s"><span class="pl-pds">"</span>^SSH-2.0-<span class="pl-pds">"</span></span>
+  <span class="pl-ent">irc_banner</span>:
+    <span class="pl-ent">prober</span>: <span class="pl-s">tcp</span>
+    <span class="pl-ent">tcp</span>:
+      <span class="pl-ent">query_response</span>:
+      - <span class="pl-ent">send</span>: <span class="pl-s"><span class="pl-pds">"</span>NICK prober<span class="pl-pds">"</span></span>
+      - <span class="pl-ent">send</span>: <span class="pl-s"><span class="pl-pds">"</span>USER prober prober prober :prober<span class="pl-pds">"</span></span>
+      - <span class="pl-ent">expect</span>: <span class="pl-s"><span class="pl-pds">"</span>PING :([^ ]+)<span class="pl-pds">"</span></span>
+        <span class="pl-ent">send</span>: <span class="pl-s"><span class="pl-pds">"</span>PONG ${1}<span class="pl-pds">"</span></span>
+      - <span class="pl-ent">expect</span>: <span class="pl-s"><span class="pl-pds">"</span>^:[^ ]+ 001<span class="pl-pds">"</span></span>
+  <span class="pl-ent">icmp</span>:
+    <span class="pl-ent">prober</span>: <span class="pl-s">icmp </span>
+  <span class="pl-ent">http_2xx_java</span>: <span class="pl-c"><span class="pl-c">#</span> 自定义状态码200的匹配规则</span>
+    <span class="pl-ent">prober</span>: <span class="pl-s">http</span>
+    <span class="pl-ent">http</span>:
+      <span class="pl-ent">method</span>: <span class="pl-s">GET</span>
+      <span class="pl-ent">fail_if_body_not_matches_regexp</span>:
+      - <span class="pl-s"><span class="pl-pds">'</span>"status":"UP"<span class="pl-pds">'</span></span></pre></div>
+<h3>2.3 采集指标</h3>
+<ol>
+<li>状态码：<code class="notranslate">probe_http_status_code</code></li>
+<li>ping延时：<code class="notranslate">probe_icmp_duration_seconds</code></li>
+<li>tcp连接：<code class="notranslate">probe_success</code></li>
+</ol>
+<h2>3.jmx-exporter</h2>
+<blockquote>
+<p>目前只用来监控kafka实例</p>
+</blockquote>
+<h3>3.1 部署方式</h3>
+<p><strong>本地部署</strong>  [<a href="https://github.com/prometheus/jmx_exporter/tree/release-0.20.0">下载链接</a>](<a href="https://github.com/prometheus/jmx_exporter/tree/release-0.20.0">https://github.com/prometheus/jmx_exporter/tree/release-0.20.0</a>)</p>
+<p>监控kafka批量启动脚本：<code class="notranslate">bash jmx_kafka.sh status</code></p>
+<div class="highlight highlight-source-shell"><pre class="notranslate"><span class="pl-c"><span class="pl-c">#!</span>/bin/bash</span>
+
+<span class="pl-c"><span class="pl-c">#</span> 定义一个函数来处理不同的 jmx 实例</span>
+<span class="pl-en">manage_jmx_instance</span>() {
+  <span class="pl-k">local</span> instance=<span class="pl-s"><span class="pl-pds">"</span><span class="pl-smi">$1</span><span class="pl-pds">"</span></span>
+  <span class="pl-k">local</span> port=<span class="pl-s"><span class="pl-pds">$((</span><span class="pl-c1">9800</span> <span class="pl-k">+</span> <span class="pl-smi">${instance<span class="pl-k">#</span>kafka}</span><span class="pl-pds">))</span></span> <span class="pl-c"><span class="pl-c">#</span> 提取实例名称后的数字并加9800作为端口</span>
+  <span class="pl-k">local</span> pid_file=<span class="pl-s"><span class="pl-pds">"</span>/var/run/jmx_<span class="pl-smi">${instance}</span>_httpserver.pid<span class="pl-pds">"</span></span>
+  <span class="pl-k">local</span> log_file=<span class="pl-s"><span class="pl-pds">"</span>/root/monitor/log/<span class="pl-smi">${instance}</span>.log<span class="pl-pds">"</span></span>
+
+  <span class="pl-k">case</span> <span class="pl-s"><span class="pl-pds">"</span><span class="pl-smi">$2</span><span class="pl-pds">"</span></span> <span class="pl-k">in</span>
+    start)
+      <span class="pl-k">if</span> [ <span class="pl-k">-f</span> <span class="pl-s"><span class="pl-pds">"</span><span class="pl-smi">$pid_file</span><span class="pl-pds">"</span></span> ]<span class="pl-k">;</span> <span class="pl-k">then</span>
+        <span class="pl-c1">echo</span> <span class="pl-s"><span class="pl-pds">"</span>jmx_<span class="pl-smi">${instance}</span>_httpserver is already running.<span class="pl-pds">"</span></span>
+      <span class="pl-k">else</span>
+        <span class="pl-c"><span class="pl-c">#</span> 使用对应的端口号启动 jmx_prometheus_httpserver</span>
+        nohup java -jar /root/monitor/jmx_prometheus_httpserver-0.20.0.jar <span class="pl-smi">$port</span> /root/monitor/<span class="pl-smi">${instance}</span>.yml <span class="pl-k">&gt;&gt;</span> <span class="pl-s"><span class="pl-pds">"</span><span class="pl-smi">$log_file</span><span class="pl-pds">"</span></span> <span class="pl-k">2&gt;&amp;1</span> <span class="pl-k">&amp;</span>
+        <span class="pl-c1">echo</span> <span class="pl-smi">$!</span> <span class="pl-k">&gt;</span> <span class="pl-s"><span class="pl-pds">"</span><span class="pl-smi">$pid_file</span><span class="pl-pds">"</span></span>
+        <span class="pl-c1">echo</span> <span class="pl-s"><span class="pl-pds">"</span>jmx_<span class="pl-smi">${instance}</span>_httpserver on port <span class="pl-smi">$port</span> started.<span class="pl-pds">"</span></span>
+      <span class="pl-k">fi</span>
+      ;;
+    status)
+      <span class="pl-k">if</span> [ <span class="pl-k">-f</span> <span class="pl-s"><span class="pl-pds">"</span><span class="pl-smi">$pid_file</span><span class="pl-pds">"</span></span> ]<span class="pl-k">;</span> <span class="pl-k">then</span>
+        PID=<span class="pl-s"><span class="pl-pds">$(</span>cat <span class="pl-s"><span class="pl-pds">"</span><span class="pl-smi">$pid_file</span><span class="pl-pds">"</span></span><span class="pl-pds">)</span></span>
+        ps -p <span class="pl-smi">$PID</span> <span class="pl-k">&gt;</span> /dev/null <span class="pl-k">2&gt;&amp;1</span>
+        <span class="pl-k">if</span> [ <span class="pl-smi">$?</span> <span class="pl-k">-eq</span> 0 ]<span class="pl-k">;</span> <span class="pl-k">then</span>
+          <span class="pl-c1">echo</span> <span class="pl-s"><span class="pl-pds">"</span>jmx_<span class="pl-smi">${instance}</span>_httpserver is running (PID <span class="pl-smi">$PID</span>).<span class="pl-pds">"</span></span>
+        <span class="pl-k">else</span>
+          <span class="pl-c1">echo</span> <span class="pl-s"><span class="pl-pds">"</span>jmx_<span class="pl-smi">${instance}</span>_httpserver is not running but PID file exists.<span class="pl-pds">"</span></span>
+        <span class="pl-k">fi</span>
+      <span class="pl-k">else</span>
+        <span class="pl-c1">echo</span> <span class="pl-s"><span class="pl-pds">"</span>jmx_<span class="pl-smi">${instance}</span>_httpserver is not running.<span class="pl-pds">"</span></span>
+      <span class="pl-k">fi</span>
+      ;;
+    stop)
+      <span class="pl-k">if</span> [ <span class="pl-k">-f</span> <span class="pl-s"><span class="pl-pds">"</span><span class="pl-smi">$pid_file</span><span class="pl-pds">"</span></span> ]<span class="pl-k">;</span> <span class="pl-k">then</span>
+        PID=<span class="pl-s"><span class="pl-pds">$(</span>cat <span class="pl-s"><span class="pl-pds">"</span><span class="pl-smi">$pid_file</span><span class="pl-pds">"</span></span><span class="pl-pds">)</span></span>
+        <span class="pl-c"><span class="pl-c">#</span> 使用 kill 而不是 kill -9 以避免过于激进地终止进程</span>
+        <span class="pl-c1">kill</span> <span class="pl-smi">$PID</span>
+        rm -f <span class="pl-s"><span class="pl-pds">"</span><span class="pl-smi">$pid_file</span><span class="pl-pds">"</span></span>
+        <span class="pl-c1">echo</span> <span class="pl-s"><span class="pl-pds">"</span>jmx_<span class="pl-smi">${instance}</span>_httpserver stopped.<span class="pl-pds">"</span></span>
+      <span class="pl-k">else</span>
+        <span class="pl-c1">echo</span> <span class="pl-s"><span class="pl-pds">"</span>jmx_<span class="pl-smi">${instance}</span>_httpserver is not running.<span class="pl-pds">"</span></span>
+      <span class="pl-k">fi</span>
+      ;;
+    <span class="pl-k">*</span>)
+      <span class="pl-c1">echo</span> <span class="pl-s"><span class="pl-pds">"</span>Usage: <span class="pl-smi">$0</span> {start|status|stop}<span class="pl-pds">"</span></span>
+      <span class="pl-c1">exit</span> 1
+      ;;
+  <span class="pl-k">esac</span>
+}
+
+<span class="pl-c"><span class="pl-c">#</span> 根据提供的选项调用函数来管理不同的 jmx 实例,同目录下存放了三个kafka1-3.yml配置文件供exporter使用</span>
+<span class="pl-k">for</span> <span class="pl-smi">instance</span> <span class="pl-k">in</span> kafka1 kafka2 kafka3<span class="pl-k">;</span> <span class="pl-k">do</span>
+  manage_jmx_instance <span class="pl-s"><span class="pl-pds">"</span><span class="pl-smi">$instance</span><span class="pl-pds">"</span></span> <span class="pl-s"><span class="pl-pds">"</span><span class="pl-smi">$1</span><span class="pl-pds">"</span></span>
+<span class="pl-k">done</span>
+
+<span class="pl-c1">exit</span> 0</pre></div>
+<h3>3.2 配置文件</h3>
+<p><code class="notranslate">kafka1.yml</code></p>
+<div class="highlight highlight-source-yaml"><pre class="notranslate"><span class="pl-ent">lowercaseOutputName</span>: <span class="pl-c1">true</span>
+<span class="pl-ent">hostPort</span>: <span class="pl-s">kafka_ip:9999</span>
+<span class="pl-ent">rules</span>:
+<span class="pl-c"><span class="pl-c">#</span> Special cases and very specific rules</span>
+- <span class="pl-ent">pattern </span>: <span class="pl-s">kafka.server&lt;type=(.+), name=(.+), clientId=(.+), topic=(.+), partition=(.*)&gt;&lt;&gt;Value</span>
+  <span class="pl-ent">name</span>: <span class="pl-s">kafka_server_$1_$2</span>
+  <span class="pl-ent">type</span>: <span class="pl-s">GAUGE</span>
+  <span class="pl-ent">labels</span>:
+    <span class="pl-ent">clientId</span>: <span class="pl-s"><span class="pl-pds">"</span>$3<span class="pl-pds">"</span></span>
+    <span class="pl-ent">topic</span>: <span class="pl-s"><span class="pl-pds">"</span>$4<span class="pl-pds">"</span></span>
+    <span class="pl-ent">partition</span>: <span class="pl-s"><span class="pl-pds">"</span>$5<span class="pl-pds">"</span></span>
+- <span class="pl-ent">pattern </span>: <span class="pl-s">kafka.server&lt;type=(.+), name=(.+), clientId=(.+), brokerHost=(.+), brokerPort=(.+)&gt;&lt;&gt;Value</span>
+  <span class="pl-ent">name</span>: <span class="pl-s">kafka_server_$1_$2</span>
+  <span class="pl-ent">type</span>: <span class="pl-s">GAUGE</span>
+  <span class="pl-ent">labels</span>:
+    <span class="pl-ent">clientId</span>: <span class="pl-s"><span class="pl-pds">"</span>$3<span class="pl-pds">"</span></span>
+    <span class="pl-ent">broker</span>: <span class="pl-s"><span class="pl-pds">"</span>$4:$5<span class="pl-pds">"</span></span>
+- <span class="pl-ent">pattern </span>: <span class="pl-s">kafka.coordinator.(\w+)&lt;type=(.+), name=(.+)&gt;&lt;&gt;Value</span>
+  <span class="pl-ent">name</span>: <span class="pl-s">kafka_coordinator_$1_$2_$3</span>
+  <span class="pl-ent">type</span>: <span class="pl-s">GAUGE</span>
+
+<span class="pl-c"><span class="pl-c">#</span> Generic per-second counters with 0-2 key/value pairs</span>
+- <span class="pl-ent">pattern</span>: <span class="pl-s">kafka.(\w+)&lt;type=(.+), name=(.+)PerSec\w*, (.+)=(.+), (.+)=(.+)&gt;&lt;&gt;Count</span>
+  <span class="pl-ent">name</span>: <span class="pl-s">kafka_$1_$2_$3_total</span>
+  <span class="pl-ent">type</span>: <span class="pl-s">COUNTER</span>
+  <span class="pl-ent">labels</span>:
+    <span class="pl-s"><span class="pl-pds">"</span><span class="pl-ent">$4</span><span class="pl-pds">"</span></span>: <span class="pl-s"><span class="pl-pds">"</span>$5<span class="pl-pds">"</span></span>
+    <span class="pl-s"><span class="pl-pds">"</span><span class="pl-ent">$6</span><span class="pl-pds">"</span></span>: <span class="pl-s"><span class="pl-pds">"</span>$7<span class="pl-pds">"</span></span>
+- <span class="pl-ent">pattern</span>: <span class="pl-s">kafka.(\w+)&lt;type=(.+), name=(.+)PerSec\w*, (.+)=(.+)&gt;&lt;&gt;Count</span>
+  <span class="pl-ent">name</span>: <span class="pl-s">kafka_$1_$2_$3_total</span>
+  <span class="pl-ent">type</span>: <span class="pl-s">COUNTER</span>
+  <span class="pl-ent">labels</span>:
+    <span class="pl-s"><span class="pl-pds">"</span><span class="pl-ent">$4</span><span class="pl-pds">"</span></span>: <span class="pl-s"><span class="pl-pds">"</span>$5<span class="pl-pds">"</span></span>
+- <span class="pl-ent">pattern</span>: <span class="pl-s">kafka.(\w+)&lt;type=(.+), name=(.+)PerSec\w*&gt;&lt;&gt;Count</span>
+  <span class="pl-ent">name</span>: <span class="pl-s">kafka_$1_$2_$3_total</span>
+  <span class="pl-ent">type</span>: <span class="pl-s">COUNTER</span>
+
+<span class="pl-c"><span class="pl-c">#</span> Quota specific rules</span>
+- <span class="pl-ent">pattern</span>: <span class="pl-s">kafka.server&lt;type=(.+), user=(.+), client-id=(.+)&gt;&lt;&gt;([a-z-]+)</span>
+  <span class="pl-ent">name</span>: <span class="pl-s">kafka_server_quota_$4</span>
+  <span class="pl-ent">type</span>: <span class="pl-s">GAUGE</span>
+  <span class="pl-ent">labels</span>:
+    <span class="pl-ent">resource</span>: <span class="pl-s"><span class="pl-pds">"</span>$1<span class="pl-pds">"</span></span>
+    <span class="pl-ent">user</span>: <span class="pl-s"><span class="pl-pds">"</span>$2<span class="pl-pds">"</span></span>
+    <span class="pl-ent">clientId</span>: <span class="pl-s"><span class="pl-pds">"</span>$3<span class="pl-pds">"</span></span>
+- <span class="pl-ent">pattern</span>: <span class="pl-s">kafka.server&lt;type=(.+), client-id=(.+)&gt;&lt;&gt;([a-z-]+)</span>
+  <span class="pl-ent">name</span>: <span class="pl-s">kafka_server_quota_$3</span>
+  <span class="pl-ent">type</span>: <span class="pl-s">GAUGE</span>
+  <span class="pl-ent">labels</span>:
+    <span class="pl-ent">resource</span>: <span class="pl-s"><span class="pl-pds">"</span>$1<span class="pl-pds">"</span></span>
+    <span class="pl-ent">clientId</span>: <span class="pl-s"><span class="pl-pds">"</span>$2<span class="pl-pds">"</span></span>
+- <span class="pl-ent">pattern</span>: <span class="pl-s">kafka.server&lt;type=(.+), user=(.+)&gt;&lt;&gt;([a-z-]+)</span>
+  <span class="pl-ent">name</span>: <span class="pl-s">kafka_server_quota_$3</span>
+  <span class="pl-ent">type</span>: <span class="pl-s">GAUGE</span>
+  <span class="pl-ent">labels</span>:
+    <span class="pl-ent">resource</span>: <span class="pl-s"><span class="pl-pds">"</span>$1<span class="pl-pds">"</span></span>
+    <span class="pl-ent">user</span>: <span class="pl-s"><span class="pl-pds">"</span>$2<span class="pl-pds">"</span></span>
+
+<span class="pl-c"><span class="pl-c">#</span> Generic gauges with 0-2 key/value pairs</span>
+- <span class="pl-ent">pattern</span>: <span class="pl-s">kafka.(\w+)&lt;type=(.+), name=(.+), (.+)=(.+), (.+)=(.+)&gt;&lt;&gt;Value</span>
+  <span class="pl-ent">name</span>: <span class="pl-s">kafka_$1_$2_$3</span>
+  <span class="pl-ent">type</span>: <span class="pl-s">GAUGE</span>
+  <span class="pl-ent">labels</span>:
+    <span class="pl-s"><span class="pl-pds">"</span><span class="pl-ent">$4</span><span class="pl-pds">"</span></span>: <span class="pl-s"><span class="pl-pds">"</span>$5<span class="pl-pds">"</span></span>
+    <span class="pl-s"><span class="pl-pds">"</span><span class="pl-ent">$6</span><span class="pl-pds">"</span></span>: <span class="pl-s"><span class="pl-pds">"</span>$7<span class="pl-pds">"</span></span>
+- <span class="pl-ent">pattern</span>: <span class="pl-s">kafka.(\w+)&lt;type=(.+), name=(.+), (.+)=(.+)&gt;&lt;&gt;Value</span>
+  <span class="pl-ent">name</span>: <span class="pl-s">kafka_$1_$2_$3</span>
+  <span class="pl-ent">type</span>: <span class="pl-s">GAUGE</span>
+  <span class="pl-ent">labels</span>:
+    <span class="pl-s"><span class="pl-pds">"</span><span class="pl-ent">$4</span><span class="pl-pds">"</span></span>: <span class="pl-s"><span class="pl-pds">"</span>$5<span class="pl-pds">"</span></span>
+- <span class="pl-ent">pattern</span>: <span class="pl-s">kafka.(\w+)&lt;type=(.+), name=(.+)&gt;&lt;&gt;Value</span>
+  <span class="pl-ent">name</span>: <span class="pl-s">kafka_$1_$2_$3</span>
+  <span class="pl-ent">type</span>: <span class="pl-s">GAUGE</span>
+
+<span class="pl-c"><span class="pl-c">#</span> Emulate Prometheus 'Summary' metrics for the exported 'Histogram's.</span>
+<span class="pl-c"><span class="pl-c">#</span></span>
+<span class="pl-c"><span class="pl-c">#</span> Note that these are missing the '_sum' metric!</span>
+- <span class="pl-ent">pattern</span>: <span class="pl-s">kafka.(\w+)&lt;type=(.+), name=(.+), (.+)=(.+), (.+)=(.+)&gt;&lt;&gt;Count</span>
+  <span class="pl-ent">name</span>: <span class="pl-s">kafka_$1_$2_$3_count</span>
+  <span class="pl-ent">type</span>: <span class="pl-s">COUNTER</span>
+  <span class="pl-ent">labels</span>:
+    <span class="pl-s"><span class="pl-pds">"</span><span class="pl-ent">$4</span><span class="pl-pds">"</span></span>: <span class="pl-s"><span class="pl-pds">"</span>$5<span class="pl-pds">"</span></span>
+    <span class="pl-s"><span class="pl-pds">"</span><span class="pl-ent">$6</span><span class="pl-pds">"</span></span>: <span class="pl-s"><span class="pl-pds">"</span>$7<span class="pl-pds">"</span></span>
+- <span class="pl-ent">pattern</span>: <span class="pl-s">kafka.(\w+)&lt;type=(.+), name=(.+), (.+)=(.*), (.+)=(.+)&gt;&lt;&gt;(\d+)thPercentile</span>
+  <span class="pl-ent">name</span>: <span class="pl-s">kafka_$1_$2_$3</span>
+  <span class="pl-ent">type</span>: <span class="pl-s">GAUGE</span>
+  <span class="pl-ent">labels</span>:
+    <span class="pl-s"><span class="pl-pds">"</span><span class="pl-ent">$4</span><span class="pl-pds">"</span></span>: <span class="pl-s"><span class="pl-pds">"</span>$5<span class="pl-pds">"</span></span>
+    <span class="pl-s"><span class="pl-pds">"</span><span class="pl-ent">$6</span><span class="pl-pds">"</span></span>: <span class="pl-s"><span class="pl-pds">"</span>$7<span class="pl-pds">"</span></span>
+    <span class="pl-ent">quantile</span>: <span class="pl-s"><span class="pl-pds">"</span>0.$8<span class="pl-pds">"</span></span>
+- <span class="pl-ent">pattern</span>: <span class="pl-s">kafka.(\w+)&lt;type=(.+), name=(.+), (.+)=(.+)&gt;&lt;&gt;Count</span>
+  <span class="pl-ent">name</span>: <span class="pl-s">kafka_$1_$2_$3_count</span>
+  <span class="pl-ent">type</span>: <span class="pl-s">COUNTER</span>
+  <span class="pl-ent">labels</span>:
+    <span class="pl-s"><span class="pl-pds">"</span><span class="pl-ent">$4</span><span class="pl-pds">"</span></span>: <span class="pl-s"><span class="pl-pds">"</span>$5<span class="pl-pds">"</span></span>
+- <span class="pl-ent">pattern</span>: <span class="pl-s">kafka.(\w+)&lt;type=(.+), name=(.+), (.+)=(.*)&gt;&lt;&gt;(\d+)thPercentile</span>
+  <span class="pl-ent">name</span>: <span class="pl-s">kafka_$1_$2_$3</span>
+  <span class="pl-ent">type</span>: <span class="pl-s">GAUGE</span>
+  <span class="pl-ent">labels</span>:
+    <span class="pl-s"><span class="pl-pds">"</span><span class="pl-ent">$4</span><span class="pl-pds">"</span></span>: <span class="pl-s"><span class="pl-pds">"</span>$5<span class="pl-pds">"</span></span>
+    <span class="pl-ent">quantile</span>: <span class="pl-s"><span class="pl-pds">"</span>0.$6<span class="pl-pds">"</span></span>
+- <span class="pl-ent">pattern</span>: <span class="pl-s">kafka.(\w+)&lt;type=(.+), name=(.+)&gt;&lt;&gt;Count</span>
+  <span class="pl-ent">name</span>: <span class="pl-s">kafka_$1_$2_$3_count</span>
+  <span class="pl-ent">type</span>: <span class="pl-s">COUNTER</span>
+- <span class="pl-ent">pattern</span>: <span class="pl-s">kafka.(\w+)&lt;type=(.+), name=(.+)&gt;&lt;&gt;(\d+)thPercentile</span>
+  <span class="pl-ent">name</span>: <span class="pl-s">kafka_$1_$2_$3</span>
+  <span class="pl-ent">type</span>: <span class="pl-s">GAUGE</span>
+  <span class="pl-ent">labels</span>:
+    <span class="pl-ent">quantile</span>: <span class="pl-s"><span class="pl-pds">"</span>0.$4<span class="pl-pds">"</span></span>
+
+<span class="pl-c"><span class="pl-c">#</span> Generic gauges for MeanRate Percent</span>
+<span class="pl-c"><span class="pl-c">#</span> Ex) kafka.server&lt;type=KafkaRequestHandlerPool, name=RequestHandlerAvgIdlePercent&gt;&lt;&gt;MeanRate</span>
+- <span class="pl-ent">pattern</span>: <span class="pl-s">kafka.(\w+)&lt;type=(.+), name=(.+)Percent\w*&gt;&lt;&gt;MeanRate</span>
+  <span class="pl-ent">name</span>: <span class="pl-s">kafka_$1_$2_$3_percent</span>
+  <span class="pl-ent">type</span>: <span class="pl-s">GAUGE</span>
+- <span class="pl-ent">pattern</span>: <span class="pl-s">kafka.(\w+)&lt;type=(.+), name=(.+)Percent\w*&gt;&lt;&gt;Value</span>
+  <span class="pl-ent">name</span>: <span class="pl-s">kafka_$1_$2_$3_percent</span>
+  <span class="pl-ent">type</span>: <span class="pl-s">GAUGE</span>
+- <span class="pl-ent">pattern</span>: <span class="pl-s">kafka.(\w+)&lt;type=(.+), name=(.+)Percent\w*, (.+)=(.+)&gt;&lt;&gt;Value</span>
+  <span class="pl-ent">name</span>: <span class="pl-s">kafka_$1_$2_$3_percent</span>
+  <span class="pl-ent">type</span>: <span class="pl-s">GAUGE</span>
+  <span class="pl-ent">labels</span>:
+    <span class="pl-s"><span class="pl-pds">"</span><span class="pl-ent">$4</span><span class="pl-pds">"</span></span>: <span class="pl-s"><span class="pl-pds">"</span>$5<span class="pl-pds">"</span></span></pre></div>
+<h3>3.3 采集指标</h3>
+<ol>
+<li>指定kafka-topic消息数量：<code class="notranslate">round(increase(kafka_server_brokertopicmetrics_messagesin_total{topic="kafka_topic"}[1h]),0.01)</code></li>
+</ol>
+<h2>4.mysql-exporter</h2>
+<h3>4.1 部署方式</h3>
+<div class="highlight highlight-source-shell"><pre class="notranslate">docker run -d --name mysql-exporter --restart always -p 9104:9104 -e DATA_SOURCE_NAME=<span class="pl-s"><span class="pl-pds">"</span>user:passwd@(ip:3306)/<span class="pl-pds">"</span></span> prom/mysqld-exporter</pre></div>
+<h3>4.2 指标名称</h3>
+<ol>
+<li>Mysql监控agent存活：mysql_up</li>
+<li>连接数：mysql_global_status_threads_connected</li>
+<li>文件打开数：mysql_global_status_innodb_num_open_files</li>
+<li>从库只读：mysql_global_variables_read_only</li>
+<li>主从延迟：mysql_slave_status_seconds_behind_master</li>
+<li>sql线程：mysql_slave_status_slave_sql_running</li>
+<li>IO线程：mysql_slave_status_slave_io_running</li>
+<li>入口流量：mysql_global_status_bytes_received</li>
+<li>出口流量：mysql_global_status_bytes_sent</li>
+<li>写操作速率：mysql_global_status_commands_total</li>
+<li>慢查询：mysql_global_status_slow_queries</li>
+<li>查询速率：mysql_global_status_questions</li>
+<li>可用连接数：mysql_global_variables_max_connections</li>
+<li>缓冲池利用率：mysql_global_status_buffer_pool_pages</li>
+<li>打开文件数量限制：mysql_global_variables_open_files_limit</li>
+<li>启用了InnoDB强制恢复功能：mysql_global_variables_innodb_force_recovery</li>
+<li>InnoDB日志文件大小：mysql_global_variables_innodb_log_file_size</li>
+<li>InnoDB插件已启用：mysql_global_variables_ignore_builtin_innodb</li>
+<li>Binary Log状态：mysql_global_variables_log_bin</li>
+<li>Binlog缓存大小：mysql_global_variables_binlog_cache_size</li>
+<li>同步Binlog状态：mysql_global_variables_sync_binlog</li>
+<li>IO线程状态：mysql_slave_status_slave_io_running</li>
+<li>sql线程状态：mysql_slave_status_slave_sql_running</li>
+<li>InnoDB日志等待量：mysql_global_status_innodb_log_waits （不为0的话，InnoDB log buffer因空间不足而等待）</li>
+</ol></div>
+<div style="font-size:small;margin-top:8px;float:right;">🍺转载文章请注明出处，谢谢！🍺</div>
+<button class="btn btn-block" type="button" onclick="openComments()" id="cmButton">评论</button>
+<div class="comments" id="comments"></div>
+</div>
+    <div id="footer">Copyright © <span id="year"></span><a href="https://blog.witter.top"> V's Blog </a>
+<p><a href="https://beian.miit.gov.cn/" target="_blank">冀ICP备2022019998号</a>
+<span id="runday"></span>Powered by <a href="https://meekdai.com/Gmeek.html" target="_blank">Gmeek</a>
+</p>
+
+<script>
+if("06/20/2024"!=""){
+    var now=new Date();
+    var startSite=new Date("06/20/2024");
+    var diff=now.getTime()-startSite.getTime();
+    var diffDay=Math.floor(diff/(1000*60*60*24));
+    document.getElementById("year").innerHTML=now.getFullYear();
+    if("冀ICP备2022019998号"!=""){document.getElementById("runday").innerHTML=" • "+"网站运行"+diffDay+"天"+" • ";}
+    else{document.getElementById("runday").innerHTML="网站运行"+diffDay+"天"+" • ";}
+}
+</script>
+</div>
+</body>
+<script>
+var IconList={'sun': 'M8 10.5a2.5 2.5 0 100-5 2.5 2.5 0 000 5zM8 12a4 4 0 100-8 4 4 0 000 8zM8 0a.75.75 0 01.75.75v1.5a.75.75 0 01-1.5 0V.75A.75.75 0 018 0zm0 13a.75.75 0 01.75.75v1.5a.75.75 0 01-1.5 0v-1.5A.75.75 0 018 13zM2.343 2.343a.75.75 0 011.061 0l1.06 1.061a.75.75 0 01-1.06 1.06l-1.06-1.06a.75.75 0 010-1.06zm9.193 9.193a.75.75 0 011.06 0l1.061 1.06a.75.75 0 01-1.06 1.061l-1.061-1.06a.75.75 0 010-1.061zM16 8a.75.75 0 01-.75.75h-1.5a.75.75 0 010-1.5h1.5A.75.75 0 0116 8zM3 8a.75.75 0 01-.75.75H.75a.75.75 0 010-1.5h1.5A.75.75 0 013 8zm10.657-5.657a.75.75 0 010 1.061l-1.061 1.06a.75.75 0 11-1.06-1.06l1.06-1.06a.75.75 0 011.06 0zm-9.193 9.193a.75.75 0 010 1.06l-1.06 1.061a.75.75 0 11-1.061-1.06l1.06-1.061a.75.75 0 011.061 0z', 'moon': 'M9.598 1.591a.75.75 0 01.785-.175 7 7 0 11-8.967 8.967.75.75 0 01.961-.96 5.5 5.5 0 007.046-7.046.75.75 0 01.175-.786zm1.616 1.945a7 7 0 01-7.678 7.678 5.5 5.5 0 107.678-7.678z', 'sync': 'M1.705 8.005a.75.75 0 0 1 .834.656 5.5 5.5 0 0 0 9.592 2.97l-1.204-1.204a.25.25 0 0 1 .177-.427h3.646a.25.25 0 0 1 .25.25v3.646a.25.25 0 0 1-.427.177l-1.38-1.38A7.002 7.002 0 0 1 1.05 8.84a.75.75 0 0 1 .656-.834ZM8 2.5a5.487 5.487 0 0 0-4.131 1.869l1.204 1.204A.25.25 0 0 1 4.896 6H1.25A.25.25 0 0 1 1 5.75V2.104a.25.25 0 0 1 .427-.177l1.38 1.38A7.002 7.002 0 0 1 14.95 7.16a.75.75 0 0 1-1.49.178A5.5 5.5 0 0 0 8 2.5Z', 'home': 'M6.906.664a1.749 1.749 0 0 1 2.187 0l5.25 4.2c.415.332.657.835.657 1.367v7.019A1.75 1.75 0 0 1 13.25 15h-3.5a.75.75 0 0 1-.75-.75V9H7v5.25a.75.75 0 0 1-.75.75h-3.5A1.75 1.75 0 0 1 1 13.25V6.23c0-.531.242-1.034.657-1.366l5.25-4.2Zm1.25 1.171a.25.25 0 0 0-.312 0l-5.25 4.2a.25.25 0 0 0-.094.196v7.019c0 .138.112.25.25.25H5.5V8.25a.75.75 0 0 1 .75-.75h3.5a.75.75 0 0 1 .75.75v5.25h2.75a.25.25 0 0 0 .25-.25V6.23a.25.25 0 0 0-.094-.195Z', 'github': 'M8 0c4.42 0 8 3.58 8 8a8.013 8.013 0 0 1-5.45 7.59c-.4.08-.55-.17-.55-.38 0-.27.01-1.13.01-2.2 0-.75-.25-1.23-.54-1.48 1.78-.2 3.65-.88 3.65-3.95 0-.88-.31-1.59-.82-2.15.08-.2.36-1.02-.08-2.12 0 0-.67-.22-2.2.82-.64-.18-1.32-.27-2-.27-.68 0-1.36.09-2 .27-1.53-1.03-2.2-.82-2.2-.82-.44 1.1-.16 1.92-.08 2.12-.51.56-.82 1.28-.82 2.15 0 3.06 1.86 3.75 3.64 3.95-.23.2-.44.55-.51 1.07-.46.21-1.61.55-2.33-.66-.15-.24-.6-.83-1.23-.82-.67.01-.27.38.01.53.34.19.73.9.82 1.13.16.45.68 1.31 2.69.94 0 .67.01 1.3.01 1.49 0 .21-.15.45-.55.38A7.995 7.995 0 0 1 0 8c0-4.42 3.58-8 8-8Z'};
+var utterancesLoad=0;
+
+let themeSettings={
+    "dark": ["dark","moon","#00f0ff","dark-blue"],
+    "light": ["light","sun","#ff5000","github-light"],
+    "auto": ["auto","sync","","preferred-color-scheme"]
+};
+function changeTheme(mode, icon, color, utheme){
+    document.documentElement.setAttribute("data-color-mode",mode);
+    document.getElementById("themeSwitch").setAttribute("d",value=IconList[icon]);
+    document.getElementById("themeSwitch").parentNode.style.color=color;
+    if(utterancesLoad==1){utterancesTheme(utheme);}
+}
+function modeSwitch(){
+    let currentMode=document.documentElement.getAttribute('data-color-mode');
+    let newMode = currentMode === "light" ? "dark" : currentMode === "dark" ? "auto" : "light";
+    localStorage.setItem("meek_theme", newMode);
+    if(themeSettings[newMode]){
+        changeTheme(...themeSettings[newMode]);
+    }
+}
+function utterancesTheme(theme){
+    const message={type:'set-theme',theme: theme};
+    const iframe=document.getElementsByClassName('utterances-frame')[0];
+    iframe.contentWindow.postMessage(message,'https://utteranc.es');
+}
+if(themeSettings[theme]){changeTheme(...themeSettings[theme]);}
+console.log("\n %c Gmeek last https://github.com/Meekdai/Gmeek \n\n","padding:5px 0;background:#02d81d;color:#fff");
+</script>
+
+<script>
+document.getElementById("pathHome").setAttribute("d",IconList["home"]);
+document.getElementById("pathIssue").setAttribute("d",IconList["github"]);
+
+function openComments(){
+    cm=document.getElementById("comments");
+    cmButton=document.getElementById("cmButton");
+    cmButton.innerHTML="loading";
+    span=document.createElement("span");
+    span.setAttribute("class","AnimatedEllipsis");
+    cmButton.appendChild(span);
+
+    script=document.createElement("script");
+    script.setAttribute("src","https://utteranc.es/client.js");
+    script.setAttribute("repo","ljwtorch/ljwtorch.github.io");
+    script.setAttribute("issue-term","title");
+    
+    if(localStorage.getItem("meek_theme")=="dark"){script.setAttribute("theme","dark-blue");}
+    else if(localStorage.getItem("meek_theme")=="light") {script.setAttribute("theme","github-light");}
+    else{script.setAttribute("theme","preferred-color-scheme");}
+    
+    script.setAttribute("crossorigin","anonymous");
+    script.setAttribute("async","");
+    cm.appendChild(script);
+
+    int=self.setInterval("iFrameLoading()",200);
+}
+
+function iFrameLoading(){
+    var utterances=document.getElementsByClassName('utterances');
+    if(utterances.length==1){
+        if(utterances[0].style.height!=""){
+            utterancesLoad=1;
+            int=window.clearInterval(int);
+            document.getElementById("cmButton").style.display="none";
+            console.log("utterances Load OK");
+        }
+    }
+}
+</script>
+<script defer src="https://cloud.umami.is/script.js" data-website-id="3ba773a6-8f89-4549-a750-a200e9bc10a0"></script>
+
+</html>
