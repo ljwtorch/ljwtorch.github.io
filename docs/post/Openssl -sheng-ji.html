@@ -9,78 +9,120 @@
         let theme = localStorage.getItem("meek_theme") || "light";
         document.documentElement.setAttribute("data-color-mode", theme);
     </script>
-<meta name="description" content="> 所做留下痕迹
+<meta name="description" content="## 升级支持TLS 1.3
 
-```
-> [!NOTE]
-> Useful information that users should know, even when skimming content.
-
-> [!TIP]
-> Helpful advice for doing things better or more easily.
-
-> [!IMPORTANT]
-> Key information users need to know to achieve their goal.
-
-> [!WARNING]
-> Urgent info that needs immediate user attention to avoid problems.
-
-> [!CAUTION]
-> Advises about risks or negative outcomes of certain actions.
+```shell
+# 下载
+wget https://www.openssl.org/source/openssl-3.0.13.tar.gz
+# 解压
+tar -zxvf openssl-3.0.13.tar.gz
+# 配置、编译
+./config  --prefix=/usr/local/openssl
+make
+# 检查是否出错
+make test
+# 安装
+make install
 ```
 
-> [!NOTE]
-> Useful information that users should know, even when skimming content.
+安装完成后检查链接库是否正常，将缺少的文件直接软链接到系统的`/usr/lib64`目录下
 
-> [!TIP]
-> Helpful advice for doing things better or more easily.
+```shell
+cd /usr/local/openssl/bin
+ldd openssl
 
-> [!IMPORTANT]
-> Key information users need to know to achieve their goal.
+linux-vdso.so.1 =>  (0x00007ffe3893b000)
+libssl.so.3 => not found
+libcrypto.so.3 => not found
+libdl.so.2 => /lib64/libdl.so.2 (0x00007ff49e5e0000)
+libpthread.so.0 => /lib64/libpthread.so.0 (0x00007ff49e3c4000)
+libc.so.6 => /lib64/libc.so.6 (0x00007ff49dff6000)
+/lib64/ld-linux-x86-64.so.2 (0x00007ff49e7e4000)
 
-> [!WARNING]
-> Urgent info that needs immediate user attention to avoid problems.
+ln -s /usr/local/openssl/lib64/libssl.so.3 /usr/lib64/libssl.so.3
+ln -s /usr/local/openssl/lib64/libcrypto.so.3 /usr/lib64/libcrypto.so.3
 
-> [!CAUTION]
-> Advises about risks or negative outcomes of certain actions.。">
-<meta property="og:title" content="V's first">
-<meta property="og:description" content="> 所做留下痕迹
-
-```
-> [!NOTE]
-> Useful information that users should know, even when skimming content.
-
-> [!TIP]
-> Helpful advice for doing things better or more easily.
-
-> [!IMPORTANT]
-> Key information users need to know to achieve their goal.
-
-> [!WARNING]
-> Urgent info that needs immediate user attention to avoid problems.
-
-> [!CAUTION]
-> Advises about risks or negative outcomes of certain actions.
+linux-vdso.so.1 =>  (0x00007fffd2ddb000)
+libssl.so.3 => /lib64/libssl.so.3 (0x00007fbc48fc8000)
+libcrypto.so.3 => /lib64/libcrypto.so.3 (0x00007fbc48954000)
+libdl.so.2 => /lib64/libdl.so.2 (0x00007fbc48750000)
+libpthread.so.0 => /lib64/libpthread.so.0 (0x00007fbc48534000)
+libc.so.6 => /lib64/libc.so.6 (0x00007fbc48166000)
+/lib64/ld-linux-x86-64.so.2 (0x00007fbc4926d000)
 ```
 
-> [!NOTE]
-> Useful information that users should know, even when skimming content.
+报错：
 
-> [!TIP]
-> Helpful advice for doing things better or more easily.
+```shell
+Can't locate IPC/Cmd.pm in @INC (@INC contains: /home/sonkwo/openssl-3.0.13/util/perl /usr/local/lib64/perl5 /usr/local/share/perl5 /usr/lib64/perl5/vendor_perl /usr/share/perl5/vendor_perl /usr/lib64/perl5 /usr/share/perl5 . /home/sonkwo/openssl-3.0.13/external/perl/Text-Template-1.56/lib) at /home/sonkwo/openssl-3.0.13/util/perl/OpenSSL/config.pm line 19.
+BEGIN failed--compilation aborted at /home/sonkwo/openssl-3.0.13/util/perl/OpenSSL/config.pm line 19.
+Compilation failed in require at /home/sonkwo/openssl-3.0.13/Configure line 23.
+BEGIN failed--compilation aborted at /home/sonkwo/openssl-3.0.13/Configure line 23.
 
-> [!IMPORTANT]
-> Key information users need to know to achieve their goal.
+yum install perl-IPC-Cmd
+```
 
-> [!WARNING]
-> Urgent info that needs immediate user attention to avoid problems.
+。">
+<meta property="og:title" content="Openssl 升级">
+<meta property="og:description" content="## 升级支持TLS 1.3
 
-> [!CAUTION]
-> Advises about risks or negative outcomes of certain actions.。">
+```shell
+# 下载
+wget https://www.openssl.org/source/openssl-3.0.13.tar.gz
+# 解压
+tar -zxvf openssl-3.0.13.tar.gz
+# 配置、编译
+./config  --prefix=/usr/local/openssl
+make
+# 检查是否出错
+make test
+# 安装
+make install
+```
+
+安装完成后检查链接库是否正常，将缺少的文件直接软链接到系统的`/usr/lib64`目录下
+
+```shell
+cd /usr/local/openssl/bin
+ldd openssl
+
+linux-vdso.so.1 =>  (0x00007ffe3893b000)
+libssl.so.3 => not found
+libcrypto.so.3 => not found
+libdl.so.2 => /lib64/libdl.so.2 (0x00007ff49e5e0000)
+libpthread.so.0 => /lib64/libpthread.so.0 (0x00007ff49e3c4000)
+libc.so.6 => /lib64/libc.so.6 (0x00007ff49dff6000)
+/lib64/ld-linux-x86-64.so.2 (0x00007ff49e7e4000)
+
+ln -s /usr/local/openssl/lib64/libssl.so.3 /usr/lib64/libssl.so.3
+ln -s /usr/local/openssl/lib64/libcrypto.so.3 /usr/lib64/libcrypto.so.3
+
+linux-vdso.so.1 =>  (0x00007fffd2ddb000)
+libssl.so.3 => /lib64/libssl.so.3 (0x00007fbc48fc8000)
+libcrypto.so.3 => /lib64/libcrypto.so.3 (0x00007fbc48954000)
+libdl.so.2 => /lib64/libdl.so.2 (0x00007fbc48750000)
+libpthread.so.0 => /lib64/libpthread.so.0 (0x00007fbc48534000)
+libc.so.6 => /lib64/libc.so.6 (0x00007fbc48166000)
+/lib64/ld-linux-x86-64.so.2 (0x00007fbc4926d000)
+```
+
+报错：
+
+```shell
+Can't locate IPC/Cmd.pm in @INC (@INC contains: /home/sonkwo/openssl-3.0.13/util/perl /usr/local/lib64/perl5 /usr/local/share/perl5 /usr/lib64/perl5/vendor_perl /usr/share/perl5/vendor_perl /usr/lib64/perl5 /usr/share/perl5 . /home/sonkwo/openssl-3.0.13/external/perl/Text-Template-1.56/lib) at /home/sonkwo/openssl-3.0.13/util/perl/OpenSSL/config.pm line 19.
+BEGIN failed--compilation aborted at /home/sonkwo/openssl-3.0.13/util/perl/OpenSSL/config.pm line 19.
+Compilation failed in require at /home/sonkwo/openssl-3.0.13/Configure line 23.
+BEGIN failed--compilation aborted at /home/sonkwo/openssl-3.0.13/Configure line 23.
+
+yum install perl-IPC-Cmd
+```
+
+。">
 <meta property="og:type" content="article">
-<meta property="og:url" content="https://blog.witter.top/post/V%27s%20first.html">
+<meta property="og:url" content="https://blog.witter.top/post/Openssl%20-sheng-ji.html">
 <meta property="og:image" content="https://img.witter.top/file/b037878209903b7d5bb17.jpg">
-<title>V's first</title>
-
+<title>Openssl 升级</title>
+<link href="//unpkg.com/@wooorm/starry-night@2.1.1/style/both.css" rel="stylesheet" />
 
 </head>
 <style>
@@ -104,13 +146,13 @@ body{box-sizing: border-box;min-width: 200px;max-width: 900px;margin: 20px auto;
     .postTitle{font-size:24px;}
 }
 </style>
-<style>.markdown-alert{padding:0.5rem 1rem;margin-bottom:1rem;border-left:.25em solid var(--borderColor-default,var(--color-border-default));}.markdown-alert .markdown-alert-title {display:flex;font-weight:var(--base-text-weight-medium,500);align-items:center;line-height:1;}.markdown-alert>:first-child {margin-top:0;}.markdown-alert>:last-child {margin-bottom:0;}</style><style>.markdown-alert.markdown-alert-note {border-left-color:var(--borderColor-accent-emphasis, var(--color-accent-emphasis));background-color:var(--color-accent-subtle);}.markdown-alert.markdown-alert-note .markdown-alert-title {color: var(--fgColor-accent,var(--color-accent-fg));}</style><style>.markdown-alert.markdown-alert-tip {border-left-color:var(--borderColor-success-emphasis, var(--color-success-emphasis));background-color:var(--color-success-subtle);}.markdown-alert.markdown-alert-tip .markdown-alert-title {color: var(--fgColor-success,var(--color-success-fg));}</style><style>.markdown-alert.markdown-alert-important {border-left-color:var(--borderColor-done-emphasis, var(--color-done-emphasis));background-color:var(--color-done-subtle);}.markdown-alert.markdown-alert-important .markdown-alert-title {color: var(--fgColor-done,var(--color-done-fg));}</style><style>.markdown-alert.markdown-alert-warning {border-left-color:var(--borderColor-attention-emphasis, var(--color-attention-emphasis));background-color:var(--color-attention-subtle);}.markdown-alert.markdown-alert-warning .markdown-alert-title {color: var(--fgColor-attention,var(--color-attention-fg));}</style><style>.markdown-alert.markdown-alert-caution {border-left-color:var(--borderColor-danger-emphasis, var(--color-danger-emphasis));background-color:var(--color-danger-subtle);}.markdown-alert.markdown-alert-caution .markdown-alert-title {color: var(--fgColor-danger,var(--color-danger-fg));}</style>
+
 
 
 
 <body>
     <div id="header">
-<h1 class="postTitle">V's first</h1>
+<h1 class="postTitle">Openssl 升级</h1>
 <div class="title-right">
     <a href="https://blog.witter.top" id="buttonHome" class="btn btn-invisible circle" title="首页">
         <svg class="octicon" width="16" height="16">
@@ -118,7 +160,7 @@ body{box-sizing: border-box;min-width: 200px;max-width: 900px;margin: 20px auto;
         </svg>
     </a>
     
-    <a href="https://github.com/ljwtorch/ljwtorch.github.io/issues/1" target="_blank" class="btn btn-invisible circle" title="Issue">
+    <a href="https://github.com/ljwtorch/ljwtorch.github.io/issues/11" target="_blank" class="btn btn-invisible circle" title="Issue">
         <svg class="octicon" width="16" height="16">
             <path id="pathIssue" fill-rule="evenodd"></path>
         </svg>
@@ -134,34 +176,47 @@ body{box-sizing: border-box;min-width: 200px;max-width: 900px;margin: 20px auto;
 </div>
 </div>
     <div id="content">
-<div class="markdown-body" id="postBody"><blockquote>
-<p>所做留下痕迹</p>
-</blockquote>
-<pre class="notranslate"><code class="notranslate">&gt; [!NOTE]
-&gt; Useful information that users should know, even when skimming content.
+<div class="markdown-body" id="postBody"><h2>升级支持TLS 1.3</h2>
+<div class="highlight highlight-source-shell"><pre class="notranslate"><span class="pl-c"><span class="pl-c">#</span> 下载</span>
+wget https://www.openssl.org/source/openssl-3.0.13.tar.gz
+<span class="pl-c"><span class="pl-c">#</span> 解压</span>
+tar -zxvf openssl-3.0.13.tar.gz
+<span class="pl-c"><span class="pl-c">#</span> 配置、编译</span>
+./config  --prefix=/usr/local/openssl
+make
+<span class="pl-c"><span class="pl-c">#</span> 检查是否出错</span>
+make <span class="pl-c1">test</span>
+<span class="pl-c"><span class="pl-c">#</span> 安装</span>
+make install</pre></div>
+<p>安装完成后检查链接库是否正常，将缺少的文件直接软链接到系统的<code class="notranslate">/usr/lib64</code>目录下</p>
+<div class="highlight highlight-source-shell"><pre class="notranslate"><span class="pl-c1">cd</span> /usr/local/openssl/bin
+ldd openssl
 
-&gt; [!TIP]
-&gt; Helpful advice for doing things better or more easily.
+linux-vdso.so.1 =<span class="pl-k">&gt;</span>  (0x00007ffe3893b000)
+libssl.so.3 =<span class="pl-k">&gt;</span> not found
+libcrypto.so.3 =<span class="pl-k">&gt;</span> not found
+libdl.so.2 =<span class="pl-k">&gt;</span> /lib64/libdl.so.2 (0x00007ff49e5e0000)
+libpthread.so.0 =<span class="pl-k">&gt;</span> /lib64/libpthread.so.0 (0x00007ff49e3c4000)
+libc.so.6 =<span class="pl-k">&gt;</span> /lib64/libc.so.6 (0x00007ff49dff6000)
+/lib64/ld-linux-x86-64.so.2 (0x00007ff49e7e4000)
 
-&gt; [!IMPORTANT]
-&gt; Key information users need to know to achieve their goal.
+ln -s /usr/local/openssl/lib64/libssl.so.3 /usr/lib64/libssl.so.3
+ln -s /usr/local/openssl/lib64/libcrypto.so.3 /usr/lib64/libcrypto.so.3
 
-&gt; [!WARNING]
-&gt; Urgent info that needs immediate user attention to avoid problems.
-
-&gt; [!CAUTION]
-&gt; Advises about risks or negative outcomes of certain actions.
-</code></pre>
-<div class="markdown-alert markdown-alert-note"><p class="markdown-alert-title"><svg class="octicon octicon-info mr-2" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8Zm8-6.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13ZM6.5 7.75A.75.75 0 0 1 7.25 7h1a.75.75 0 0 1 .75.75v2.75h.25a.75.75 0 0 1 0 1.5h-2a.75.75 0 0 1 0-1.5h.25v-2h-.25a.75.75 0 0 1-.75-.75ZM8 6a1 1 0 1 1 0-2 1 1 0 0 1 0 2Z"></path></svg>Note</p><p>Useful information that users should know, even when skimming content.</p>
-</div>
-<div class="markdown-alert markdown-alert-tip"><p class="markdown-alert-title"><svg class="octicon octicon-light-bulb mr-2" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="M8 1.5c-2.363 0-4 1.69-4 3.75 0 .984.424 1.625.984 2.304l.214.253c.223.264.47.556.673.848.284.411.537.896.621 1.49a.75.75 0 0 1-1.484.211c-.04-.282-.163-.547-.37-.847a8.456 8.456 0 0 0-.542-.68c-.084-.1-.173-.205-.268-.32C3.201 7.75 2.5 6.766 2.5 5.25 2.5 2.31 4.863 0 8 0s5.5 2.31 5.5 5.25c0 1.516-.701 2.5-1.328 3.259-.095.115-.184.22-.268.319-.207.245-.383.453-.541.681-.208.3-.33.565-.37.847a.751.751 0 0 1-1.485-.212c.084-.593.337-1.078.621-1.489.203-.292.45-.584.673-.848.075-.088.147-.173.213-.253.561-.679.985-1.32.985-2.304 0-2.06-1.637-3.75-4-3.75ZM5.75 12h4.5a.75.75 0 0 1 0 1.5h-4.5a.75.75 0 0 1 0-1.5ZM6 15.25a.75.75 0 0 1 .75-.75h2.5a.75.75 0 0 1 0 1.5h-2.5a.75.75 0 0 1-.75-.75Z"></path></svg>Tip</p><p>Helpful advice for doing things better or more easily.</p>
-</div>
-<div class="markdown-alert markdown-alert-important"><p class="markdown-alert-title"><svg class="octicon octicon-report mr-2" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="M0 1.75C0 .784.784 0 1.75 0h12.5C15.216 0 16 .784 16 1.75v9.5A1.75 1.75 0 0 1 14.25 13H8.06l-2.573 2.573A1.458 1.458 0 0 1 3 14.543V13H1.75A1.75 1.75 0 0 1 0 11.25Zm1.75-.25a.25.25 0 0 0-.25.25v9.5c0 .138.112.25.25.25h2a.75.75 0 0 1 .75.75v2.19l2.72-2.72a.749.749 0 0 1 .53-.22h6.5a.25.25 0 0 0 .25-.25v-9.5a.25.25 0 0 0-.25-.25Zm7 2.25v2.5a.75.75 0 0 1-1.5 0v-2.5a.75.75 0 0 1 1.5 0ZM9 9a1 1 0 1 1-2 0 1 1 0 0 1 2 0Z"></path></svg>Important</p><p>Key information users need to know to achieve their goal.</p>
-</div>
-<div class="markdown-alert markdown-alert-warning"><p class="markdown-alert-title"><svg class="octicon octicon-alert mr-2" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="M6.457 1.047c.659-1.234 2.427-1.234 3.086 0l6.082 11.378A1.75 1.75 0 0 1 14.082 15H1.918a1.75 1.75 0 0 1-1.543-2.575Zm1.763.707a.25.25 0 0 0-.44 0L1.698 13.132a.25.25 0 0 0 .22.368h12.164a.25.25 0 0 0 .22-.368Zm.53 3.996v2.5a.75.75 0 0 1-1.5 0v-2.5a.75.75 0 0 1 1.5 0ZM9 11a1 1 0 1 1-2 0 1 1 0 0 1 2 0Z"></path></svg>Warning</p><p>Urgent info that needs immediate user attention to avoid problems.</p>
-</div>
-<div class="markdown-alert markdown-alert-caution"><p class="markdown-alert-title"><svg class="octicon octicon-stop mr-2" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="M4.47.22A.749.749 0 0 1 5 0h6c.199 0 .389.079.53.22l4.25 4.25c.141.14.22.331.22.53v6a.749.749 0 0 1-.22.53l-4.25 4.25A.749.749 0 0 1 11 16H5a.749.749 0 0 1-.53-.22L.22 11.53A.749.749 0 0 1 0 11V5c0-.199.079-.389.22-.53Zm.84 1.28L1.5 5.31v5.38l3.81 3.81h5.38l3.81-3.81V5.31L10.69 1.5ZM8 4a.75.75 0 0 1 .75.75v3.5a.75.75 0 0 1-1.5 0v-3.5A.75.75 0 0 1 8 4Zm0 8a1 1 0 1 1 0-2 1 1 0 0 1 0 2Z"></path></svg>Caution</p><p>Advises about risks or negative outcomes of certain actions.</p>
-</div></div>
+linux-vdso.so.1 =<span class="pl-k">&gt;</span>  (0x00007fffd2ddb000)
+libssl.so.3 =<span class="pl-k">&gt;</span> /lib64/libssl.so.3 (0x00007fbc48fc8000)
+libcrypto.so.3 =<span class="pl-k">&gt;</span> /lib64/libcrypto.so.3 (0x00007fbc48954000)
+libdl.so.2 =<span class="pl-k">&gt;</span> /lib64/libdl.so.2 (0x00007fbc48750000)
+libpthread.so.0 =<span class="pl-k">&gt;</span> /lib64/libpthread.so.0 (0x00007fbc48534000)
+libc.so.6 =<span class="pl-k">&gt;</span> /lib64/libc.so.6 (0x00007fbc48166000)
+/lib64/ld-linux-x86-64.so.2 (0x00007fbc4926d000)</pre></div>
+<p>报错：</p>
+<div class="highlight highlight-source-shell"><pre class="notranslate">Can<span class="pl-s"><span class="pl-pds">'</span>t locate IPC/Cmd.pm in @INC (@INC contains: /home/sonkwo/openssl-3.0.13/util/perl /usr/local/lib64/perl5 /usr/local/share/perl5 /usr/lib64/perl5/vendor_perl /usr/share/perl5/vendor_perl /usr/lib64/perl5 /usr/share/perl5 . /home/sonkwo/openssl-3.0.13/external/perl/Text-Template-1.56/lib) at /home/sonkwo/openssl-3.0.13/util/perl/OpenSSL/config.pm line 19.</span>
+<span class="pl-s">BEGIN failed--compilation aborted at /home/sonkwo/openssl-3.0.13/util/perl/OpenSSL/config.pm line 19.</span>
+<span class="pl-s">Compilation failed in require at /home/sonkwo/openssl-3.0.13/Configure line 23.</span>
+<span class="pl-s">BEGIN failed--compilation aborted at /home/sonkwo/openssl-3.0.13/Configure line 23.</span>
+<span class="pl-s"></span>
+<span class="pl-s">yum install perl-IPC-Cmd</span></pre></div></div>
 <div style="font-size:small;margin-top:8px;float:right;">🍺转载文章请注明出处，谢谢！🍺</div>
 <button class="btn btn-block" type="button" onclick="openComments()" id="cmButton">评论</button>
 <div class="comments" id="comments"></div>

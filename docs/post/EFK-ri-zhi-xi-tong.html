@@ -9,8 +9,7 @@
         let theme = localStorage.getItem("meek_theme") || "light";
         document.documentElement.setAttribute("data-color-mode", theme);
     </script>
-<meta name="description" content="# EFK日志告警系统
-
+<meta name="description" content="
 **注：现在新版本elastic stack已经支持将kafka作为输出和输入的目标**
 
 当日志不是结构化数据：*.log->filebeat->kafka->logstash->elasticsearch
@@ -32,8 +31,7 @@ filebeat.inputs:
 - type: filestream #新版本常用文件流输入方式
   id: my-filestream-id #每个文件流输入必须有一个唯一的 ID。">
 <meta property="og:title" content="EFK日志系统">
-<meta property="og:description" content="# EFK日志告警系统
-
+<meta property="og:description" content="
 **注：现在新版本elastic stack已经支持将kafka作为输出和输入的目标**
 
 当日志不是结构化数据：*.log->filebeat->kafka->logstash->elasticsearch
@@ -112,8 +110,7 @@ body{box-sizing: border-box;min-width: 200px;max-width: 900px;margin: 20px auto;
 </div>
 </div>
     <div id="content">
-<div class="markdown-body" id="postBody"><h1>EFK日志告警系统</h1>
-<p><strong>注：现在新版本elastic stack已经支持将kafka作为输出和输入的目标</strong></p>
+<div class="markdown-body" id="postBody"><p><strong>注：现在新版本elastic stack已经支持将kafka作为输出和输入的目标</strong></p>
 <p>当日志不是结构化数据：*.log-&gt;filebeat-&gt;kafka-&gt;logstash-&gt;elasticsearch</p>
 <p>当日志是结构化数据：*.log-&gt;filebeat-&gt;kafka-&gt;filebeat-&gt;elasticsearch</p>
 <p>区别在于是否需要logstash进行日志的过滤和结构化；</p>
