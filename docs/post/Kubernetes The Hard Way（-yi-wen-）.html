@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html data-color-mode="light" data-dark-theme="dark" data-light-theme="light" lang="zh-CN">
+<head>
+    <meta content="text/html; charset=utf-8" http-equiv="content-type" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <link href="//cdn.staticfile.net/Primer/21.0.7/primer.css" rel="stylesheet" />
+    <link rel="icon" href="https://img.witter.top/file/b037878209903b7d5bb17.jpg"><script>
+        let theme = localStorage.getItem("meek_theme") || "light";
+        document.documentElement.setAttribute("data-color-mode", theme);
+    </script>
+<meta name="description" content="> [!IMPORTANT]
+> [GitHub原文链接](https://github.com/kelseyhightower/kubernetes-the-hard-way) 本文使用ChatGPT协助翻译
+
+# 先决条件
+
+在本实验中，您将回顾跟随本教程所需的机器要求。">
+<meta property="og:title" content="Kubernetes The Hard Way（译文）">
+<meta property="og:description" content="> [!IMPORTANT]
+> [GitHub原文链接](https://github.com/kelseyhightower/kubernetes-the-hard-way) 本文使用ChatGPT协助翻译
+
+# 先决条件
+
+在本实验中，您将回顾跟随本教程所需的机器要求。">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://blog.witter.top/post/Kubernetes%20The%20Hard%20Way%EF%BC%88-yi-wen-%EF%BC%89.html">
+<meta property="og:image" content="https://img.witter.top/file/b037878209903b7d5bb17.jpg">
+<title>Kubernetes The Hard Way（译文）</title>
+<link href="//unpkg.com/@wooorm/starry-night@2.1.1/style/both.css" rel="stylesheet" />
+
+</head>
+<style>
+body{box-sizing: border-box;min-width: 200px;max-width: 900px;margin: 20px auto;padding: 45px;font-size: 16px;font-family: sans-serif;line-height: 1.25;}
+#header{display:flex;padding-bottom:8px;border-bottom: 1px solid var(--borderColor-muted, var(--color-border-muted));margin-bottom: 16px;}
+#footer {margin-top:64px; text-align: center;font-size: small;}
+
+</style>
+
+<style>
+.postTitle{margin: auto 0;font-size:40px;font-weight:bold;}
+.title-right{display:flex;margin:auto 0 0 auto;}
+.title-right .circle{padding: 14px 16px;margin-right:8px;}
+#postBody{border-bottom: 1px solid var(--color-border-default);padding-bottom:36px;}
+#postBody hr{height:2px;}
+#cmButton{height:48px;margin-top:48px;}
+#comments{margin-top:64px;}
+.g-emoji{font-size:24px;}
+@media (max-width: 600px) {
+    body {padding: 8px;}
+    .postTitle{font-size:24px;}
+}
+</style>
+<style>.markdown-alert{padding:0.5rem 1rem;margin-bottom:1rem;border-left:.25em solid var(--borderColor-default,var(--color-border-default));}.markdown-alert .markdown-alert-title {display:flex;font-weight:var(--base-text-weight-medium,500);align-items:center;line-height:1;}.markdown-alert>:first-child {margin-top:0;}.markdown-alert>:last-child {margin-bottom:0;}</style><style>.markdown-alert.markdown-alert-important {border-left-color:var(--borderColor-done-emphasis, var(--color-done-emphasis));background-color:var(--color-done-subtle);}.markdown-alert.markdown-alert-important .markdown-alert-title {color: var(--fgColor-done,var(--color-done-fg));}</style>
+
+
+
+<body>
+    <div id="header">
+<h1 class="postTitle">Kubernetes The Hard Way（译文）</h1>
+<div class="title-right">
+    <a href="https://blog.witter.top" id="buttonHome" class="btn btn-invisible circle" title="首页">
+        <svg class="octicon" width="16" height="16">
+            <path id="pathHome" fill-rule="evenodd"></path>
+        </svg>
+    </a>
+    
+    <a href="https://github.com/ljwtorch/ljwtorch.github.io/issues/20" target="_blank" class="btn btn-invisible circle" title="Issue">
+        <svg class="octicon" width="16" height="16">
+            <path id="pathIssue" fill-rule="evenodd"></path>
+        </svg>
+    </a>
+    
+
+    <a class="btn btn-invisible circle" onclick="modeSwitch();" title="切换主题">
+        <svg class="octicon" width="16" height="16" >
+            <path id="themeSwitch" fill-rule="evenodd"></path>
+        </svg>
+    </a>
+
+</div>
+</div>
+    <div id="content">
+<div class="markdown-body" id="postBody"><div class="markdown-alert markdown-alert-important"><p class="markdown-alert-title"><svg class="octicon octicon-report mr-2" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="M0 1.75C0 .784.784 0 1.75 0h12.5C15.216 0 16 .784 16 1.75v9.5A1.75 1.75 0 0 1 14.25 13H8.06l-2.573 2.573A1.458 1.458 0 0 1 3 14.543V13H1.75A1.75 1.75 0 0 1 0 11.25Zm1.75-.25a.25.25 0 0 0-.25.25v9.5c0 .138.112.25.25.25h2a.75.75 0 0 1 .75.75v2.19l2.72-2.72a.749.749 0 0 1 .53-.22h6.5a.25.25 0 0 0 .25-.25v-9.5a.25.25 0 0 0-.25-.25Zm7 2.25v2.5a.75.75 0 0 1-1.5 0v-2.5a.75.75 0 0 1 1.5 0ZM9 9a1 1 0 1 1-2 0 1 1 0 0 1 2 0Z"></path></svg>Important</p><p><a href="https://github.com/kelseyhightower/kubernetes-the-hard-way">GitHub原文链接</a> 本文使用ChatGPT协助翻译</p>
+</div>
+<h1>先决条件</h1>
+<p>在本实验中，您将回顾跟随本教程所需的机器要求。</p>
+<h2>虚拟或物理机器</h2>
+<p>本教程需要四（4）台运行Debian 12（bookworm）的虚拟或物理ARM64机器。下表列出了四台机器及其CPU、内存和存储要求。</p>
+<table role="table">
+<thead>
+<tr>
+<th>名称</th>
+<th>描述</th>
+<th>CPU</th>
+<th>内存</th>
+<th>存储</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>jumpbox</td>
+<td>管理主机</td>
+<td>1</td>
+<td>512MB</td>
+<td>10GB</td>
+</tr>
+<tr>
+<td>server</td>
+<td>Kubernetes服务器</td>
+<td>1</td>
+<td>2GB</td>
+<td>20GB</td>
+</tr>
+<tr>
+<td>node-0</td>
+<td>Kubernetes工作节点</td>
+<td>1</td>
+<td>2GB</td>
+<td>20GB</td>
+</tr>
+<tr>
+<td>node-1</td>
+<td>Kubernetes工作节点</td>
+<td>1</td>
+<td>2GB</td>
+<td>20GB</td>
+</tr>
+</tbody>
+</table>
+<p>如何配置这些机器由您决定，唯一的要求是每台机器必须符合上述系统要求，包括机器规格和操作系统版本。一旦您配置好所有四台机器，通过在每台机器上运行 <code class="notranslate">uname</code> 命令来验证系统要求：</p>
+<div class="highlight highlight-source-shell"><pre class="notranslate">uname -mov</pre></div>
+<p>运行 <code class="notranslate">uname</code> 命令后，您应该会看到以下输出：</p>
+<div class="highlight highlight-source-shell"><pre class="notranslate"><span class="pl-c"><span class="pl-c">#</span>1 SMP Debian 6.1.55-1 (2023-09-29) aarch64 GNU/Linux</span></pre></div>
+<p>您可能会惊讶地看到 <code class="notranslate">aarch64</code>，但这是Arm架构64位指令集的正式名称。您经常会看到Apple和Linux内核维护者在提到对<code class="notranslate">aarch64</code>的支持时使用<code class="notranslate">arm64</code>。本教程将始终使用<code class="notranslate">arm64</code>以避免混淆。</p>
+<h1>设置Jumpbox</h1>
+<p>在本实验中，您将设置四台机器之一为<code class="notranslate">jumpbox</code>。这台机器将用于在本教程中运行命令。虽然使用专用机器以确保一致性，但这些命令也可以从几乎任何机器运行，包括运行macOS或Linux的个人工作站。</p>
+<p>将<code class="notranslate">jumpbox</code>视为管理机器，您将使用它作为基础来从头开始设置Kubernetes集群。在开始之前，我们需要安装一些命令行工具并克隆Kubernetes The Hard Way Git库，该库包含一些用于配置各种Kubernetes组件的额外配置文件。</p>
+<p>登录到<code class="notranslate">jumpbox</code>：</p>
+<div class="highlight highlight-source-shell"><pre class="notranslate">ssh root@jumpbox</pre></div>
+<p>所有命令将以<code class="notranslate">root</code>用户身份运行。这是为了方便起见，并将帮助减少设置所有内容所需的命令数量。</p>
+<h3>安装命令行工具</h3>
+<p>现在，您已经以<code class="notranslate">root</code>用户身份登录到<code class="notranslate">jumpbox</code>机器，您将安装用于在整个教程中执行各种任务的命令行工具。</p>
+<div class="highlight highlight-source-shell"><pre class="notranslate">apt-get -y install wget curl vim openssl git</pre></div>
+<h3>同步GitHub库</h3>
+<p>现在是下载本教程副本的时候了，其中包含将用于从头构建Kubernetes集群的配置文件和模板。使用<code class="notranslate">git</code>命令克隆Kubernetes The Hard Way Git库：</p>
+<div class="highlight highlight-source-shell"><pre class="notranslate">git clone --depth 1 \
+  https://github.com/kelseyhightower/kubernetes-the-hard-way.git</pre></div>
+<p>进入<code class="notranslate">kubernetes-the-hard-way</code>目录：</p>
+<div class="highlight highlight-source-shell"><pre class="notranslate"><span class="pl-c1">cd</span> kubernetes-the-hard-way</pre></div>
+<p>这将是本教程其余部分的工作目录。如果您迷路了，请运行<code class="notranslate">pwd</code>命令以确认在<code class="notranslate">jumpbox</code>上运行命令时是否在正确的目录中：</p>
+<div class="highlight highlight-source-shell"><pre class="notranslate"><span class="pl-c1">pwd</span>
+/root/kubernetes-the-hard-way</pre></div>
+<h3>下载二进制文件</h3>
+<p>下载列在<code class="notranslate">downloads.txt</code>文件中的二进制文件，使用<code class="notranslate">wget</code>命令：</p>
+<div class="highlight highlight-source-shell"><pre class="notranslate">wget -q --show-progress \
+  --https-only \
+  --timestamping \
+  -P downloads \
+  -i downloads.txt</pre></div>
+<p>根据您的互联网连接速度，下载<code class="notranslate">584</code>兆字节的二进制文件可能需要一段时间，下载完成后，您可以使用<code class="notranslate">ls</code>命令列出它们：</p>
+<div class="highlight highlight-source-shell"><pre class="notranslate">ls -loh downloads
+
+total 584M
+-rw-r--r-- 1 root  41M May  9 13:35 cni-plugins-linux-arm64-v1.3.0.tgz
+-rw-r--r-- 1 root  34M Oct 26 15:21 containerd-1.7.8-linux-arm64.tar.gz
+-rw-r--r-- 1 root  22M Aug 14 00:19 crictl-v1.28.0-linux-arm.tar.gz
+-rw-r--r-- 1 root  15M Jul 11 02:30 etcd-v3.4.27-linux-arm64.tar.gz
+-rw-r--r-- 1 root 111M Oct 18 07:34 kube-apiserver
+-rw-r--r-- 1 root 107M Oct 18 07:34 kube-controller-manager
+-rw-r--r-- 1 root  51M Oct 18 07:34 kube-proxy
+-rw-r--r-- 1 root  52M Oct 18 07:34 kube-scheduler
+-rw-r--r-- 1 root  46M Oct 18 07:34 kubectl
+-rw-r--r-- 1 root 101M Oct 18 07:34 kubelet
+-rw-r--r-- 1 root 9.6M Aug 10 18:57 runc.arm64</pre></div>
+<h3>安装kubectl</h3>
+<p>在本节中，您将在<code class="notranslate">jumpbox</code>机器上安装<code class="notranslate">kubectl</code>，即官方Kubernetes客户端命令行工具。在本教程后面您的集群配置完成后，<code class="notranslate">kubectl</code>将用于与Kubernetes控制进行交互。</p>
+<p>使用<code class="notranslate">chmod</code>命令使<code class="notranslate">kubectl</code>二进制文件可执行并将其移动到<code class="notranslate">/usr/local/bin/</code>目录：</p>
+<div class="highlight highlight-source-shell"><pre class="notranslate">{
+  chmod +x downloads/kubectl
+  cp downloads/kubectl /usr/local/bin/
+}</pre></div>
+<p>此时，<code class="notranslate">kubectl</code>已安装，可以通过运行<code class="notranslate">kubectl</code>命令进行验证：</p>
+<div class="highlight highlight-source-shell"><pre class="notranslate">kubectl version --client
+
+Client Version: v1.28.3
+Kustomize Version: v5.0.4-0.20230601165947-6ce0bf390ce3</pre></div>
+<p>此时，<code class="notranslate">jumpbox</code>已安装完成所有必要的命令行工具和实用程序。</p>
+<h1>配置计算资源</h1>
+<p>Kubernetes 需要一组机器来托管 Kubernetes 控制平面和最终运行容器的工作节点。在本实验中，您将配置设置 Kubernetes 集群所需的机器。</p>
+<h2>机器数据库</h2>
+<p>本教程将利用一个文本文件作为机器数据库，存储在设置 Kubernetes 控制平面和工作节点时将使用的各种机器属性。以下模式表示机器数据库中的条目，每行一个条目：</p>
+<div class="highlight highlight-source-shell"><pre class="notranslate">IPV4_ADDRESS FQDN HOSTNAME POD_SUBNET</pre></div>
+<p>每一列分别对应一台机器的IP地址 <code class="notranslate">IPV4_ADDRESS</code>，完全限定域名 <code class="notranslate">FQDN</code>，主机名 <code class="notranslate">HOSTNAME</code> 和 IP 子网 <code class="notranslate">POD_SUBNET</code>。Kubernetes 为每个 <code class="notranslate">pod</code> 分配一个 IP 地址，<code class="notranslate">POD_SUBNET</code> 表示分配给集群中每台机器的唯一 IP 地址范围。</p>
+<p>以下是创建本教程时使用的机器数据库示例。请注意，IP 地址已被屏蔽。只要每台机器能够相互访问以及访问<code class="notranslate">jumpbox</code>，您的机器可以分配任何 IP 地址。</p>
+<div class="highlight highlight-source-shell"><pre class="notranslate">cat machines.txt
+
+XXX.XXX.XXX.XXX server.kubernetes.local server  
+XXX.XXX.XXX.XXX node-0.kubernetes.local node-0 10.200.0.0/24
+XXX.XXX.XXX.XXX node-1.kubernetes.local node-1 10.200.1.0/24</pre></div>
+<p>现在轮到您创建一个<code class="notranslate">machines.txt</code>文件，其中包含您将用来创建 Kubernetes 集群的三台机器的详细信息。使用上面的示例机器数据库，并添加您的机器的详细信息。</p>
+<h2>配置 SSH 访问</h2>
+<p>SSH 将用于配置集群中的机器。请验证您对机器数据库中列出的每台机器都有 <code class="notranslate">root</code> SSH 访问权限。您可能需要通过更新 sshd_config 文件并重新启动 SSH 服务器来启用每个节点上的 root SSH 访问。</p>
+<h3>启用 root SSH 访问</h3>
+<p>如果每台机器上启用了 <code class="notranslate">root</code> SSH 访问，您应该可以使用以下命令验证 SSH 访问：</p>
+<div class="highlight highlight-source-shell"><pre class="notranslate"><span class="pl-k">for</span> <span class="pl-smi">host</span> <span class="pl-k">in</span> server node-0 node-1
+<span class="pl-k">do</span> ssh root@<span class="pl-smi">${host}</span> uname -o -m -n
+<span class="pl-k">done</span>
+
+server aarch64 GNU/Linux
+node-0 aarch64 GNU/Linux
+node-1 aarch64 GNU/Linux</pre></div>
+<h2>将 DNS 条目添加到本地机器</h2>
+<p>在本节中，您将从 <code class="notranslate">hosts</code> 文件附加 DNS 条目到 <code class="notranslate">jumpbox</code> 机器上的本地 <code class="notranslate">/etc/hosts</code> 文件。</p>
+<p>将 <code class="notranslate">hosts</code> 文件中的 DNS 条目附加到 <code class="notranslate">/etc/hosts</code>：</p>
+<div class="highlight highlight-source-shell"><pre class="notranslate">cat hosts <span class="pl-k">&gt;&gt;</span> /etc/hosts</pre></div>
+<p>验证 <code class="notranslate">/etc/hosts</code> 文件已更新：</p>
+<div class="highlight highlight-source-shell"><pre class="notranslate">cat /etc/hosts
+
+127.0.0.1       localhost
+127.0.1.1       jumpbox
+
+<span class="pl-c"><span class="pl-c">#</span> The following lines are desirable for IPv6 capable hosts</span>
+::1     localhost ip6-localhost ip6-loopback
+ff02::1 ip6-allnodes
+ff02::2 ip6-allrouters
+
+<span class="pl-c"><span class="pl-c">#</span> Kubernetes The Hard Way</span>
+XXX.XXX.XXX.XXX server.kubernetes.local server
+XXX.XXX.XXX.XXX node-0.kubernetes.local node-0
+XXX.XXX.XXX.XXX node-1.kubernetes.local node-1</pre></div>
+<p>此时，您应该可以使用主机名 SSH 访问 <code class="notranslate">machines.txt</code> 文件中列出的每台机器。</p>
+<div class="highlight highlight-source-shell"><pre class="notranslate"><span class="pl-k">for</span> <span class="pl-smi">host</span> <span class="pl-k">in</span> server node-0 node-1
+<span class="pl-k">do</span> ssh root@<span class="pl-smi">${host}</span> uname -o -m -n
+<span class="pl-k">done</span>
+
+server aarch64 GNU/Linux
+node-0 aarch64 GNU/Linux
+node-1 aarch64 GNU/Linux</pre></div>
+<h2>将 DNS 条目添加到远程机器</h2>
+<p>在本节中，您将从 <code class="notranslate">hosts</code> 文件附加 DNS 条目到 <code class="notranslate">machines.txt</code> 文件中列出的每台机器的 <code class="notranslate">/etc/hosts</code> 文件中。</p>
+<p>将 <code class="notranslate">hosts</code> 文件复制到每台机器，并将内容附加到 <code class="notranslate">/etc/hosts</code>：</p>
+<div class="highlight highlight-source-shell"><pre class="notranslate"><span class="pl-k">while</span> <span class="pl-c1">read</span> IP FQDN HOST SUBNET<span class="pl-k">;</span> <span class="pl-k">do</span>
+  scp hosts root@<span class="pl-smi">${HOST}</span>:<span class="pl-k">~</span>/
+  ssh -n \
+    root@<span class="pl-smi">${HOST}</span> <span class="pl-s"><span class="pl-pds">"</span>cat hosts &gt;&gt; /etc/hosts<span class="pl-pds">"</span></span>
+<span class="pl-k">done</span> <span class="pl-k">&lt;</span> machines.txt</pre></div>
+<p>此时，可以在 <code class="notranslate">jumpbox</code> 机器或 Kubernetes 集群中的任何三台机器之间使用主机名进行连接。您现在可以使用 <code class="notranslate">server</code>、<code class="notranslate">node-0</code> 或 <code class="notranslate">node-1</code> 等主机名而不是 IP 地址进行连接。</p></div>
+<div style="font-size:small;margin-top:8px;float:right;">🍺转载文章请注明出处，谢谢！🍺</div>
+<button class="btn btn-block" type="button" onclick="openComments()" id="cmButton">评论</button>
+<div class="comments" id="comments"></div>
+</div>
+    <div id="footer">Copyright © <span id="year"></span><a href="https://blog.witter.top"> V's Blog </a>
+<p><a href="https://beian.miit.gov.cn/" target="_blank">冀ICP备2022019998号</a>
+<span id="runday"></span>Powered by <a href="https://meekdai.com/Gmeek.html" target="_blank">Gmeek</a>
+</p>
+
+<script>
+if("06/20/2024"!=""){
+    var now=new Date();
+    var startSite=new Date("06/20/2024");
+    var diff=now.getTime()-startSite.getTime();
+    var diffDay=Math.floor(diff/(1000*60*60*24));
+    document.getElementById("year").innerHTML=now.getFullYear();
+    if("冀ICP备2022019998号"!=""){document.getElementById("runday").innerHTML=" • "+"网站运行"+diffDay+"天"+" • ";}
+    else{document.getElementById("runday").innerHTML="网站运行"+diffDay+"天"+" • ";}
+}
+</script>
+</div>
+</body>
+<script>
+var IconList={'sun': 'M8 10.5a2.5 2.5 0 100-5 2.5 2.5 0 000 5zM8 12a4 4 0 100-8 4 4 0 000 8zM8 0a.75.75 0 01.75.75v1.5a.75.75 0 01-1.5 0V.75A.75.75 0 018 0zm0 13a.75.75 0 01.75.75v1.5a.75.75 0 01-1.5 0v-1.5A.75.75 0 018 13zM2.343 2.343a.75.75 0 011.061 0l1.06 1.061a.75.75 0 01-1.06 1.06l-1.06-1.06a.75.75 0 010-1.06zm9.193 9.193a.75.75 0 011.06 0l1.061 1.06a.75.75 0 01-1.06 1.061l-1.061-1.06a.75.75 0 010-1.061zM16 8a.75.75 0 01-.75.75h-1.5a.75.75 0 010-1.5h1.5A.75.75 0 0116 8zM3 8a.75.75 0 01-.75.75H.75a.75.75 0 010-1.5h1.5A.75.75 0 013 8zm10.657-5.657a.75.75 0 010 1.061l-1.061 1.06a.75.75 0 11-1.06-1.06l1.06-1.06a.75.75 0 011.06 0zm-9.193 9.193a.75.75 0 010 1.06l-1.06 1.061a.75.75 0 11-1.061-1.06l1.06-1.061a.75.75 0 011.061 0z', 'moon': 'M9.598 1.591a.75.75 0 01.785-.175 7 7 0 11-8.967 8.967.75.75 0 01.961-.96 5.5 5.5 0 007.046-7.046.75.75 0 01.175-.786zm1.616 1.945a7 7 0 01-7.678 7.678 5.5 5.5 0 107.678-7.678z', 'sync': 'M1.705 8.005a.75.75 0 0 1 .834.656 5.5 5.5 0 0 0 9.592 2.97l-1.204-1.204a.25.25 0 0 1 .177-.427h3.646a.25.25 0 0 1 .25.25v3.646a.25.25 0 0 1-.427.177l-1.38-1.38A7.002 7.002 0 0 1 1.05 8.84a.75.75 0 0 1 .656-.834ZM8 2.5a5.487 5.487 0 0 0-4.131 1.869l1.204 1.204A.25.25 0 0 1 4.896 6H1.25A.25.25 0 0 1 1 5.75V2.104a.25.25 0 0 1 .427-.177l1.38 1.38A7.002 7.002 0 0 1 14.95 7.16a.75.75 0 0 1-1.49.178A5.5 5.5 0 0 0 8 2.5Z', 'home': 'M6.906.664a1.749 1.749 0 0 1 2.187 0l5.25 4.2c.415.332.657.835.657 1.367v7.019A1.75 1.75 0 0 1 13.25 15h-3.5a.75.75 0 0 1-.75-.75V9H7v5.25a.75.75 0 0 1-.75.75h-3.5A1.75 1.75 0 0 1 1 13.25V6.23c0-.531.242-1.034.657-1.366l5.25-4.2Zm1.25 1.171a.25.25 0 0 0-.312 0l-5.25 4.2a.25.25 0 0 0-.094.196v7.019c0 .138.112.25.25.25H5.5V8.25a.75.75 0 0 1 .75-.75h3.5a.75.75 0 0 1 .75.75v5.25h2.75a.25.25 0 0 0 .25-.25V6.23a.25.25 0 0 0-.094-.195Z', 'github': 'M8 0c4.42 0 8 3.58 8 8a8.013 8.013 0 0 1-5.45 7.59c-.4.08-.55-.17-.55-.38 0-.27.01-1.13.01-2.2 0-.75-.25-1.23-.54-1.48 1.78-.2 3.65-.88 3.65-3.95 0-.88-.31-1.59-.82-2.15.08-.2.36-1.02-.08-2.12 0 0-.67-.22-2.2.82-.64-.18-1.32-.27-2-.27-.68 0-1.36.09-2 .27-1.53-1.03-2.2-.82-2.2-.82-.44 1.1-.16 1.92-.08 2.12-.51.56-.82 1.28-.82 2.15 0 3.06 1.86 3.75 3.64 3.95-.23.2-.44.55-.51 1.07-.46.21-1.61.55-2.33-.66-.15-.24-.6-.83-1.23-.82-.67.01-.27.38.01.53.34.19.73.9.82 1.13.16.45.68 1.31 2.69.94 0 .67.01 1.3.01 1.49 0 .21-.15.45-.55.38A7.995 7.995 0 0 1 0 8c0-4.42 3.58-8 8-8Z'};
+var utterancesLoad=0;
+
+let themeSettings={
+    "dark": ["dark","moon","#00f0ff","dark-blue"],
+    "light": ["light","sun","#ff5000","github-light"],
+    "auto": ["auto","sync","","preferred-color-scheme"]
+};
+function changeTheme(mode, icon, color, utheme){
+    document.documentElement.setAttribute("data-color-mode",mode);
+    document.getElementById("themeSwitch").setAttribute("d",value=IconList[icon]);
+    document.getElementById("themeSwitch").parentNode.style.color=color;
+    if(utterancesLoad==1){utterancesTheme(utheme);}
+}
+function modeSwitch(){
+    let currentMode=document.documentElement.getAttribute('data-color-mode');
+    let newMode = currentMode === "light" ? "dark" : currentMode === "dark" ? "auto" : "light";
+    localStorage.setItem("meek_theme", newMode);
+    if(themeSettings[newMode]){
+        changeTheme(...themeSettings[newMode]);
+    }
+}
+function utterancesTheme(theme){
+    const message={type:'set-theme',theme: theme};
+    const iframe=document.getElementsByClassName('utterances-frame')[0];
+    iframe.contentWindow.postMessage(message,'https://utteranc.es');
+}
+if(themeSettings[theme]){changeTheme(...themeSettings[theme]);}
+console.log("\n %c Gmeek last https://github.com/Meekdai/Gmeek \n\n","padding:5px 0;background:#02d81d;color:#fff");
+</script>
+
+<script>
+document.getElementById("pathHome").setAttribute("d",IconList["home"]);
+document.getElementById("pathIssue").setAttribute("d",IconList["github"]);
+
+function openComments(){
+    cm=document.getElementById("comments");
+    cmButton=document.getElementById("cmButton");
+    cmButton.innerHTML="loading";
+    span=document.createElement("span");
+    span.setAttribute("class","AnimatedEllipsis");
+    cmButton.appendChild(span);
+
+    script=document.createElement("script");
+    script.setAttribute("src","https://utteranc.es/client.js");
+    script.setAttribute("repo","ljwtorch/ljwtorch.github.io");
+    script.setAttribute("issue-term","title");
+    
+    if(localStorage.getItem("meek_theme")=="dark"){script.setAttribute("theme","dark-blue");}
+    else if(localStorage.getItem("meek_theme")=="light") {script.setAttribute("theme","github-light");}
+    else{script.setAttribute("theme","preferred-color-scheme");}
+    
+    script.setAttribute("crossorigin","anonymous");
+    script.setAttribute("async","");
+    cm.appendChild(script);
+
+    int=self.setInterval("iFrameLoading()",200);
+}
+
+function iFrameLoading(){
+    var utterances=document.getElementsByClassName('utterances');
+    if(utterances.length==1){
+        if(utterances[0].style.height!=""){
+            utterancesLoad=1;
+            int=window.clearInterval(int);
+            document.getElementById("cmButton").style.display="none";
+            console.log("utterances Load OK");
+        }
+    }
+}
+</script>
+<script defer src="http://ssh.witter.top:10012/script.js" data-website-id="b891c729-62b4-46cb-bdca-d622dc706106"></script>
+
+</html>

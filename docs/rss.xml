@@ -1,5 +1,10 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<rss xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/" version="2.0"><channel><title>V's Blog</title><link>https://blog.witter.top</link><description>自有清风常载鹤，从无猜意不惊鸥。</description><copyright>V's Blog</copyright><docs>http://www.rssboard.org/rss-specification</docs><generator>python-feedgen</generator><image><url>https://img.witter.top/file/b037878209903b7d5bb17.jpg</url><title>avatar</title><link>https://blog.witter.top</link></image><lastBuildDate>Thu, 27 Jun 2024 06:28:56 +0000</lastBuildDate><managingEditor>V's Blog</managingEditor><ttl>60</ttl><webMaster>V's Blog</webMaster><item><title>Debian开启smb服务</title><link>https://blog.witter.top/post/Debian-kai-qi-smb-fu-wu.html</link><description>1. 安装samba：`sudo apt install samba smbclient cifs-utils`&#13;
+<rss xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/" version="2.0"><channel><title>V's Blog</title><link>https://blog.witter.top</link><description>自有清风常载鹤，从无猜意不惊鸥。</description><copyright>V's Blog</copyright><docs>http://www.rssboard.org/rss-specification</docs><generator>python-feedgen</generator><image><url>https://img.witter.top/file/b037878209903b7d5bb17.jpg</url><title>avatar</title><link>https://blog.witter.top</link></image><lastBuildDate>Sat, 29 Jun 2024 04:49:44 +0000</lastBuildDate><managingEditor>V's Blog</managingEditor><ttl>60</ttl><webMaster>V's Blog</webMaster><item><title>Kubernetes The Hard Way（译文）</title><link>https://blog.witter.top/post/Kubernetes%20The%20Hard%20Way%EF%BC%88-yi-wen-%EF%BC%89.html</link><description>&gt; [!IMPORTANT]&#13;
+&gt; [GitHub原文链接](https://github.com/kelseyhightower/kubernetes-the-hard-way) 本文使用ChatGPT协助翻译&#13;
+&#13;
+# 先决条件&#13;
+&#13;
+在本实验中，您将回顾跟随本教程所需的机器要求。</description><guid isPermaLink="true">https://blog.witter.top/post/Kubernetes%20The%20Hard%20Way%EF%BC%88-yi-wen-%EF%BC%89.html</guid><pubDate>Sat, 29 Jun 2024 04:49:20 +0000</pubDate></item><item><title>Debian开启smb服务</title><link>https://blog.witter.top/post/Debian-kai-qi-smb-fu-wu.html</link><description>1. 安装samba：`sudo apt install samba smbclient cifs-utils`&#13;
 &#13;
 2. 创建samba目录&#13;
 &#13;
