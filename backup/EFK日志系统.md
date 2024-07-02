@@ -1,4 +1,3 @@
-
 **注：现在新版本elastic stack已经支持将kafka作为输出和输入的目标**
 
 当日志不是结构化数据：*.log->filebeat->kafka->logstash->elasticsearch
@@ -230,6 +229,10 @@ i18n.locale: "zh-CN"
 
 ### Elastalert
 
+[[官方文档](https://elastalert.readthedocs.io/en/latest/index.html)](https://elastalert.readthedocs.io/en/latest/index.html)
+
+#### 配置文件
+
 `config.yaml`
 
 ```yaml
@@ -393,6 +396,42 @@ alert:
   - "dingtalk"
 dingtalk_access_token: ""
 dingtalk_msgtype: "markdown"
+```
+
+#### Enhancements自定义开发&镜像构建
+
+> [!TIP]
+>
+> 初始化流程可以按照官方[[文档](https://elastalert.readthedocs.io/en/latest/recipes/adding_enhancements.html)](https://elastalert.readthedocs.io/en/latest/recipes/adding_enhancements.html)进行
+
+Example：Ruby日志格式匹配提取request-id
+
+创建文件夹
+
+```shell
+mkdir elastalert/elastalert_modules
+touch __init__.py extract_request_id.py
+```
+
+`extract_request_id.py`
+
+```python
+from elastalert.enhancements import BaseEnhancement
+import re
+
+class Extract_Requestid(BaseEnhancement):
+    def process(self, match):
+        # 定义正则表达式模式
+        pattern = r"\b[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}\b"
+        # 检查 'message' 字段是否存在于match中
+        if 'message' in match:
+            log_message = match['message']
+            match_obj = re.search(pattern, log_message)
+            if match_obj:
+                match['extract_requestid'] = match_obj.group(0)
+            else:
+                match['extract_requestid'] = "request id not found"
+
 ```
 
 ### docker compose 部署
@@ -596,6 +635,3 @@ output {
    #查询
    GET /_cluster/settings?pretty
    ```
-
-   
-
