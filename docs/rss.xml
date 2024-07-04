@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<rss xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/" version="2.0"><channel><title>V's Blog</title><link>https://blog.witter.top</link><description>自有清风常载鹤，从无猜意不惊鸥。</description><copyright>V's Blog</copyright><docs>http://www.rssboard.org/rss-specification</docs><generator>python-feedgen</generator><image><url>https://img.witter.top/file/b037878209903b7d5bb17.jpg</url><title>avatar</title><link>https://blog.witter.top</link></image><lastBuildDate>Thu, 04 Jul 2024 07:18:21 +0000</lastBuildDate><managingEditor>V's Blog</managingEditor><ttl>60</ttl><webMaster>V's Blog</webMaster><item><title>Drone CI/CD</title><link>https://blog.witter.top/post/Drone%20CI-CD.html</link><description>[[官方文档](https://docs.drone.io/)](https://docs.drone.io/)&#13;
+<rss xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/" version="2.0"><channel><title>V's Blog</title><link>https://blog.witter.top</link><description>自有清风常载鹤，从无猜意不惊鸥。</description><copyright>V's Blog</copyright><docs>http://www.rssboard.org/rss-specification</docs><generator>python-feedgen</generator><image><url>https://img.witter.top/file/b037878209903b7d5bb17.jpg</url><title>avatar</title><link>https://blog.witter.top</link></image><lastBuildDate>Thu, 04 Jul 2024 08:45:36 +0000</lastBuildDate><managingEditor>V's Blog</managingEditor><ttl>60</ttl><webMaster>V's Blog</webMaster><item><title>Drone CI/CD</title><link>https://blog.witter.top/post/Drone%20CI-CD.html</link><description>[官方文档](https://docs.drone.io/)](https://docs.drone.io/)&#13;
 &#13;
 drone-server+ssh-runner &#13;
 &#13;
@@ -33,7 +33,9 @@ services:&#13;
       - '3001:3000'&#13;
     restart: always&#13;
     container_name: runner-ssh&#13;
-```。</description><guid isPermaLink="true">https://blog.witter.top/post/Drone%20CI-CD.html</guid><pubDate>Thu, 04 Jul 2024 07:17:58 +0000</pubDate></item><item><title>Kubernetes The Hard Way（译文）</title><link>https://blog.witter.top/post/Kubernetes%20The%20Hard%20Way%EF%BC%88-yi-wen-%EF%BC%89.html</link><description>&gt; [!IMPORTANT]&#13;
+```&#13;
+![Uploading 31BEE20F-9ED6-471A-BF70-7C488FF1BF71.png…]()&#13;
+。</description><guid isPermaLink="true">https://blog.witter.top/post/Drone%20CI-CD.html</guid><pubDate>Thu, 04 Jul 2024 07:17:58 +0000</pubDate></item><item><title>Kubernetes The Hard Way（译文）</title><link>https://blog.witter.top/post/Kubernetes%20The%20Hard%20Way%EF%BC%88-yi-wen-%EF%BC%89.html</link><description>&gt; [!IMPORTANT]&#13;
 &gt; [GitHub原文链接](https://github.com/kelseyhightower/kubernetes-the-hard-way) 本文使用ChatGPT协助翻译&#13;
 &#13;
 # 先决条件&#13;
