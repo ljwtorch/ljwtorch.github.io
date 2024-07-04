@@ -1,4 +1,4 @@
-[官方文档](https://docs.drone.io/)](https://docs.drone.io/)
+[官方文档](https://docs.drone.io/)
 
 drone-server+ssh-runner 
 
@@ -33,4 +33,5 @@ services:
     restart: always
     container_name: runner-ssh
 ```
-![Uploading 31BEE20F-9ED6-471A-BF70-7C488FF1BF71.png…]()
+![image](https://github.com/ljwtorch/ljwtorch.github.io/assets/64066892/8aee94fa-7f40-48bc-be49-52f85decf879)
+
