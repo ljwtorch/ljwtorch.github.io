@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<rss xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/" version="2.0"><channel><title>V's Blog</title><link>https://blog.witter.top</link><description>自有清风常载鹤，从无猜意不惊鸥。</description><copyright>V's Blog</copyright><docs>http://www.rssboard.org/rss-specification</docs><generator>python-feedgen</generator><image><url>https://img.witter.top/file/b037878209903b7d5bb17.jpg</url><title>avatar</title><link>https://blog.witter.top</link></image><lastBuildDate>Fri, 05 Jul 2024 07:51:45 +0000</lastBuildDate><managingEditor>V's Blog</managingEditor><ttl>60</ttl><webMaster>V's Blog</webMaster><item><title>MySQL的备份/恢复</title><link>https://blog.witter.top/post/MySQL-de-bei-fen---hui-fu.html</link><description>&#13;
+<rss xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/" version="2.0"><channel><title>V's Blog</title><link>https://blog.witter.top</link><description>自有清风常载鹤，从无猜意不惊鸥。</description><copyright>V's Blog</copyright><docs>http://www.rssboard.org/rss-specification</docs><generator>python-feedgen</generator><image><url>https://img.witter.top/file/b037878209903b7d5bb17.jpg</url><title>avatar</title><link>https://blog.witter.top</link></image><lastBuildDate>Fri, 05 Jul 2024 16:11:34 +0000</lastBuildDate><managingEditor>V's Blog</managingEditor><ttl>60</ttl><webMaster>V's Blog</webMaster><item><title>MySQL的备份/恢复</title><link>https://blog.witter.top/post/MySQL-de-bei-fen---hui-fu.html</link><description>&#13;
 ### 备份&#13;
 &#13;
 **mysqldump**&#13;
@@ -81,7 +81,12 @@ mysql -u your_username -p -e 'CREATE DATABASE IF NOT EXISTS database1;'&#13;
 mysql -u your_username -p database1 &lt; /path/to/your/backup/directory/database1_backup.sql&#13;
 # 恢复整个实例&#13;
 mysql -u your_username -p &lt; /path/to/your/backup/directory/all_databases_backup.sql&#13;
-```。</description><guid isPermaLink="true">https://blog.witter.top/post/MySQL-de-bei-fen---hui-fu.html</guid><pubDate>Fri, 05 Jul 2024 07:51:17 +0000</pubDate></item><item><title>Drone CI/CD</title><link>https://blog.witter.top/post/Drone%20CI-CD.html</link><description>[官方文档](https://docs.drone.io/)&#13;
+```。</description><guid isPermaLink="true">https://blog.witter.top/post/MySQL-de-bei-fen---hui-fu.html</guid><pubDate>Fri, 05 Jul 2024 07:51:17 +0000</pubDate></item><item><title>有趣项目收集</title><link>https://blog.witter.top/post/you-qu-xiang-mu-shou-ji.html</link><description>&gt; [!NOTE]&#13;
+&gt; 整理自Koala聊开源&#13;
+&#13;
+- [Cyber Scarecrow|赛博稻草人](https://www.cyberscarecrow.com)&#13;
+- [Yazi|Rust 编写终端文件管理器](https://github.com/sxyazi/yazi)&#13;
+- [Glasskube|K8s 包管理器](https://glasskube.dev/)。</description><guid isPermaLink="true">https://blog.witter.top/post/you-qu-xiang-mu-shou-ji.html</guid><pubDate>Fri, 05 Jul 2024 05:50:52 +0000</pubDate></item><item><title>Drone CI/CD</title><link>https://blog.witter.top/post/Drone%20CI-CD.html</link><description>[官方文档](https://docs.drone.io/)&#13;
 &#13;
 drone-server+ssh-runner &#13;
 &#13;
