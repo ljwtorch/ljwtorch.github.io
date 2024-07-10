@@ -130,7 +130,7 @@ body{box-sizing: border-box;min-width: 200px;max-width: 900px;margin: 20px auto;
 <p><strong>YARN</strong>（作业调度和集群资源管理的框架）：解决资源任务调度</p>
 <p><strong>MAPREDUCE</strong>（分布式运算编程框架）：解决海量数据计算</p>
 <p><strong>其他框架</strong></p>
-<table role="table">
+<markdown-accessiblity-table><table role="table">
 <thead>
 <tr>
 <th><strong>框架</strong></th>
@@ -175,7 +175,7 @@ body{box-sizing: border-box;min-width: 200px;max-width: 900px;margin: 20px auto;
 <td>基于mapreduce/spark/flink等分布式运算框架的机器学习算法库</td>
 </tr>
 </tbody>
-</table>
+</table></markdown-accessiblity-table>
 <p><strong>默认端口更改</strong></p>
 <ol>
 <li>在hadoop3.x之前，多个Hadoop服务的默认端口都属于Linux的临时端口范围（32768-61000）。这就意味着用户的服务在启动的时候可能因为和其他应用程序产生端口冲突而无法启动</li>
@@ -417,7 +417,7 @@ hadoop fs -put a.txt  /</pre></div>
 </blockquote>
 <div class="highlight highlight-source-shell"><pre class="notranslate">yarn jar /export/server/hadoop-3.1.4/share/hadoop/mapreduce/hadoop-mapreduce-examples-2.7.5.jar pi 2 50</pre></div>
 <h3>3.3 安装目录结构</h3>
-<table role="table">
+<markdown-accessiblity-table><table role="table">
 <thead>
 <tr>
 <th>bin</th>
@@ -450,7 +450,7 @@ hadoop fs -put a.txt  /</pre></div>
 <td>Hadoop各个模块编译后的jar包所在的目录，官方自带示例。</td>
 </tr>
 </tbody>
-</table>
+</table></markdown-accessiblity-table>
 <p><strong>配置文件：</strong></p>
 <h5>hadoop-env.sh</h5>
 <p>文件中设置的是Hadoop运行时需要的环境变量。JAVA_HOME是必须设置的，即使我们当前的系统中设置了JAVA_HOME，它也是不认识的，因为Hadoop即使是在本机上执行，它也是把当前的执行环境当成远程服务器。</p>
@@ -504,7 +504,7 @@ hadoop fs -put a.txt  /</pre></div>
 </ol>
 <h1>HDFS</h1>
 <h2>1.目录规划</h2>
-<table role="table">
+<markdown-accessiblity-table><table role="table">
 <thead>
 <tr>
 <th>目录</th>
@@ -533,11 +533,11 @@ hadoop fs -put a.txt  /</pre></div>
 <td>存储hive数据仓库中的数据</td>
 </tr>
 </tbody>
-</table>
+</table></markdown-accessiblity-table>
 <h2>2.指令操作</h2>
 <p>Hadoop提供了文件系统的shell命令行客户端，使用方法： <code class="notranslate">hdfs [SHELL_OPTIONS] COMMAND  [GENERIC_OPTIONS] [COMMAND_OPTIONS]</code></p>
 <p>选项：</p>
-<table role="table">
+<markdown-accessiblity-table><table role="table">
 <thead>
 <tr>
 <th><strong>COMMAND_OPTIONS</strong></th>
@@ -558,7 +558,7 @@ hadoop fs -put a.txt  /</pre></div>
 <td>用户命令、或者是管理命令</td>
 </tr>
 </tbody>
-</table>
+</table></markdown-accessiblity-table>
 <p>示例：</p>
 <ol>
 <li>
