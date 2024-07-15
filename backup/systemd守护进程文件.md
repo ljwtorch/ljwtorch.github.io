@@ -5,7 +5,7 @@
 
 ## Nginx
 
-```shell
+```ini
 [Unit]
 Description=The NGINX HTTP and reverse proxy server
 After=network.target
@@ -25,7 +25,7 @@ WantedBy=multi-user.target
 
 ## Prometheus
 
-```shell
+```ini
 [Unit]
 Description=Prometheus service
 After=network.target

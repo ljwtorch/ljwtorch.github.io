@@ -16,7 +16,7 @@
 
 ## Nginx
 
-```shell
+```ini
 [Unit]
 Description=The NGINX HTTP and reverse proxy server
 After=network.target
@@ -36,7 +36,7 @@ WantedBy=multi-user.target
 
 ## Prometheus
 
-```shell
+```ini
 [Unit]
 Description=Prometheus service
 After=network.target
@@ -68,7 +68,7 @@ WantedBy=multi-user.target
 
 ## Nginx
 
-```shell
+```ini
 [Unit]
 Description=The NGINX HTTP and reverse proxy server
 After=network.target
@@ -88,7 +88,7 @@ WantedBy=multi-user.target
 
 ## Prometheus
 
-```shell
+```ini
 [Unit]
 Description=Prometheus service
 After=network.target
@@ -176,42 +176,42 @@ body{box-sizing: border-box;min-width: 200px;max-width: 900px;margin: 20px auto;
 <li>列出当前正在运行的进程：<code class="notranslate">systemctl list-units --type=service --state=running</code></li>
 </ol>
 <h2>Nginx</h2>
-<div class="highlight highlight-source-shell"><pre class="notranslate">[Unit]
-Description=The NGINX HTTP and reverse proxy server
-After=network.target
+<div class="highlight highlight-source-ini"><pre class="notranslate"><span class="pl-en">[Unit]</span>
+<span class="pl-k">Description</span>=The NGINX HTTP and reverse proxy server
+<span class="pl-k">After</span>=network.target
 
-[Service]
-Type=forking
-PIDFile=/var/run/nginx.pid
-ExecStartPre=/usr/sbin/nginx -t -c /usr/local/openresty/nginx/conf/nginx.conf
-ExecStart=/usr/sbin/nginx -c /usr/local/openresty/nginx/conf/nginx.conf
-ExecReload=/usr/sbin/nginx -s reload
-ExecStop=/usr/sbin/nginx -s quit
-PrivateTmp=true
+<span class="pl-en">[Service]</span>
+<span class="pl-k">Type</span>=forking
+<span class="pl-k">PIDFile</span>=/var/run/nginx.pid
+<span class="pl-k">ExecStartPre</span>=/usr/sbin/nginx -t -c /usr/local/openresty/nginx/conf/nginx.conf
+<span class="pl-k">ExecStart</span>=/usr/sbin/nginx -c /usr/local/openresty/nginx/conf/nginx.conf
+<span class="pl-k">ExecReload</span>=/usr/sbin/nginx -s reload
+<span class="pl-k">ExecStop</span>=/usr/sbin/nginx -s quit
+<span class="pl-k">PrivateTmp</span>=true
 
-[Install]
-WantedBy=multi-user.target</pre></div>
+<span class="pl-en">[Install]</span>
+<span class="pl-k">WantedBy</span>=multi-user.target</pre></div>
 <h2>Prometheus</h2>
-<div class="highlight highlight-source-shell"><pre class="notranslate">[Unit]
-Description=Prometheus service
-After=network.target
+<div class="highlight highlight-source-ini"><pre class="notranslate"><span class="pl-en">[Unit]</span>
+<span class="pl-k">Description</span>=Prometheus service
+<span class="pl-k">After</span>=network.target
 
-[Service]
-User=root
-Type=simple
-ExecStart=/home/sonkwo/monitor/prometheus/prometheus \
---web.listen-address=0.0.0.0:9090 \
---storage.tsdb.path=/etc/prometheus/data \
---config.file=/etc/prometheus/prometheus.yml \
---storage.tsdb.retention.time=60d \
+<span class="pl-en">[Service]</span>
+<span class="pl-k">User</span>=root
+<span class="pl-k">Type</span>=simple
+<span class="pl-k">ExecStart</span>=/home/sonkwo/monitor/prometheus/prometheus \
+--<span class="pl-k">web.listen-address</span>=0.0.0.0:9090 \
+--<span class="pl-k">storage.tsdb.path</span>=/etc/prometheus/data \
+--<span class="pl-k">config.file</span>=/etc/prometheus/prometheus.yml \
+--<span class="pl-k">storage.tsdb.retention.time</span>=60d \
 --web.enable-lifecycle \
 --web.enable-admin-api
-ExecReload=/bin/kill -s HUP <span class="pl-smi">$MAINPID</span>
-ExecStop=/bin/kill -s QUIT <span class="pl-smi">$MAINPID</span>
-Restart=on-failure
+<span class="pl-k">ExecReload</span>=/bin/kill -s HUP $MAINPID
+<span class="pl-k">ExecStop</span>=/bin/kill -s QUIT $MAINPID
+<span class="pl-k">Restart</span>=on-failure
 
-[Install]
-WantedBy=multi-user.target</pre></div></div>
+<span class="pl-en">[Install]</span>
+<span class="pl-k">WantedBy</span>=multi-user.target</pre></div></div>
 <div style="font-size:small;margin-top:8px;float:right;">🍺转载文章请注明出处，谢谢！🍺</div>
 
 <button class="btn btn-block" type="button" onclick="openComments()" id="cmButton">评论</button>

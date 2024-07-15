@@ -1,12 +1,12 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<rss xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/" version="2.0"><channel><title>V's Blog</title><link>https://blog.witter.top</link><description>自有清风常载鹤，从无猜意不惊鸥。</description><copyright>V's Blog</copyright><docs>http://www.rssboard.org/rss-specification</docs><generator>python-feedgen</generator><image><url>https://img.witter.top/file/b037878209903b7d5bb17.jpg</url><title>avatar</title><link>https://blog.witter.top</link></image><lastBuildDate>Mon, 15 Jul 2024 06:18:42 +0000</lastBuildDate><managingEditor>V's Blog</managingEditor><ttl>60</ttl><webMaster>V's Blog</webMaster><item><title>systemd守护进程文件</title><link>https://blog.witter.top/post/systemd-shou-hu-jin-cheng-wen-jian.html</link><description>## 一些systemd指令&#13;
+<rss xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/" version="2.0"><channel><title>V's Blog</title><link>https://blog.witter.top</link><description>自有清风常载鹤，从无猜意不惊鸥。</description><copyright>V's Blog</copyright><docs>http://www.rssboard.org/rss-specification</docs><generator>python-feedgen</generator><image><url>https://img.witter.top/file/b037878209903b7d5bb17.jpg</url><title>avatar</title><link>https://blog.witter.top</link></image><lastBuildDate>Mon, 15 Jul 2024 06:31:30 +0000</lastBuildDate><managingEditor>V's Blog</managingEditor><ttl>60</ttl><webMaster>V's Blog</webMaster><item><title>systemd守护进程文件</title><link>https://blog.witter.top/post/systemd-shou-hu-jin-cheng-wen-jian.html</link><description>## 一些systemd指令&#13;
 &#13;
 1. 列出开机自启的进程：`systemctl list-unit-files --type=service --state=enabled`&#13;
 2. 列出当前正在运行的进程：`systemctl list-units --type=service --state=running`&#13;
 &#13;
 ## Nginx&#13;
 &#13;
-```shell&#13;
+```ini&#13;
 [Unit]&#13;
 Description=The NGINX HTTP and reverse proxy server&#13;
 After=network.target&#13;
@@ -26,7 +26,7 @@ WantedBy=multi-user.target&#13;
 &#13;
 ## Prometheus&#13;
 &#13;
-```shell&#13;
+```ini&#13;
 [Unit]&#13;
 Description=Prometheus service&#13;
 After=network.target&#13;
