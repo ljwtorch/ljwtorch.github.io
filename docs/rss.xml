@@ -1,5 +1,24 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<rss xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/" version="2.0"><channel><title>V's Blog</title><link>https://blog.witter.top</link><description>自有清风常载鹤，从无猜意不惊鸥。</description><copyright>V's Blog</copyright><docs>http://www.rssboard.org/rss-specification</docs><generator>python-feedgen</generator><image><url>https://img.witter.top/file/b037878209903b7d5bb17.jpg</url><title>avatar</title><link>https://blog.witter.top</link></image><lastBuildDate>Mon, 15 Jul 2024 06:31:30 +0000</lastBuildDate><managingEditor>V's Blog</managingEditor><ttl>60</ttl><webMaster>V's Blog</webMaster><item><title>systemd守护进程文件</title><link>https://blog.witter.top/post/systemd-shou-hu-jin-cheng-wen-jian.html</link><description>## 一些systemd指令&#13;
+<rss xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/" version="2.0"><channel><title>V's Blog</title><link>https://blog.witter.top</link><description>自有清风常载鹤，从无猜意不惊鸥。</description><copyright>V's Blog</copyright><docs>http://www.rssboard.org/rss-specification</docs><generator>python-feedgen</generator><image><url>https://img.witter.top/file/b037878209903b7d5bb17.jpg</url><title>avatar</title><link>https://blog.witter.top</link></image><lastBuildDate>Mon, 15 Jul 2024 10:58:49 +0000</lastBuildDate><managingEditor>V's Blog</managingEditor><ttl>60</ttl><webMaster>V's Blog</webMaster><item><title>redis 小记</title><link>https://blog.witter.top/post/redis%20-xiao-ji.html</link><description>## 计算KEYS占用内存大小&#13;
+&#13;
+```lua&#13;
+local keys = redis.call('KEYS', '*')&#13;
+local result = {}&#13;
+for _, key in ipairs(keys) do&#13;
+    local memory = redis.call('MEMORY', 'USAGE', key)&#13;
+    table.insert(result, key .. ': ' .. memory .. ' bytes')&#13;
+end&#13;
+return result&#13;
+```&#13;
+&#13;
+**使用redis-cli**&#13;
+&#13;
+```shell&#13;
+redis-cli -h xxx -p 6379 -a $(cat ./pwd) --eval mem.lua &gt; mem_result.txt&#13;
+cat mem_result.txt |awk -F ':' '{print $1 $2 $NF}'|uniq -c | sort -nr &gt; redis.txt&#13;
+```&#13;
+&#13;
+。</description><guid isPermaLink="true">https://blog.witter.top/post/redis%20-xiao-ji.html</guid><pubDate>Mon, 15 Jul 2024 10:58:25 +0000</pubDate></item><item><title>systemd守护进程文件</title><link>https://blog.witter.top/post/systemd-shou-hu-jin-cheng-wen-jian.html</link><description>## 一些systemd指令&#13;
 &#13;
 1. 列出开机自启的进程：`systemctl list-unit-files --type=service --state=enabled`&#13;
 2. 列出当前正在运行的进程：`systemctl list-units --type=service --state=running`&#13;
