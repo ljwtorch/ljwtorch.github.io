@@ -12,12 +12,30 @@
 <meta name="description" content="## 计算KEYS占用内存大小
 
 ```lua
-local keys = redis.call('KEYS', '*')
+-- 初始化游标为 '0'，用于 SCAN 命令的初始值
+local cursor = '0'
+-- 创建一个空表 result，用于存储结果
 local result = {}
-for _, key in ipairs(keys) do
-    local memory = redis.call('MEMORY', 'USAGE', key)
-    table.insert(result, key .. ': ' .. memory .. ' bytes')
-end
+-- 使用 repeat 循环，直到游标返回 '0' 表示扫描结束
+repeat
+    -- 使用 SCAN 命令逐步获取键，SCAN 命令返回一个表，第一个元素是新的游标，第二个元素是键的列表
+    local res = redis.call('SCAN', cursor)
+    -- 更新游标为新的游标值，以便在下一次迭代中继续扫描
+    cursor = res[1]
+    -- 获取键的列表
+    local keys = res[2]
+    -- 遍历每个键
+    for _, key in ipairs(keys) do
+        -- 使用 MEMORY USAGE 命令获取键的内存使用情况
+        local memory = redis.call('MEMORY', 'USAGE', key)
+        -- 将键和其内存使用情况格式化为字符串，并插入到结果表中
+        table.insert(result, key .. ': ' .. memory .. ' bytes')
+    end
+    -- 添加延迟以降低 Redis 的 CPU 占用率，单位为秒
+    redis.call('DEBUG', 'SLEEP', 0.1)    
+-- 继续循环，直到游标为 '0' 表示扫描结束
+until cursor == '0'
+-- 返回结果表
 return result
 ```
 
@@ -33,12 +51,30 @@ cat mem_result.txt |awk -F ':' '{print $1 $2 $NF}'|uniq -c | sort -nr > redis.tx
 <meta property="og:description" content="## 计算KEYS占用内存大小
 
 ```lua
-local keys = redis.call('KEYS', '*')
+-- 初始化游标为 '0'，用于 SCAN 命令的初始值
+local cursor = '0'
+-- 创建一个空表 result，用于存储结果
 local result = {}
-for _, key in ipairs(keys) do
-    local memory = redis.call('MEMORY', 'USAGE', key)
-    table.insert(result, key .. ': ' .. memory .. ' bytes')
-end
+-- 使用 repeat 循环，直到游标返回 '0' 表示扫描结束
+repeat
+    -- 使用 SCAN 命令逐步获取键，SCAN 命令返回一个表，第一个元素是新的游标，第二个元素是键的列表
+    local res = redis.call('SCAN', cursor)
+    -- 更新游标为新的游标值，以便在下一次迭代中继续扫描
+    cursor = res[1]
+    -- 获取键的列表
+    local keys = res[2]
+    -- 遍历每个键
+    for _, key in ipairs(keys) do
+        -- 使用 MEMORY USAGE 命令获取键的内存使用情况
+        local memory = redis.call('MEMORY', 'USAGE', key)
+        -- 将键和其内存使用情况格式化为字符串，并插入到结果表中
+        table.insert(result, key .. ': ' .. memory .. ' bytes')
+    end
+    -- 添加延迟以降低 Redis 的 CPU 占用率，单位为秒
+    redis.call('DEBUG', 'SLEEP', 0.1)    
+-- 继续循环，直到游标为 '0' 表示扫描结束
+until cursor == '0'
+-- 返回结果表
 return result
 ```
 
@@ -109,12 +145,30 @@ body{box-sizing: border-box;min-width: 200px;max-width: 900px;margin: 20px auto;
 </div>
     <div id="content">
 <div class="markdown-body" id="postBody"><h2>计算KEYS占用内存大小</h2>
-<div class="highlight highlight-source-lua"><pre class="notranslate"><span class="pl-k">local</span> <span class="pl-smi">keys</span> <span class="pl-k">=</span> <span class="pl-smi">redis</span>.<span class="pl-c1">call</span>(<span class="pl-s"><span class="pl-pds">'</span>KEYS<span class="pl-pds">'</span></span>, <span class="pl-s"><span class="pl-pds">'</span>*<span class="pl-pds">'</span></span>)
+<div class="highlight highlight-source-lua"><pre class="notranslate"><span class="pl-c"><span class="pl-c">--</span> 初始化游标为 "0"，用于 SCAN 命令的初始值</span>
+<span class="pl-k">local</span> <span class="pl-smi">cursor</span> <span class="pl-k">=</span> <span class="pl-s"><span class="pl-pds">"</span>0<span class="pl-pds">"</span></span>
+<span class="pl-c"><span class="pl-c">--</span> 创建一个空表 result，用于存储结果</span>
 <span class="pl-k">local</span> <span class="pl-smi">result</span> <span class="pl-k">=</span> {}
-<span class="pl-k">for</span> <span class="pl-smi">_</span>, <span class="pl-smi">key</span> <span class="pl-k">in</span> <span class="pl-c1">ipairs</span>(<span class="pl-smi">keys</span>) <span class="pl-k">do</span>
-    <span class="pl-k">local</span> <span class="pl-smi">memory</span> <span class="pl-k">=</span> <span class="pl-smi">redis</span>.<span class="pl-c1">call</span>(<span class="pl-s"><span class="pl-pds">'</span>MEMORY<span class="pl-pds">'</span></span>, <span class="pl-s"><span class="pl-pds">'</span>USAGE<span class="pl-pds">'</span></span>, <span class="pl-smi">key</span>)
-    <span class="pl-c1">table.insert</span>(<span class="pl-smi">result</span>, <span class="pl-smi">key</span> <span class="pl-k">..</span> <span class="pl-s"><span class="pl-pds">"</span>: <span class="pl-pds">" </span></span><span class="pl-k">..</span> <span class="pl-smi">memory</span> <span class="pl-k">..</span> <span class="pl-s"><span class="pl-pds">"</span> bytes<span class="pl-pds">"</span></span>)
-<span class="pl-k">end</span>
+<span class="pl-c"><span class="pl-c">--</span> 使用 repeat 循环，直到游标返回 "0" 表示扫描结束</span>
+<span class="pl-k">repeat</span>
+    <span class="pl-c"><span class="pl-c">--</span> 使用 SCAN 命令逐步获取键，SCAN 命令返回一个表，第一个元素是新的游标，第二个元素是键的列表</span>
+    <span class="pl-k">local</span> <span class="pl-smi">res</span> <span class="pl-k">=</span> <span class="pl-smi">redis</span>.<span class="pl-c1">call</span>(<span class="pl-s"><span class="pl-pds">'</span>SCAN<span class="pl-pds">'</span></span>, <span class="pl-smi">cursor</span>)
+    <span class="pl-c"><span class="pl-c">--</span> 更新游标为新的游标值，以便在下一次迭代中继续扫描</span>
+    <span class="pl-smi">cursor</span> <span class="pl-k">=</span> <span class="pl-smi">res</span>[<span class="pl-c1">1</span>]
+    <span class="pl-c"><span class="pl-c">--</span> 获取键的列表</span>
+    <span class="pl-k">local</span> <span class="pl-smi">keys</span> <span class="pl-k">=</span> <span class="pl-smi">res</span>[<span class="pl-c1">2</span>]
+    <span class="pl-c"><span class="pl-c">--</span> 遍历每个键</span>
+    <span class="pl-k">for</span> <span class="pl-smi">_</span>, <span class="pl-smi">key</span> <span class="pl-k">in</span> <span class="pl-c1">ipairs</span>(<span class="pl-smi">keys</span>) <span class="pl-k">do</span>
+        <span class="pl-c"><span class="pl-c">--</span> 使用 MEMORY USAGE 命令获取键的内存使用情况</span>
+        <span class="pl-k">local</span> <span class="pl-smi">memory</span> <span class="pl-k">=</span> <span class="pl-smi">redis</span>.<span class="pl-c1">call</span>(<span class="pl-s"><span class="pl-pds">'</span>MEMORY<span class="pl-pds">'</span></span>, <span class="pl-s"><span class="pl-pds">'</span>USAGE<span class="pl-pds">'</span></span>, <span class="pl-smi">key</span>)
+        <span class="pl-c"><span class="pl-c">--</span> 将键和其内存使用情况格式化为字符串，并插入到结果表中</span>
+        <span class="pl-c1">table.insert</span>(<span class="pl-smi">result</span>, <span class="pl-smi">key</span> <span class="pl-k">..</span> <span class="pl-s"><span class="pl-pds">"</span>: <span class="pl-pds">" </span></span><span class="pl-k">..</span> <span class="pl-smi">memory</span> <span class="pl-k">..</span> <span class="pl-s"><span class="pl-pds">"</span> bytes<span class="pl-pds">"</span></span>)
+    <span class="pl-k">end</span>
+    <span class="pl-c"><span class="pl-c">--</span> 添加延迟以降低 Redis 的 CPU 占用率，单位为秒</span>
+    <span class="pl-smi">redis</span>.<span class="pl-c1">call</span>(<span class="pl-s"><span class="pl-pds">'</span>DEBUG<span class="pl-pds">'</span></span>, <span class="pl-s"><span class="pl-pds">'</span>SLEEP<span class="pl-pds">'</span></span>, <span class="pl-c1">0.1</span>)    
+<span class="pl-c"><span class="pl-c">--</span> 继续循环，直到游标为 "0" 表示扫描结束</span>
+<span class="pl-k">until</span> <span class="pl-smi">cursor</span> <span class="pl-k">==</span> <span class="pl-s"><span class="pl-pds">"</span>0<span class="pl-pds">"</span></span>
+<span class="pl-c"><span class="pl-c">--</span> 返回结果表</span>
 <span class="pl-k">return</span> <span class="pl-smi">result</span></pre></div>
 <p><strong>使用redis-cli</strong></p>
 <div class="highlight highlight-source-shell"><pre class="notranslate">redis-cli -h xxx -p 6379 -a <span class="pl-s"><span class="pl-pds">$(</span>cat ./pwd<span class="pl-pds">)</span></span> --eval mem.lua <span class="pl-k">&gt;</span> mem_result.txt
