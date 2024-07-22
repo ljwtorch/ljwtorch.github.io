@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<rss xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/" version="2.0"><channel><title>V's Blog</title><link>https://blog.witter.top</link><description>自有清风常载鹤，从无猜意不惊鸥。</description><copyright>V's Blog</copyright><docs>http://www.rssboard.org/rss-specification</docs><generator>python-feedgen</generator><image><url>https://img.witter.top/file/b037878209903b7d5bb17.jpg</url><title>avatar</title><link>https://blog.witter.top</link></image><lastBuildDate>Mon, 22 Jul 2024 05:33:48 +0000</lastBuildDate><managingEditor>V's Blog</managingEditor><ttl>60</ttl><webMaster>V's Blog</webMaster><item><title>redis 小记</title><link>https://blog.witter.top/post/redis%20-xiao-ji.html</link><description>## 计算KEYS占用内存大小&#13;
+<rss xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/" version="2.0"><channel><title>V's Blog</title><link>https://blog.witter.top</link><description>自有清风常载鹤，从无猜意不惊鸥。</description><copyright>V's Blog</copyright><docs>http://www.rssboard.org/rss-specification</docs><generator>python-feedgen</generator><image><url>https://img.witter.top/file/b037878209903b7d5bb17.jpg</url><title>avatar</title><link>https://blog.witter.top</link></image><lastBuildDate>Mon, 22 Jul 2024 05:35:38 +0000</lastBuildDate><managingEditor>V's Blog</managingEditor><ttl>60</ttl><webMaster>V's Blog</webMaster><item><title>redis 小记</title><link>https://blog.witter.top/post/redis%20-xiao-ji.html</link><description>## 计算KEYS占用内存大小&#13;
 &#13;
 ```lua&#13;
 -- 初始化游标为 '0'，用于 SCAN 命令的初始值&#13;
@@ -1701,5 +1701,6 @@ Type 'help', 'copyright', 'credits' or 'license' for more information.&#13;
 - [Pikimov | 网页版 AE](https://pikimov.com/)&#13;
 - [Dropbase | Prompt 和 Python 开发 Web 应用工具](https://github.com/DropbaseHQ/dropbase)&#13;
 - [Logdy | 便捷日志查看工具](https://logdy.dev/)&#13;
+- [Pezzo | 开源 LLMOps 平台](https://github.com/pezzolabs/pezzo)&#13;
 &#13;
 &lt;span id='busuanzi'&gt;:robot:感谢第&lt;span&gt;&lt;/span&gt;小伙伴的&lt;span&gt;&lt;/span&gt;次访问此页面。</description><guid isPermaLink="true">https://blog.witter.top/link.html</guid><pubDate>Fri, 21 Jun 2024 06:35:57 +0000</pubDate></item></channel></rss>
