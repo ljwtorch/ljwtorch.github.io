@@ -1,11 +1,11 @@
 
 ### 集群升级
 
-> **[[官网升级步骤](https://kubernetes.io/docs/tasks/administer-cluster/kubeadm/kubeadm-upgrade/)](https://kubernetes.io/docs/tasks/administer-cluster/kubeadm/kubeadm-upgrade/)，注意阅读升级说明**
+> **[官网升级步骤](https://kubernetes.io/docs/tasks/administer-cluster/kubeadm/kubeadm-upgrade/)，注意阅读升级说明**
 
 #### 1.更改所有主机软件包存储库地址
 
-> 这里使用的是[[清华镜像源地址](https://mirrors.tuna.tsinghua.edu.cn/help/kubernetes/)](https://mirrors.tuna.tsinghua.edu.cn/help/kubernetes/)，宿主机使用的包管理器为apt，在以下 URL 中，所有仓库的公钥均相同，只需要将仓库地址中的 `v1.28` 修改为所需的版本
+> 这里使用的是[清华镜像源地址](https://mirrors.tuna.tsinghua.edu.cn/help/kubernetes/)，宿主机使用的包管理器为apt，在以下 URL 中，所有仓库的公钥均相同，只需要将仓库地址中的 `v1.28` 修改为所需的版本
 
 ```shell
 curl -fsSL https://pkgs.k8s.io/core:/stable:/v1.28/deb/Release.key | gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg
@@ -208,7 +208,7 @@ kubectl uncordon <node-to-uncordon>
 
 ### 证书手动更新
 
-> **[[官网升级步骤](https://kubernetes.io/docs/tasks/administer-cluster/kubeadm/kubeadm-certs/#manual-preparation-of-component-credentials)](https://kubernetes.io/docs/tasks/administer-cluster/kubeadm/kubeadm-certs/#manual-preparation-of-component-credentials)，需要查看文档中的警告和笔记**，当集群升级后，证书会自行更新
+> **[官网升级步骤](https://kubernetes.io/docs/tasks/administer-cluster/kubeadm/kubeadm-certs/#manual-preparation-of-component-credentials)，需要查看文档中的警告和笔记**，当集群升级后，证书会自行更新
 
 #### 1.检查证书是否过期
 
@@ -251,3 +251,6 @@ kubectl -n kube-system delete po etcd-xxx kube-apiserver-xxx kube-controller-man
 # 临时将清单文件从 /etc/kubernetes/manifests/ 移除并等待 20 秒，并再次重建pod
 # 之后你可以将文件移回去，kubelet 可以完成 Pod 的重建，而组件的证书更新操作也得以完成
 ```
+
+
+

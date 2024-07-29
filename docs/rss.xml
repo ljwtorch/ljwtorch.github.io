@@ -1,12 +1,12 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<rss xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/" version="2.0"><channel><title>V's Blog</title><link>https://blog.witter.top</link><description>自有清风常载鹤，从无猜意不惊鸥。</description><copyright>V's Blog</copyright><docs>http://www.rssboard.org/rss-specification</docs><generator>python-feedgen</generator><image><url>https://img.witter.top/file/b037878209903b7d5bb17.jpg</url><title>avatar</title><link>https://blog.witter.top</link></image><lastBuildDate>Mon, 29 Jul 2024 03:19:18 +0000</lastBuildDate><managingEditor>V's Blog</managingEditor><ttl>60</ttl><webMaster>V's Blog</webMaster><item><title>Kubernetes集群&amp;证书升级</title><link>https://blog.witter.top/post/Kubernetes-ji-qun-%26-zheng-shu-sheng-ji.html</link><description>&#13;
+<rss xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/" version="2.0"><channel><title>V's Blog</title><link>https://blog.witter.top</link><description>自有清风常载鹤，从无猜意不惊鸥。</description><copyright>V's Blog</copyright><docs>http://www.rssboard.org/rss-specification</docs><generator>python-feedgen</generator><image><url>https://img.witter.top/file/b037878209903b7d5bb17.jpg</url><title>avatar</title><link>https://blog.witter.top</link></image><lastBuildDate>Mon, 29 Jul 2024 03:21:12 +0000</lastBuildDate><managingEditor>V's Blog</managingEditor><ttl>60</ttl><webMaster>V's Blog</webMaster><item><title>Kubernetes集群&amp;证书升级</title><link>https://blog.witter.top/post/Kubernetes-ji-qun-%26-zheng-shu-sheng-ji.html</link><description>&#13;
 ### 集群升级&#13;
 &#13;
-&gt; **[[官网升级步骤](https://kubernetes.io/docs/tasks/administer-cluster/kubeadm/kubeadm-upgrade/)](https://kubernetes.io/docs/tasks/administer-cluster/kubeadm/kubeadm-upgrade/)，注意阅读升级说明**&#13;
+&gt; **[官网升级步骤](https://kubernetes.io/docs/tasks/administer-cluster/kubeadm/kubeadm-upgrade/)，注意阅读升级说明**&#13;
 &#13;
 #### 1.更改所有主机软件包存储库地址&#13;
 &#13;
-&gt; 这里使用的是[[清华镜像源地址](https://mirrors.tuna.tsinghua.edu.cn/help/kubernetes/)](https://mirrors.tuna.tsinghua.edu.cn/help/kubernetes/)，宿主机使用的包管理器为apt，在以下 URL 中，所有仓库的公钥均相同，只需要将仓库地址中的 `v1.28` 修改为所需的版本&#13;
+&gt; 这里使用的是[清华镜像源地址](https://mirrors.tuna.tsinghua.edu.cn/help/kubernetes/)，宿主机使用的包管理器为apt，在以下 URL 中，所有仓库的公钥均相同，只需要将仓库地址中的 `v1.28` 修改为所需的版本&#13;
 &#13;
 ```shell&#13;
 curl -fsSL https://pkgs.k8s.io/core:/stable:/v1.28/deb/Release.key | gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg&#13;
@@ -209,7 +209,7 @@ kubectl uncordon &lt;node-to-uncordon&gt;&#13;
 &#13;
 ### 证书手动更新&#13;
 &#13;
-&gt; **[[官网升级步骤](https://kubernetes.io/docs/tasks/administer-cluster/kubeadm/kubeadm-certs/#manual-preparation-of-component-credentials)](https://kubernetes.io/docs/tasks/administer-cluster/kubeadm/kubeadm-certs/#manual-preparation-of-component-credentials)，需要查看文档中的警告和笔记**，当集群升级后，证书会自行更新&#13;
+&gt; **[官网升级步骤](https://kubernetes.io/docs/tasks/administer-cluster/kubeadm/kubeadm-certs/#manual-preparation-of-component-credentials)，需要查看文档中的警告和笔记**，当集群升级后，证书会自行更新&#13;
 &#13;
 #### 1.检查证书是否过期&#13;
 &#13;
@@ -251,7 +251,11 @@ kubectl -n kube-system delete po etcd-xxx kube-apiserver-xxx kube-controller-man
 # 查看对应pod日志，如果仍然报错：x509: certificate has expired or is not yet valid，则：&#13;
 # 临时将清单文件从 /etc/kubernetes/manifests/ 移除并等待 20 秒，并再次重建pod&#13;
 # 之后你可以将文件移回去，kubelet 可以完成 Pod 的重建，而组件的证书更新操作也得以完成&#13;
-```。</description><guid isPermaLink="true">https://blog.witter.top/post/Kubernetes-ji-qun-%26-zheng-shu-sheng-ji.html</guid><pubDate>Mon, 29 Jul 2024 03:18:45 +0000</pubDate></item><item><title>redis 小记</title><link>https://blog.witter.top/post/redis%20-xiao-ji.html</link><description>## 计算KEYS占用内存大小&#13;
+```&#13;
+&#13;
+&#13;
+&#13;
+。</description><guid isPermaLink="true">https://blog.witter.top/post/Kubernetes-ji-qun-%26-zheng-shu-sheng-ji.html</guid><pubDate>Mon, 29 Jul 2024 03:18:45 +0000</pubDate></item><item><title>redis 小记</title><link>https://blog.witter.top/post/redis%20-xiao-ji.html</link><description>## 计算KEYS占用内存大小&#13;
 &#13;
 ```lua&#13;
 -- 初始化游标为 '0'，用于 SCAN 命令的初始值&#13;
