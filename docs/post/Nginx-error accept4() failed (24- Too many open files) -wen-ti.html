@@ -10,7 +10,7 @@
         let theme = localStorage.getItem("meek_theme") || "light";
         document.documentElement.setAttribute("data-color-mode", theme);
     </script>
-<meta name="description" content="**网络结构：**公网->Nginx->后端websocket服务
+<meta name="description" content="**网络结构：** 公网->Nginx->后端websocket服务
 
 **报错日志：**`2024/07/24 14:03:08 [crit] 708160#0: accept4() failed (24: Too many open files)`
 
@@ -44,7 +44,7 @@
 
    > 1. **TIME_WAIT**：表示连接已经关闭，但TCP还没有完全删除连接，因为需要确保所有数据包都已经被正确接收和处理。">
 <meta property="og:title" content="Nginx-error accept4() failed (24: Too many open files) 问题">
-<meta property="og:description" content="**网络结构：**公网->Nginx->后端websocket服务
+<meta property="og:description" content="**网络结构：** 公网->Nginx->后端websocket服务
 
 **报错日志：**`2024/07/24 14:03:08 [crit] 708160#0: accept4() failed (24: Too many open files)`
 
@@ -136,7 +136,7 @@ body{box-sizing: border-box;min-width: 200px;max-width: 900px;margin: 20px auto;
 </div>
 </div>
     <div id="content">
-<div class="markdown-body" id="postBody"><p>**网络结构：**公网-&gt;Nginx-&gt;后端websocket服务</p>
+<div class="markdown-body" id="postBody"><p><strong>网络结构：</strong> 公网-&gt;Nginx-&gt;后端websocket服务</p>
 <p><strong>报错日志：</strong><code class="notranslate">2024/07/24 14:03:08 [crit] 708160#0: accept4() failed (24: Too many open files)</code></p>
 <p><strong>解决方法：</strong></p>
 <ol>

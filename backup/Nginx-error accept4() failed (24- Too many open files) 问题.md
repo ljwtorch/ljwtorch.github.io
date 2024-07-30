@@ -1,4 +1,4 @@
-**网络结构：**公网->Nginx->后端websocket服务
+**网络结构：** 公网->Nginx->后端websocket服务
 
 **报错日志：**`2024/07/24 14:03:08 [crit] 708160#0: accept4() failed (24: Too many open files)`
 
