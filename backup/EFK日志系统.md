@@ -618,6 +618,58 @@ output {
 }
 ```
 
+# ES索引生命周期
+
+## 以下面的顺序来配置
+
+### Kibana
+
+1. 点击管理->索引生命周期策略->创建策略，选择需要的阶段和在多少天后删除该数据；
+
+2. 点击管理->索引管理->索引模板->创建模板：
+
+   - 名称修改完貌似是不可重新编辑的；
+
+   - 索引模式可以以通配符'*'的方式来匹配需要的索引，首次建议使用一个进行测试；
+
+   - 数据流不要创建；
+
+   - 打开下面的**允许自动创建**；
+
+   - **索引设置**可以对索引生命周期策略进行关联：
+
+     ```json
+     {
+       "index": {
+         "lifecycle": {
+           "name": "log-rotate"
+         }
+       }
+     }
+     ```
+
+   - **映射**可以从已经存在的索引当中复制json到这里粘贴进行编辑；
+
+### Filebeat
+
+> 这里的filebeat为消费kafka后将日志消息存储到Elasticsearch中的filebeat实例，主要看配置文件变化
+
+```yaml
+# 按照官方文档中开启对应的配置就可以
+setup.ilm.enabled: true
+setup.ilm.policy_name: "log-rotate"
+setup.template.enabled: false
+setup.template.overwrite: true
+setup.template.json.enabled: true
+setup.template.name: "filebeat-%{[agent.version]}"
+setup.template.pattern: "filebeat-%{[agent.version]}-*"
+setup.template.settings:
+  index.number_of_shards: 1
+  index.number_of_replicas: 0
+```
+
+# 
+
 # 问题
 
 1. this action would add [2] shards, but this cluster currently has [1000]/[1000] maximum normal shards open：es分片数量超限

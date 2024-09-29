@@ -657,6 +657,60 @@ output {
   }
 }
 </code></pre>
+<h1>ES索引生命周期</h1>
+<h2>以下面的顺序来配置</h2>
+<h3>Kibana</h3>
+<ol>
+<li>
+<p>点击管理-&gt;索引生命周期策略-&gt;创建策略，选择需要的阶段和在多少天后删除该数据；</p>
+</li>
+<li>
+<p>点击管理-&gt;索引管理-&gt;索引模板-&gt;创建模板：</p>
+<ul>
+<li>
+<p>名称修改完貌似是不可重新编辑的；</p>
+</li>
+<li>
+<p>索引模式可以以通配符'*'的方式来匹配需要的索引，首次建议使用一个进行测试；</p>
+</li>
+<li>
+<p>数据流不要创建；</p>
+</li>
+<li>
+<p>打开下面的<strong>允许自动创建</strong>；</p>
+</li>
+<li>
+<p><strong>索引设置</strong>可以对索引生命周期策略进行关联：</p>
+<div class="highlight highlight-source-json"><pre class="notranslate">{
+  <span class="pl-ent">"index"</span>: {
+    <span class="pl-ent">"lifecycle"</span>: {
+      <span class="pl-ent">"name"</span>: <span class="pl-s"><span class="pl-pds">"</span>log-rotate<span class="pl-pds">"</span></span>
+    }
+  }
+}</pre></div>
+</li>
+<li>
+<p><strong>映射</strong>可以从已经存在的索引当中复制json到这里粘贴进行编辑；</p>
+</li>
+</ul>
+</li>
+</ol>
+<h3>Filebeat</h3>
+<blockquote>
+<p>这里的filebeat为消费kafka后将日志消息存储到Elasticsearch中的filebeat实例，主要看配置文件变化</p>
+</blockquote>
+<div class="highlight highlight-source-yaml"><pre class="notranslate"><span class="pl-c"><span class="pl-c">#</span> 按照官方文档中开启对应的配置就可以</span>
+<span class="pl-ent">setup.ilm.enabled</span>: <span class="pl-c1">true</span>
+<span class="pl-ent">setup.ilm.policy_name</span>: <span class="pl-s"><span class="pl-pds">"</span>log-rotate<span class="pl-pds">"</span></span>
+<span class="pl-ent">setup.template.enabled</span>: <span class="pl-c1">false</span>
+<span class="pl-ent">setup.template.overwrite</span>: <span class="pl-c1">true</span>
+<span class="pl-ent">setup.template.json.enabled</span>: <span class="pl-c1">true</span>
+<span class="pl-ent">setup.template.name</span>: <span class="pl-s"><span class="pl-pds">"</span>filebeat-%{[agent.version]}<span class="pl-pds">"</span></span>
+<span class="pl-ent">setup.template.pattern</span>: <span class="pl-s"><span class="pl-pds">"</span>filebeat-%{[agent.version]}-*<span class="pl-pds">"</span></span>
+<span class="pl-ent">setup.template.settings</span>:
+  <span class="pl-ent">index.number_of_shards</span>: <span class="pl-c1">1</span>
+  <span class="pl-ent">index.number_of_replicas</span>: <span class="pl-c1">0</span></pre></div>
+<h1></h1>
 <h1>问题</h1>
 <ol>
 <li>
