@@ -1,5 +1,23 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<rss xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/" version="2.0"><channel><title>V's Blog</title><link>https://blog.witter.top</link><description>自有清风常载鹤，从无猜意不惊鸥。</description><copyright>V's Blog</copyright><docs>http://www.rssboard.org/rss-specification</docs><generator>python-feedgen</generator><image><url>https://img.witter.top/file/b037878209903b7d5bb17.jpg</url><title>avatar</title><link>https://blog.witter.top</link></image><lastBuildDate>Thu, 12 Sep 2024 07:26:00 +0000</lastBuildDate><managingEditor>V's Blog</managingEditor><ttl>60</ttl><webMaster>V's Blog</webMaster><item><title>使用 Nginx 过滤请求host，达到白名单的效果</title><link>https://blog.witter.top/post/shi-yong-%20Nginx%20-guo-lv-qing-qiu-host%EF%BC%8C-da-dao-bai-ming-dan-de-xiao-guo.html</link><description>```nginx&#13;
+<rss xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/" version="2.0"><channel><title>V's Blog</title><link>https://blog.witter.top</link><description>自有清风常载鹤，从无猜意不惊鸥。</description><copyright>V's Blog</copyright><docs>http://www.rssboard.org/rss-specification</docs><generator>python-feedgen</generator><image><url>https://img.witter.top/file/b037878209903b7d5bb17.jpg</url><title>avatar</title><link>https://blog.witter.top</link></image><lastBuildDate>Tue, 29 Oct 2024 05:58:37 +0000</lastBuildDate><managingEditor>V's Blog</managingEditor><ttl>60</ttl><webMaster>V's Blog</webMaster><item><title>Docker 配置拉取镜像代理</title><link>https://blog.witter.top/post/Docker%20-pei-zhi-la-qu-jing-xiang-dai-li.html</link><description>&gt; 对 `docker daemon` 配置额外的环境变量，来使 `docker pull` 指令经过网络代理访问&#13;
+&gt;&#13;
+&gt; 参考文档：[[DockerDocs:Daemon proxy configuration](https://docs.docker.com/engine/daemon/proxy/#environment-variables)](https://docs.docker.com/engine/daemon/proxy/#environment-variables)&#13;
+&#13;
+```shell&#13;
+# 使用systemd的系统中，添加额外的配置文件&#13;
+mkdir -p /etc/systemd/system/docker.service.d&#13;
+&#13;
+cat &lt;&lt; EOF &gt;&gt; /etc/systemd/system/docker.service.d/http-proxy.conf&#13;
+[Service]&#13;
+Environment=HTTP_PROXY=http://xxxx:41001&#13;
+Environment=HTTPS_PROXY=http://xxxx:41001&#13;
+Environment='NO_PROXY=localhost,127.0.0.1,xxxx'&#13;
+EOF&#13;
+&#13;
+systemctl daemon-reload&#13;
+systemctl reload docker&#13;
+systemctl restart docker&#13;
+```。</description><guid isPermaLink="true">https://blog.witter.top/post/Docker%20-pei-zhi-la-qu-jing-xiang-dai-li.html</guid><pubDate>Tue, 29 Oct 2024 05:58:14 +0000</pubDate></item><item><title>使用 Nginx 过滤请求host，达到白名单的效果</title><link>https://blog.witter.top/post/shi-yong-%20Nginx%20-guo-lv-qing-qiu-host%EF%BC%8C-da-dao-bai-ming-dan-de-xiao-guo.html</link><description>```nginx&#13;
 server {&#13;
     listen xxx;&#13;
     server_name xxx.xxx.cn;&#13;
