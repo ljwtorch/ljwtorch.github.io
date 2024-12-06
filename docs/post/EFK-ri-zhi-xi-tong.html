@@ -491,9 +491,9 @@ touch __init__.py extract_request_id.py</pre></div>
         <span class="pl-c"># 检查 'message' 字段是否存在于match中</span>
         <span class="pl-k">if</span> <span class="pl-s">'message'</span> <span class="pl-c1">in</span> <span class="pl-s1">match</span>:
             <span class="pl-s1">log_message</span> <span class="pl-c1">=</span> <span class="pl-s1">match</span>[<span class="pl-s">'message'</span>]
-            <span class="pl-s1">match_obj</span> <span class="pl-c1">=</span> <span class="pl-s1">re</span>.<span class="pl-en">search</span>(<span class="pl-s1">pattern</span>, <span class="pl-s1">log_message</span>)
+            <span class="pl-s1">match_obj</span> <span class="pl-c1">=</span> <span class="pl-s1">re</span>.<span class="pl-c1">search</span>(<span class="pl-s1">pattern</span>, <span class="pl-s1">log_message</span>)
             <span class="pl-k">if</span> <span class="pl-s1">match_obj</span>:
-                <span class="pl-s1">match</span>[<span class="pl-s">'extract_requestid'</span>] <span class="pl-c1">=</span> <span class="pl-s1">match_obj</span>.<span class="pl-en">group</span>(<span class="pl-c1">0</span>)
+                <span class="pl-s1">match</span>[<span class="pl-s">'extract_requestid'</span>] <span class="pl-c1">=</span> <span class="pl-s1">match_obj</span>.<span class="pl-c1">group</span>(<span class="pl-c1">0</span>)
             <span class="pl-k">else</span>:
                 <span class="pl-s1">match</span>[<span class="pl-s">'extract_requestid'</span>] <span class="pl-c1">=</span> <span class="pl-s">"request id not found"</span></pre></div>
 <h3>docker compose 部署</h3>
