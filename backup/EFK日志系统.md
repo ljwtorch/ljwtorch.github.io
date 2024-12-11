@@ -1,3 +1,5 @@
+# EFK日志告警系统
+
 **注：现在新版本elastic stack已经支持将kafka作为输出和输入的目标**
 
 当日志不是结构化数据：*.log->filebeat->kafka->logstash->elasticsearch
@@ -191,6 +193,41 @@ setup.template.settings:
   index.number_of_replicas: 0
 ```
 
+### logstash
+
+> 日志数据按需进行过滤和处理
+
+```bash
+# 持久化部署
+docker cp logstash:/usr/share/logstash/config ./
+docker cp logstash:/usr/share/logstash/pipeline ./
+```
+
+```yaml
+# 配置文件 logstash.yml
+http.host: "0.0.0.0"
+xpack.monitoring.elasticsearch.hosts: [ "http://elasticsearch:9200" ]
+xpack.monitoring.elasticsearch.username: "elastic"
+xpack.monitoring.elasticsearch.password: "elastic"
+```
+
+```yaml
+# pipelines.yml
+# This file is where you define your pipelines. You can define multiple.
+# For more information on multiple pipelines, see the documentation:
+#   https://www.elastic.co/guide/en/logstash/current/multiple-pipelines.html
+# 这个需要定义多条独立的管道，否则会混乱写入
+- pipeline.id: main
+  path.config: "/usr/share/logstash/pipeline"
+  
+- pipeline.id: java_pipeline
+  path.config: "/usr/share/logstash/pipeline/java-nginx-pipeline.conf"
+
+- pipeline.id: abroad_pipeline
+  path.config: "/usr/share/logstash/pipeline/java-nginx-pipeline-abroad.conf"
+
+```
+
 ### Elasticsearch
 
 `elasticsearch.yml`
@@ -229,7 +266,7 @@ i18n.locale: "zh-CN"
 
 ### Elastalert
 
-[[官方文档](https://elastalert.readthedocs.io/en/latest/index.html)](https://elastalert.readthedocs.io/en/latest/index.html)
+[官方文档](https://elastalert.readthedocs.io/en/latest/index.html)
 
 #### 配置文件
 
@@ -402,7 +439,7 @@ dingtalk_msgtype: "markdown"
 
 > [!TIP]
 >
-> 初始化流程可以按照官方[[文档](https://elastalert.readthedocs.io/en/latest/recipes/adding_enhancements.html)](https://elastalert.readthedocs.io/en/latest/recipes/adding_enhancements.html)进行
+> 初始化流程可以按照官方[文档](https://elastalert.readthedocs.io/en/latest/recipes/adding_enhancements.html)进行
 
 Example：Ruby日志格式匹配提取request-id
 
@@ -534,6 +571,19 @@ services:
       - logstack
     environment:
       TZ: "Asia/Shanghai"
+      
+  logstash:
+    image: elastic/logstash:8.13.2
+    container_name: logstash
+    restart: always
+    volumes:
+      - ./logstash/config:/usr/share/logstash/config
+      - ./logstash/data:/usr/share/logstash/data
+      - ./logstash/pipeline:/usr/share/logstash/pipeline
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks:
+      - logstack
 ```
 
 
@@ -580,6 +630,8 @@ output.kafka:
 
 ### logstash
 
+实例配置文件：
+
 ```conf
 input {
   kafka {
@@ -618,57 +670,7 @@ output {
 }
 ```
 
-# ES索引生命周期
 
-## 以下面的顺序来配置
-
-### Kibana
-
-1. 点击管理->索引生命周期策略->创建策略，选择需要的阶段和在多少天后删除该数据；
-
-2. 点击管理->索引管理->索引模板->创建模板：
-
-   - 名称修改完貌似是不可重新编辑的；
-
-   - 索引模式可以以通配符'*'的方式来匹配需要的索引，首次建议使用一个进行测试；
-
-   - 数据流不要创建；
-
-   - 打开下面的**允许自动创建**；
-
-   - **索引设置**可以对索引生命周期策略进行关联：
-
-     ```json
-     {
-       "index": {
-         "lifecycle": {
-           "name": "log-rotate"
-         }
-       }
-     }
-     ```
-
-   - **映射**可以从已经存在的索引当中复制json到这里粘贴进行编辑；
-
-### Filebeat
-
-> 这里的filebeat为消费kafka后将日志消息存储到Elasticsearch中的filebeat实例，主要看配置文件变化
-
-```yaml
-# 按照官方文档中开启对应的配置就可以
-setup.ilm.enabled: true
-setup.ilm.policy_name: "log-rotate"
-setup.template.enabled: false
-setup.template.overwrite: true
-setup.template.json.enabled: true
-setup.template.name: "filebeat-%{[agent.version]}"
-setup.template.pattern: "filebeat-%{[agent.version]}-*"
-setup.template.settings:
-  index.number_of_shards: 1
-  index.number_of_replicas: 0
-```
-
-# 
 
 # 问题
 
@@ -687,3 +689,6 @@ setup.template.settings:
    #查询
    GET /_cluster/settings?pretty
    ```
+
+   
+

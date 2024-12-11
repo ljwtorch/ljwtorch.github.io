@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<rss xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/" version="2.0"><channel><title>V's Blog</title><link>https://blog.witter.top</link><description>自有清风常载鹤，从无猜意不惊鸥。</description><copyright>V's Blog</copyright><docs>http://www.rssboard.org/rss-specification</docs><generator>python-feedgen</generator><image><url>https://img.witter.top/file/b037878209903b7d5bb17.jpg</url><title>avatar</title><link>https://blog.witter.top</link></image><lastBuildDate>Tue, 05 Nov 2024 02:09:58 +0000</lastBuildDate><managingEditor>V's Blog</managingEditor><ttl>60</ttl><webMaster>V's Blog</webMaster><item><title>Docker 配置拉取镜像代理</title><link>https://blog.witter.top/post/Docker%20-pei-zhi-la-qu-jing-xiang-dai-li.html</link><description>&gt; 对 `docker daemon` 配置额外的环境变量，来使 `docker pull` 指令经过网络代理访问&#13;
+<rss xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/" version="2.0"><channel><title>V's Blog</title><link>https://blog.witter.top</link><description>自有清风常载鹤，从无猜意不惊鸥。</description><copyright>V's Blog</copyright><docs>http://www.rssboard.org/rss-specification</docs><generator>python-feedgen</generator><image><url>https://img.witter.top/file/b037878209903b7d5bb17.jpg</url><title>avatar</title><link>https://blog.witter.top</link></image><lastBuildDate>Wed, 11 Dec 2024 05:15:57 +0000</lastBuildDate><managingEditor>V's Blog</managingEditor><ttl>60</ttl><webMaster>V's Blog</webMaster><item><title>Docker 配置拉取镜像代理</title><link>https://blog.witter.top/post/Docker%20-pei-zhi-la-qu-jing-xiang-dai-li.html</link><description>&gt; 对 `docker daemon` 配置额外的环境变量，来使 `docker pull` 指令经过网络代理访问&#13;
 &gt;&#13;
 &gt; 参考文档：[DockerDocs:Daemon proxy configuration](https://docs.docker.com/engine/daemon/proxy/#environment-variables)&#13;
 &#13;
@@ -1918,7 +1918,9 @@ wrangler publish --config wrangler-dockerhub.toml&#13;
 &#13;
 访问CloudFlare后台 -&gt; Workers和Pages -&gt; 进入需要自定义的Worker -&gt; 设置 -&gt; 触发器 -&gt; 自定义域&#13;
 &#13;
-![image-20240620140432250](https://img.witter.top/file/519f26de32e9f4b53cc3b.png)。</description><guid isPermaLink="true">https://blog.witter.top/post/CloudFlare-da-jian-Docker-jing-xiang-yuan.html</guid><pubDate>Thu, 20 Jun 2024 06:05:28 +0000</pubDate></item><item><title>EFK日志系统</title><link>https://blog.witter.top/post/EFK-ri-zhi-xi-tong.html</link><description>**注：现在新版本elastic stack已经支持将kafka作为输出和输入的目标**&#13;
+![image-20240620140432250](https://img.witter.top/file/519f26de32e9f4b53cc3b.png)。</description><guid isPermaLink="true">https://blog.witter.top/post/CloudFlare-da-jian-Docker-jing-xiang-yuan.html</guid><pubDate>Thu, 20 Jun 2024 06:05:28 +0000</pubDate></item><item><title>EFK日志系统</title><link>https://blog.witter.top/post/EFK-ri-zhi-xi-tong.html</link><description># EFK日志告警系统&#13;
+&#13;
+**注：现在新版本elastic stack已经支持将kafka作为输出和输入的目标**&#13;
 &#13;
 当日志不是结构化数据：*.log-&gt;filebeat-&gt;kafka-&gt;logstash-&gt;elasticsearch&#13;
 &#13;

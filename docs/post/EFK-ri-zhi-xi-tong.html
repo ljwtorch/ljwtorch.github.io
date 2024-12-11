@@ -10,7 +10,9 @@
         let theme = localStorage.getItem("meek_theme") || "light";
         document.documentElement.setAttribute("data-color-mode", theme);
     </script>
-<meta name="description" content="**注：现在新版本elastic stack已经支持将kafka作为输出和输入的目标**
+<meta name="description" content="# EFK日志告警系统
+
+**注：现在新版本elastic stack已经支持将kafka作为输出和输入的目标**
 
 当日志不是结构化数据：*.log->filebeat->kafka->logstash->elasticsearch
 
@@ -31,7 +33,9 @@ filebeat.inputs:
 - type: filestream #新版本常用文件流输入方式
   id: my-filestream-id #每个文件流输入必须有一个唯一的 ID。">
 <meta property="og:title" content="EFK日志系统">
-<meta property="og:description" content="**注：现在新版本elastic stack已经支持将kafka作为输出和输入的目标**
+<meta property="og:description" content="# EFK日志告警系统
+
+**注：现在新版本elastic stack已经支持将kafka作为输出和输入的目标**
 
 当日志不是结构化数据：*.log->filebeat->kafka->logstash->elasticsearch
 
@@ -121,7 +125,8 @@ body{box-sizing: border-box;min-width: 200px;max-width: 900px;margin: 20px auto;
 </div>
 </div>
     <div id="content">
-<div class="markdown-body" id="postBody"><p><strong>注：现在新版本elastic stack已经支持将kafka作为输出和输入的目标</strong></p>
+<div class="markdown-body" id="postBody"><h1>EFK日志告警系统</h1>
+<p><strong>注：现在新版本elastic stack已经支持将kafka作为输出和输入的目标</strong></p>
 <p>当日志不是结构化数据：*.log-&gt;filebeat-&gt;kafka-&gt;logstash-&gt;elasticsearch</p>
 <p>当日志是结构化数据：*.log-&gt;filebeat-&gt;kafka-&gt;filebeat-&gt;elasticsearch</p>
 <p>区别在于是否需要logstash进行日志的过滤和结构化；</p>
@@ -286,6 +291,32 @@ log.retention.hours=168</pre></div>
 <span class="pl-ent">setup.template.settings</span>:
   <span class="pl-ent">index.number_of_shards</span>: <span class="pl-c1">1</span>
   <span class="pl-ent">index.number_of_replicas</span>: <span class="pl-c1">0</span></pre></div>
+<h3>logstash</h3>
+<blockquote>
+<p>日志数据按需进行过滤和处理</p>
+</blockquote>
+<div class="highlight highlight-source-shell"><pre class="notranslate"><span class="pl-c"><span class="pl-c">#</span> 持久化部署</span>
+docker cp logstash:/usr/share/logstash/config ./
+docker cp logstash:/usr/share/logstash/pipeline ./</pre></div>
+<div class="highlight highlight-source-yaml"><pre class="notranslate"><span class="pl-c"><span class="pl-c">#</span> 配置文件 logstash.yml</span>
+<span class="pl-ent">http.host</span>: <span class="pl-s"><span class="pl-pds">"</span>0.0.0.0<span class="pl-pds">"</span></span>
+<span class="pl-ent">xpack.monitoring.elasticsearch.hosts</span>: <span class="pl-s">[ "http://elasticsearch:9200" ]</span>
+<span class="pl-ent">xpack.monitoring.elasticsearch.username</span>: <span class="pl-s"><span class="pl-pds">"</span>elastic<span class="pl-pds">"</span></span>
+<span class="pl-ent">xpack.monitoring.elasticsearch.password</span>: <span class="pl-s"><span class="pl-pds">"</span>elastic<span class="pl-pds">"</span></span></pre></div>
+<div class="highlight highlight-source-yaml"><pre class="notranslate"><span class="pl-c"><span class="pl-c">#</span> pipelines.yml</span>
+<span class="pl-c"><span class="pl-c">#</span> This file is where you define your pipelines. You can define multiple.</span>
+<span class="pl-c"><span class="pl-c">#</span> For more information on multiple pipelines, see the documentation:</span>
+<span class="pl-c"><span class="pl-c">#</span>   https://www.elastic.co/guide/en/logstash/current/multiple-pipelines.html</span>
+<span class="pl-c"><span class="pl-c">#</span> 这个需要定义多条独立的管道，否则会混乱写入</span>
+- <span class="pl-ent">pipeline.id</span>: <span class="pl-s">main</span>
+  <span class="pl-ent">path.config</span>: <span class="pl-s"><span class="pl-pds">"</span>/usr/share/logstash/pipeline<span class="pl-pds">"</span></span>
+  
+- <span class="pl-ent">pipeline.id</span>: <span class="pl-s">java_pipeline</span>
+  <span class="pl-ent">path.config</span>: <span class="pl-s"><span class="pl-pds">"</span>/usr/share/logstash/pipeline/java-nginx-pipeline.conf<span class="pl-pds">"</span></span>
+
+- <span class="pl-ent">pipeline.id</span>: <span class="pl-s">abroad_pipeline</span>
+  <span class="pl-ent">path.config</span>: <span class="pl-s"><span class="pl-pds">"</span>/usr/share/logstash/pipeline/java-nginx-pipeline-abroad.conf<span class="pl-pds">"</span></span>
+</pre></div>
 <h3>Elasticsearch</h3>
 <p><code class="notranslate">elasticsearch.yml</code></p>
 <div class="highlight highlight-source-yaml"><pre class="notranslate"><span class="pl-ent">cluster.name</span>: <span class="pl-s"><span class="pl-pds">"</span>docker-cluster<span class="pl-pds">"</span></span>
@@ -313,7 +344,7 @@ log.retention.hours=168</pre></div>
 <span class="pl-ent">elasticsearch.password</span>: <span class="pl-s"><span class="pl-pds">"</span>elastic<span class="pl-pds">"</span></span>
 <span class="pl-ent">i18n.locale</span>: <span class="pl-s"><span class="pl-pds">"</span>zh-CN<span class="pl-pds">"</span></span></pre></div>
 <h3>Elastalert</h3>
-<p>[<a href="https://elastalert.readthedocs.io/en/latest/index.html" rel="nofollow">官方文档</a>](<a href="https://elastalert.readthedocs.io/en/latest/index.html" rel="nofollow">https://elastalert.readthedocs.io/en/latest/index.html</a>)</p>
+<p><a href="https://elastalert.readthedocs.io/en/latest/index.html" rel="nofollow">官方文档</a></p>
 <h4>配置文件</h4>
 <p><code class="notranslate">config.yaml</code></p>
 <div class="highlight highlight-source-yaml"><pre class="notranslate"><span class="pl-c"><span class="pl-c">#</span> This is the folder that contains the rule yaml files</span>
@@ -474,7 +505,7 @@ log.retention.hours=168</pre></div>
 <span class="pl-ent">dingtalk_msgtype</span>: <span class="pl-s"><span class="pl-pds">"</span>markdown<span class="pl-pds">"</span></span></pre></div>
 <h4>Enhancements自定义开发&amp;镜像构建</h4>
 <div class="markdown-alert markdown-alert-tip"><p class="markdown-alert-title"><svg class="octicon octicon-light-bulb mr-2" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="M8 1.5c-2.363 0-4 1.69-4 3.75 0 .984.424 1.625.984 2.304l.214.253c.223.264.47.556.673.848.284.411.537.896.621 1.49a.75.75 0 0 1-1.484.211c-.04-.282-.163-.547-.37-.847a8.456 8.456 0 0 0-.542-.68c-.084-.1-.173-.205-.268-.32C3.201 7.75 2.5 6.766 2.5 5.25 2.5 2.31 4.863 0 8 0s5.5 2.31 5.5 5.25c0 1.516-.701 2.5-1.328 3.259-.095.115-.184.22-.268.319-.207.245-.383.453-.541.681-.208.3-.33.565-.37.847a.751.751 0 0 1-1.485-.212c.084-.593.337-1.078.621-1.489.203-.292.45-.584.673-.848.075-.088.147-.173.213-.253.561-.679.985-1.32.985-2.304 0-2.06-1.637-3.75-4-3.75ZM5.75 12h4.5a.75.75 0 0 1 0 1.5h-4.5a.75.75 0 0 1 0-1.5ZM6 15.25a.75.75 0 0 1 .75-.75h2.5a.75.75 0 0 1 0 1.5h-2.5a.75.75 0 0 1-.75-.75Z"></path></svg>Tip</p>
-<p>初始化流程可以按照官方[<a href="https://elastalert.readthedocs.io/en/latest/recipes/adding_enhancements.html" rel="nofollow">文档</a>](<a href="https://elastalert.readthedocs.io/en/latest/recipes/adding_enhancements.html)%E8%BF%9B%E8%A1%8C" rel="nofollow">https://elastalert.readthedocs.io/en/latest/recipes/adding_enhancements.html)进行</a></p>
+<p>初始化流程可以按照官方<a href="https://elastalert.readthedocs.io/en/latest/recipes/adding_enhancements.html" rel="nofollow">文档</a>进行</p>
 </div>
 <p>Example：Ruby日志格式匹配提取request-id</p>
 <p>创建文件夹</p>
@@ -588,7 +619,20 @@ touch __init__.py extract_request_id.py</pre></div>
     <span class="pl-ent">networks</span>:
       - <span class="pl-s">logstack</span>
     <span class="pl-ent">environment</span>:
-      <span class="pl-ent">TZ</span>: <span class="pl-s"><span class="pl-pds">"</span>Asia/Shanghai<span class="pl-pds">"</span></span></pre></div>
+      <span class="pl-ent">TZ</span>: <span class="pl-s"><span class="pl-pds">"</span>Asia/Shanghai<span class="pl-pds">"</span></span>
+      
+  <span class="pl-ent">logstash</span>:
+    <span class="pl-ent">image</span>: <span class="pl-s">elastic/logstash:8.13.2</span>
+    <span class="pl-ent">container_name</span>: <span class="pl-s">logstash</span>
+    <span class="pl-ent">restart</span>: <span class="pl-s">always</span>
+    <span class="pl-ent">volumes</span>:
+      - <span class="pl-s">./logstash/config:/usr/share/logstash/config</span>
+      - <span class="pl-s">./logstash/data:/usr/share/logstash/data</span>
+      - <span class="pl-s">./logstash/pipeline:/usr/share/logstash/pipeline</span>
+      - <span class="pl-s">/var/lib/docker/containers:/var/lib/docker/containers:ro</span>
+      - <span class="pl-s">/var/run/docker.sock:/var/run/docker.sock:ro</span>
+    <span class="pl-ent">networks</span>:
+      - <span class="pl-s">logstack</span></pre></div>
 <h2>非结构化日志(未测试)</h2>
 <h3>filebeat 1</h3>
 <div class="highlight highlight-source-yaml"><pre class="notranslate"><span class="pl-ent">filebeat.inputs</span>:
@@ -621,6 +665,7 @@ touch __init__.py extract_request_id.py</pre></div>
 <h3>kafka</h3>
 <div class="highlight highlight-source-yaml"><pre class="notranslate"><span class="pl-c"><span class="pl-c">#</span>暂定</span></pre></div>
 <h3>logstash</h3>
+<p>实例配置文件：</p>
 <pre lang="conf" class="notranslate"><code class="notranslate">input {
   kafka {
     id =&gt; "my-kafka-consumer" # 唯一标识此Kafka消费者
@@ -657,60 +702,6 @@ output {
   }
 }
 </code></pre>
-<h1>ES索引生命周期</h1>
-<h2>以下面的顺序来配置</h2>
-<h3>Kibana</h3>
-<ol>
-<li>
-<p>点击管理-&gt;索引生命周期策略-&gt;创建策略，选择需要的阶段和在多少天后删除该数据；</p>
-</li>
-<li>
-<p>点击管理-&gt;索引管理-&gt;索引模板-&gt;创建模板：</p>
-<ul>
-<li>
-<p>名称修改完貌似是不可重新编辑的；</p>
-</li>
-<li>
-<p>索引模式可以以通配符'*'的方式来匹配需要的索引，首次建议使用一个进行测试；</p>
-</li>
-<li>
-<p>数据流不要创建；</p>
-</li>
-<li>
-<p>打开下面的<strong>允许自动创建</strong>；</p>
-</li>
-<li>
-<p><strong>索引设置</strong>可以对索引生命周期策略进行关联：</p>
-<div class="highlight highlight-source-json"><pre class="notranslate">{
-  <span class="pl-ent">"index"</span>: {
-    <span class="pl-ent">"lifecycle"</span>: {
-      <span class="pl-ent">"name"</span>: <span class="pl-s"><span class="pl-pds">"</span>log-rotate<span class="pl-pds">"</span></span>
-    }
-  }
-}</pre></div>
-</li>
-<li>
-<p><strong>映射</strong>可以从已经存在的索引当中复制json到这里粘贴进行编辑；</p>
-</li>
-</ul>
-</li>
-</ol>
-<h3>Filebeat</h3>
-<blockquote>
-<p>这里的filebeat为消费kafka后将日志消息存储到Elasticsearch中的filebeat实例，主要看配置文件变化</p>
-</blockquote>
-<div class="highlight highlight-source-yaml"><pre class="notranslate"><span class="pl-c"><span class="pl-c">#</span> 按照官方文档中开启对应的配置就可以</span>
-<span class="pl-ent">setup.ilm.enabled</span>: <span class="pl-c1">true</span>
-<span class="pl-ent">setup.ilm.policy_name</span>: <span class="pl-s"><span class="pl-pds">"</span>log-rotate<span class="pl-pds">"</span></span>
-<span class="pl-ent">setup.template.enabled</span>: <span class="pl-c1">false</span>
-<span class="pl-ent">setup.template.overwrite</span>: <span class="pl-c1">true</span>
-<span class="pl-ent">setup.template.json.enabled</span>: <span class="pl-c1">true</span>
-<span class="pl-ent">setup.template.name</span>: <span class="pl-s"><span class="pl-pds">"</span>filebeat-%{[agent.version]}<span class="pl-pds">"</span></span>
-<span class="pl-ent">setup.template.pattern</span>: <span class="pl-s"><span class="pl-pds">"</span>filebeat-%{[agent.version]}-*<span class="pl-pds">"</span></span>
-<span class="pl-ent">setup.template.settings</span>:
-  <span class="pl-ent">index.number_of_shards</span>: <span class="pl-c1">1</span>
-  <span class="pl-ent">index.number_of_replicas</span>: <span class="pl-c1">0</span></pre></div>
-<h1></h1>
 <h1>问题</h1>
 <ol>
 <li>
