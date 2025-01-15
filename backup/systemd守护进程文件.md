@@ -33,7 +33,7 @@ After=network.target
 [Service]
 User=root
 Type=simple
-ExecStart=/home/sonkwo/monitor/prometheus/prometheus \
+ExecStart=/home/xxx/monitor/prometheus/prometheus \
 --web.listen-address=0.0.0.0:9090 \
 --storage.tsdb.path=/etc/prometheus/data \
 --config.file=/etc/prometheus/prometheus.yml \

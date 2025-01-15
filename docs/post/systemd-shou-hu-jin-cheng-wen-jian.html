@@ -45,7 +45,7 @@ After=network.target
 [Service]
 User=root
 Type=simple
-ExecStart=/home/sonkwo/monitor/prometheus/prometheus \
+ExecStart=/home/xxx/monitor/prometheus/prometheus \
 --web.listen-address=0.0.0.0:9090 \
 --storage.tsdb.path=/etc/prometheus/data \
 --config.file=/etc/prometheus/prometheus.yml \
@@ -97,7 +97,7 @@ After=network.target
 [Service]
 User=root
 Type=simple
-ExecStart=/home/sonkwo/monitor/prometheus/prometheus \
+ExecStart=/home/xxx/monitor/prometheus/prometheus \
 --web.listen-address=0.0.0.0:9090 \
 --storage.tsdb.path=/etc/prometheus/data \
 --config.file=/etc/prometheus/prometheus.yml \
@@ -212,7 +212,7 @@ body{box-sizing: border-box;min-width: 200px;max-width: 900px;margin: 20px auto;
 <span class="pl-en">[Service]</span>
 <span class="pl-k">User</span>=root
 <span class="pl-k">Type</span>=simple
-<span class="pl-k">ExecStart</span>=/home/sonkwo/monitor/prometheus/prometheus \
+<span class="pl-k">ExecStart</span>=/home/xxx/monitor/prometheus/prometheus \
 --<span class="pl-k">web.listen-address</span>=0.0.0.0:9090 \
 --<span class="pl-k">storage.tsdb.path</span>=/etc/prometheus/data \
 --<span class="pl-k">config.file</span>=/etc/prometheus/prometheus.yml \
