@@ -43,10 +43,10 @@ libc.so.6 => /lib64/libc.so.6 (0x00007fbc48166000)
 报错：
 
 ```shell
-Can't locate IPC/Cmd.pm in @INC (@INC contains: /home/sonkwo/openssl-3.0.13/util/perl /usr/local/lib64/perl5 /usr/local/share/perl5 /usr/lib64/perl5/vendor_perl /usr/share/perl5/vendor_perl /usr/lib64/perl5 /usr/share/perl5 . /home/sonkwo/openssl-3.0.13/external/perl/Text-Template-1.56/lib) at /home/sonkwo/openssl-3.0.13/util/perl/OpenSSL/config.pm line 19.
-BEGIN failed--compilation aborted at /home/sonkwo/openssl-3.0.13/util/perl/OpenSSL/config.pm line 19.
-Compilation failed in require at /home/sonkwo/openssl-3.0.13/Configure line 23.
-BEGIN failed--compilation aborted at /home/sonkwo/openssl-3.0.13/Configure line 23.
+Can't locate IPC/Cmd.pm in @INC (@INC contains: /home/xxx/openssl-3.0.13/util/perl /usr/local/lib64/perl5 /usr/local/share/perl5 /usr/lib64/perl5/vendor_perl /usr/share/perl5/vendor_perl /usr/lib64/perl5 /usr/share/perl5 . /home/xxx/openssl-3.0.13/external/perl/Text-Template-1.56/lib) at /home/xxx/openssl-3.0.13/util/perl/OpenSSL/config.pm line 19.
+BEGIN failed--compilation aborted at /home/xxx/openssl-3.0.13/util/perl/OpenSSL/config.pm line 19.
+Compilation failed in require at /home/xxx/openssl-3.0.13/Configure line 23.
+BEGIN failed--compilation aborted at /home/xxx/openssl-3.0.13/Configure line 23.
 
 yum install perl-IPC-Cmd
 ```

@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<rss xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/" version="2.0"><channel><title>V's Blog</title><link>https://blog.witter.top</link><description>自有清风常载鹤，从无猜意不惊鸥。</description><copyright>V's Blog</copyright><docs>http://www.rssboard.org/rss-specification</docs><generator>python-feedgen</generator><image><url>https://img.witter.top/file/b037878209903b7d5bb17.jpg</url><title>avatar</title><link>https://blog.witter.top</link></image><lastBuildDate>Wed, 15 Jan 2025 02:04:49 +0000</lastBuildDate><managingEditor>V's Blog</managingEditor><ttl>60</ttl><webMaster>V's Blog</webMaster><item><title>Docker 配置拉取镜像代理</title><link>https://blog.witter.top/post/Docker%20-pei-zhi-la-qu-jing-xiang-dai-li.html</link><description>&gt; 对 `docker daemon` 配置额外的环境变量，来使 `docker pull` 指令经过网络代理访问&#13;
+<rss xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/" version="2.0"><channel><title>V's Blog</title><link>https://blog.witter.top</link><description>自有清风常载鹤，从无猜意不惊鸥。</description><copyright>V's Blog</copyright><docs>http://www.rssboard.org/rss-specification</docs><generator>python-feedgen</generator><image><url>https://img.witter.top/file/b037878209903b7d5bb17.jpg</url><title>avatar</title><link>https://blog.witter.top</link></image><lastBuildDate>Wed, 15 Jan 2025 16:13:09 +0000</lastBuildDate><managingEditor>V's Blog</managingEditor><ttl>60</ttl><webMaster>V's Blog</webMaster><item><title>Docker 配置拉取镜像代理</title><link>https://blog.witter.top/post/Docker%20-pei-zhi-la-qu-jing-xiang-dai-li.html</link><description>&gt; 对 `docker daemon` 配置额外的环境变量，来使 `docker pull` 指令经过网络代理访问&#13;
 &gt;&#13;
 &gt; 参考文档：[DockerDocs:Daemon proxy configuration](https://docs.docker.com/engine/daemon/proxy/#environment-variables)&#13;
 &#13;
@@ -1713,10 +1713,10 @@ libc.so.6 =&gt; /lib64/libc.so.6 (0x00007fbc48166000)&#13;
 报错：&#13;
 &#13;
 ```shell&#13;
-Can't locate IPC/Cmd.pm in @INC (@INC contains: /home/sonkwo/openssl-3.0.13/util/perl /usr/local/lib64/perl5 /usr/local/share/perl5 /usr/lib64/perl5/vendor_perl /usr/share/perl5/vendor_perl /usr/lib64/perl5 /usr/share/perl5 . /home/sonkwo/openssl-3.0.13/external/perl/Text-Template-1.56/lib) at /home/sonkwo/openssl-3.0.13/util/perl/OpenSSL/config.pm line 19.&#13;
-BEGIN failed--compilation aborted at /home/sonkwo/openssl-3.0.13/util/perl/OpenSSL/config.pm line 19.&#13;
-Compilation failed in require at /home/sonkwo/openssl-3.0.13/Configure line 23.&#13;
-BEGIN failed--compilation aborted at /home/sonkwo/openssl-3.0.13/Configure line 23.&#13;
+Can't locate IPC/Cmd.pm in @INC (@INC contains: /home/xxx/openssl-3.0.13/util/perl /usr/local/lib64/perl5 /usr/local/share/perl5 /usr/lib64/perl5/vendor_perl /usr/share/perl5/vendor_perl /usr/lib64/perl5 /usr/share/perl5 . /home/xxx/openssl-3.0.13/external/perl/Text-Template-1.56/lib) at /home/xxx/openssl-3.0.13/util/perl/OpenSSL/config.pm line 19.&#13;
+BEGIN failed--compilation aborted at /home/xxx/openssl-3.0.13/util/perl/OpenSSL/config.pm line 19.&#13;
+Compilation failed in require at /home/xxx/openssl-3.0.13/Configure line 23.&#13;
+BEGIN failed--compilation aborted at /home/xxx/openssl-3.0.13/Configure line 23.&#13;
 &#13;
 yum install perl-IPC-Cmd&#13;
 ```&#13;
