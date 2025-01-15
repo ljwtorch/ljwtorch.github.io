@@ -131,22 +131,26 @@ fi
 ```shell
 # 可选添加用户
 sudo useradd --no-create-home --shell /bin/false prometheus
-# prometheus.service 文件
+# prometheus.service 文件，优化tsdb存储空间、日志输出路径、文件打开数限制
 
 [Unit]
-Description=Prometheus
-Wants=network-online.target
-After=network-online.target
+Description=Prometheus Monitoring System
+After=network.target
 
 [Service]
-User=prometheus
-Group=prometheus
 Type=simple
-ExecStart=/usr/local/bin/prometheus \
-  --config.file=/etc/prometheus/prometheus.yml \
-  --storage.tsdb.path=/var/lib/prometheus/ \
-  --web.console.templates=/usr/share/prometheus/consoles \
-  --web.console.libraries=/usr/share/prometheus/console_libraries
+ExecStart=/bin/bash -c '/home/xxx/monitor/prometheus/prometheus \
+  --config.file=/home/sonkwo/monitor/prometheus/prometheus.yml \
+  --storage.tsdb.retention.time=90d \
+  --storage.tsdb.min-block-duration=3h \
+  --storage.tsdb.max-block-duration=24h \
+  --web.external-url=http://xxxx \
+  --web.enable-lifecycle \
+  --log.level=info 2>&1 | tee -a /var/log/prometheus/prometheus.log'
+Restart=on-failure
+User=root
+LimitNOFILE=102400
+WorkingDirectory=/home/sonkwo/monitor/prometheus
 
 [Install]
 WantedBy=multi-user.target

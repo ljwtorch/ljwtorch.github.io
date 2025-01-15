@@ -143,22 +143,26 @@ fi
 ```shell
 # 可选添加用户
 sudo useradd --no-create-home --shell /bin/false prometheus
-# prometheus.service 文件
+# prometheus.service 文件，优化tsdb存储空间、日志输出路径、文件打开数限制
 
 [Unit]
-Description=Prometheus
-Wants=network-online.target
-After=network-online.target
+Description=Prometheus Monitoring System
+After=network.target
 
 [Service]
-User=prometheus
-Group=prometheus
 Type=simple
-ExecStart=/usr/local/bin/prometheus \
-  --config.file=/etc/prometheus/prometheus.yml \
-  --storage.tsdb.path=/var/lib/prometheus/ \
-  --web.console.templates=/usr/share/prometheus/consoles \
-  --web.console.libraries=/usr/share/prometheus/console_libraries
+ExecStart=/bin/bash -c '/home/xxx/monitor/prometheus/prometheus \
+  --config.file=/home/sonkwo/monitor/prometheus/prometheus.yml \
+  --storage.tsdb.retention.time=90d \
+  --storage.tsdb.min-block-duration=3h \
+  --storage.tsdb.max-block-duration=24h \
+  --web.external-url=http://xxxx \
+  --web.enable-lifecycle \
+  --log.level=info 2>&1 | tee -a /var/log/prometheus/prometheus.log'
+Restart=on-failure
+User=root
+LimitNOFILE=102400
+WorkingDirectory=/home/sonkwo/monitor/prometheus
 
 [Install]
 WantedBy=multi-user.target
@@ -682,22 +686,26 @@ fi
 ```shell
 # 可选添加用户
 sudo useradd --no-create-home --shell /bin/false prometheus
-# prometheus.service 文件
+# prometheus.service 文件，优化tsdb存储空间、日志输出路径、文件打开数限制
 
 [Unit]
-Description=Prometheus
-Wants=network-online.target
-After=network-online.target
+Description=Prometheus Monitoring System
+After=network.target
 
 [Service]
-User=prometheus
-Group=prometheus
 Type=simple
-ExecStart=/usr/local/bin/prometheus \
-  --config.file=/etc/prometheus/prometheus.yml \
-  --storage.tsdb.path=/var/lib/prometheus/ \
-  --web.console.templates=/usr/share/prometheus/consoles \
-  --web.console.libraries=/usr/share/prometheus/console_libraries
+ExecStart=/bin/bash -c '/home/xxx/monitor/prometheus/prometheus \
+  --config.file=/home/sonkwo/monitor/prometheus/prometheus.yml \
+  --storage.tsdb.retention.time=90d \
+  --storage.tsdb.min-block-duration=3h \
+  --storage.tsdb.max-block-duration=24h \
+  --web.external-url=http://xxxx \
+  --web.enable-lifecycle \
+  --log.level=info 2>&1 | tee -a /var/log/prometheus/prometheus.log'
+Restart=on-failure
+User=root
+LimitNOFILE=102400
+WorkingDirectory=/home/sonkwo/monitor/prometheus
 
 [Install]
 WantedBy=multi-user.target
@@ -1278,22 +1286,26 @@ check_result=<span class="pl-s"><span class="pl-pds">$(</span>./promtool check c
 <p><strong>systemd部署</strong></p>
 <div class="highlight highlight-source-shell"><pre class="notranslate"><span class="pl-c"><span class="pl-c">#</span> 可选添加用户</span>
 sudo useradd --no-create-home --shell /bin/false prometheus
-<span class="pl-c"><span class="pl-c">#</span> prometheus.service 文件</span>
+<span class="pl-c"><span class="pl-c">#</span> prometheus.service 文件，优化tsdb存储空间、日志输出路径、文件打开数限制</span>
 
 [Unit]
-Description=Prometheus
-Wants=network-online.target
-After=network-online.target
+Description=Prometheus Monitoring System
+After=network.target
 
 [Service]
-User=prometheus
-Group=prometheus
 Type=simple
-ExecStart=/usr/local/bin/prometheus \
-  --config.file=/etc/prometheus/prometheus.yml \
-  --storage.tsdb.path=/var/lib/prometheus/ \
-  --web.console.templates=/usr/share/prometheus/consoles \
-  --web.console.libraries=/usr/share/prometheus/console_libraries
+ExecStart=/bin/bash -c <span class="pl-s"><span class="pl-pds">'</span>/home/xxx/monitor/prometheus/prometheus \</span>
+<span class="pl-s">  --config.file=/home/sonkwo/monitor/prometheus/prometheus.yml \</span>
+<span class="pl-s">  --storage.tsdb.retention.time=90d \</span>
+<span class="pl-s">  --storage.tsdb.min-block-duration=3h \</span>
+<span class="pl-s">  --storage.tsdb.max-block-duration=24h \</span>
+<span class="pl-s">  --web.external-url=http://xxxx \</span>
+<span class="pl-s">  --web.enable-lifecycle \</span>
+<span class="pl-s">  --log.level=info 2&gt;&amp;1 | tee -a /var/log/prometheus/prometheus.log<span class="pl-pds">'</span></span>
+Restart=on-failure
+User=root
+LimitNOFILE=102400
+WorkingDirectory=/home/sonkwo/monitor/prometheus
 
 [Install]
 WantedBy=multi-user.target
