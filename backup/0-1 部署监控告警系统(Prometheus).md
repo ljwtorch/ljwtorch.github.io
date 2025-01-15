@@ -140,7 +140,7 @@ After=network.target
 [Service]
 Type=simple
 ExecStart=/bin/bash -c '/home/xxx/monitor/prometheus/prometheus \
-  --config.file=/home/sonkwo/monitor/prometheus/prometheus.yml \
+  --config.file=/home/xxx/monitor/prometheus/prometheus.yml \
   --storage.tsdb.retention.time=90d \
   --storage.tsdb.min-block-duration=3h \
   --storage.tsdb.max-block-duration=24h \
@@ -150,7 +150,7 @@ ExecStart=/bin/bash -c '/home/xxx/monitor/prometheus/prometheus \
 Restart=on-failure
 User=root
 LimitNOFILE=102400
-WorkingDirectory=/home/sonkwo/monitor/prometheus
+WorkingDirectory=/home/xxx/monitor/prometheus
 
 [Install]
 WantedBy=multi-user.target
