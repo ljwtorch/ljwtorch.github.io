@@ -245,7 +245,7 @@ docker run -d \
   -e LDAP_USER_NAME_ATTRIBUTE="uid" \
   -e LDAP_EMAIL_ATTRIBUTE="mail" \
   -e LDAP_DISPLAY_NAME_ATTRIBUTE="displayname" \
-  -e LDAP_GROUP_SEARCH_BASE_DN="cn=groups,cn=accounts,dc=sonkwo,dc=cn" \
+  -e LDAP_GROUP_SEARCH_BASE_DN="cn=groups,cn=accounts,dc=xxx,dc=cn" \
   -e LDAP_GROUP_SEARCH_FILTER="(objectClass=groupOfNames)" \
   -e LDAP_USER_MACHER_USER_ATTRIBUTE="memberOf" \
   -e LDAP_USER_MACHER_GROUP_ATTRIBUTE="member" \
@@ -336,11 +336,11 @@ kubectl label nodes xxxx labelname=labelvalue
 apiVersion: v1
 kind: Service
 metadata:
-  name: sonkwo-community-frontend-hk
+  name: xxx-community-frontend-hk
 spec:
   type: NodePort
   selector:
-    app: sonkwo-community-frontend-hk
+    app: xxx-community-frontend-hk
   ports:
     # 默认情况下，为了方便起见，`targetPort` 被设置为与 `port` 字段相同的值。
   - nodePort: 30003	# 外部访问的端口
@@ -540,13 +540,13 @@ vim /etc/containerd/config.toml
 
 [plugins."io.containerd.grpc.v1.cri".registry.configs]
         #内部私有仓库认证信息
-        [plugins."io.containerd.grpc.v1.cri".registry.configs."registry.sonkwotest.com"] # 这行不确定要不要写上
-        [plugins."io.containerd.grpc.v1.cri".registry.configs."registry.sonkwotest.com".tls]
+        [plugins."io.containerd.grpc.v1.cri".registry.configs."registry.xxx.com"] # 这行不确定要不要写上
+        [plugins."io.containerd.grpc.v1.cri".registry.configs."registry.xxx.com".tls]
           insecure_skip_verify = false # 是否跳过证书认证
-          ca_file = "/etc/containerd/registry.sonkwotest.com/1_registry.sonkwotest.com_bundle.crt" # CA 证书
-          cert_file = "/etc/containerd/registry.sonkwotest.com/1_registry.sonkwotest.com_bundle.crt" # harbor 证书
-          key_file = "/etc/containerd/registry.sonkwotest.com/2_registry.sonkwotest.com.key" # harbor 私钥 
-        [plugins."io.containerd.grpc.v1.cri".registry.configs."registry.sonkwotest.com".auth]
+          ca_file = "/etc/containerd/registry.xxx.com/1_registry.xxx.com_bundle.crt" # CA 证书
+          cert_file = "/etc/containerd/registry.xxx.com/1_registry.xxx.com_bundle.crt" # harbor 证书
+          key_file = "/etc/containerd/registry.xxx.com/2_registry.xxx.com.key" # harbor 私钥 
+        [plugins."io.containerd.grpc.v1.cri".registry.configs."registry.xxx.com".auth]
           username = "jenkins" # 在harbor里单独创建的用户，授权访问指定项目
           password = "new2020!Ceasia#"
 ```
@@ -649,7 +649,7 @@ vim /etc/containerd/config.toml
 
 ```shell
 WARN[0000] image connect using default endpoints: [unix:///var/run/dockershim.sock unix:///run/containerd/containerd.sock unix:///run/crio/crio.sock unix:///var/run/cri-dockerd.sock]. As the default settings are now deprecated, you should set the endpoint instead. 
-E1124 15:59:57.619574 2290376 remote_image.go:171] "PullImage from image service failed" err="rpc error: code = Unavailable desc = connection error: desc = \"transport: Error while dialing dial unix /var/run/dockershim.sock: connect: no such file or directory\"" image="registry.sonkwotest.com/ceasia_test/sk-biz-eureka:20231124152125"
+E1124 15:59:57.619574 2290376 remote_image.go:171] "PullImage from image service failed" err="rpc error: code = Unavailable desc = connection error: desc = \"transport: Error while dialing dial unix /var/run/dockershim.sock: connect: no such file or directory\"" image="registry.xxx.com/ceasia_test/sk-biz-eureka:20231124152125"
 FATA[0000] pulling image: rpc error: code = Unavailable desc = connection error: desc = "transport: Error while dialing dial unix /var/run/dockershim.sock: connect: no such file or directory" 
 
 crictl config runtime-endpoint unix:///var/run/containerd/containerd.sock

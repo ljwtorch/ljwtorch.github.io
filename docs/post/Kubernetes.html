@@ -493,7 +493,7 @@ journalctl -xefu containerd</pre></div>
   -e LDAP_USER_NAME_ATTRIBUTE=<span class="pl-s"><span class="pl-pds">"</span>uid<span class="pl-pds">"</span></span> \
   -e LDAP_EMAIL_ATTRIBUTE=<span class="pl-s"><span class="pl-pds">"</span>mail<span class="pl-pds">"</span></span> \
   -e LDAP_DISPLAY_NAME_ATTRIBUTE=<span class="pl-s"><span class="pl-pds">"</span>displayname<span class="pl-pds">"</span></span> \
-  -e LDAP_GROUP_SEARCH_BASE_DN=<span class="pl-s"><span class="pl-pds">"</span>cn=groups,cn=accounts,dc=sonkwo,dc=cn<span class="pl-pds">"</span></span> \
+  -e LDAP_GROUP_SEARCH_BASE_DN=<span class="pl-s"><span class="pl-pds">"</span>cn=groups,cn=accounts,dc=xxx,dc=cn<span class="pl-pds">"</span></span> \
   -e LDAP_GROUP_SEARCH_FILTER=<span class="pl-s"><span class="pl-pds">"</span>(objectClass=groupOfNames)<span class="pl-pds">"</span></span> \
   -e LDAP_USER_MACHER_USER_ATTRIBUTE=<span class="pl-s"><span class="pl-pds">"</span>memberOf<span class="pl-pds">"</span></span> \
   -e LDAP_USER_MACHER_GROUP_ATTRIBUTE=<span class="pl-s"><span class="pl-pds">"</span>member<span class="pl-pds">"</span></span> \
@@ -551,11 +551,11 @@ kubectl label nodes xxxx labelname=labelvalue
 <div class="highlight highlight-source-shell"><pre class="notranslate">apiVersion: v1
 kind: Service
 metadata:
-  name: sonkwo-community-frontend-hk
+  name: xxx-community-frontend-hk
 spec:
   type: NodePort
   selector:
-    app: sonkwo-community-frontend-hk
+    app: xxx-community-frontend-hk
   ports:
     <span class="pl-c"><span class="pl-c">#</span> 默认情况下，为了方便起见，`targetPort` 被设置为与 `port` 字段相同的值。</span>
   - nodePort: 30003	<span class="pl-c"><span class="pl-c">#</span> 外部访问的端口</span>
@@ -721,13 +721,13 @@ kubectl label nodes <span class="pl-k">&lt;</span>your-node-name<span class="pl-
 
 [plugins.<span class="pl-s"><span class="pl-pds">"</span>io.containerd.grpc.v1.cri<span class="pl-pds">"</span></span>.registry.configs]
         <span class="pl-c"><span class="pl-c">#</span>内部私有仓库认证信息</span>
-        [plugins.<span class="pl-s"><span class="pl-pds">"</span>io.containerd.grpc.v1.cri<span class="pl-pds">"</span></span>.registry.configs.<span class="pl-s"><span class="pl-pds">"</span>registry.sonkwotest.com<span class="pl-pds">"</span></span>] <span class="pl-c"><span class="pl-c">#</span> 这行不确定要不要写上</span>
-        [plugins.<span class="pl-s"><span class="pl-pds">"</span>io.containerd.grpc.v1.cri<span class="pl-pds">"</span></span>.registry.configs.<span class="pl-s"><span class="pl-pds">"</span>registry.sonkwotest.com<span class="pl-pds">"</span></span>.tls]
+        [plugins.<span class="pl-s"><span class="pl-pds">"</span>io.containerd.grpc.v1.cri<span class="pl-pds">"</span></span>.registry.configs.<span class="pl-s"><span class="pl-pds">"</span>registry.xxx.com<span class="pl-pds">"</span></span>] <span class="pl-c"><span class="pl-c">#</span> 这行不确定要不要写上</span>
+        [plugins.<span class="pl-s"><span class="pl-pds">"</span>io.containerd.grpc.v1.cri<span class="pl-pds">"</span></span>.registry.configs.<span class="pl-s"><span class="pl-pds">"</span>registry.xxx.com<span class="pl-pds">"</span></span>.tls]
           insecure_skip_verify = <span class="pl-c1">false</span> <span class="pl-c"><span class="pl-c">#</span> 是否跳过证书认证</span>
-          ca_file = <span class="pl-s"><span class="pl-pds">"</span>/etc/containerd/registry.sonkwotest.com/1_registry.sonkwotest.com_bundle.crt<span class="pl-pds">"</span></span> <span class="pl-c"><span class="pl-c">#</span> CA 证书</span>
-          cert_file = <span class="pl-s"><span class="pl-pds">"</span>/etc/containerd/registry.sonkwotest.com/1_registry.sonkwotest.com_bundle.crt<span class="pl-pds">"</span></span> <span class="pl-c"><span class="pl-c">#</span> harbor 证书</span>
-          key_file = <span class="pl-s"><span class="pl-pds">"</span>/etc/containerd/registry.sonkwotest.com/2_registry.sonkwotest.com.key<span class="pl-pds">"</span></span> <span class="pl-c"><span class="pl-c">#</span> harbor 私钥 </span>
-        [plugins.<span class="pl-s"><span class="pl-pds">"</span>io.containerd.grpc.v1.cri<span class="pl-pds">"</span></span>.registry.configs.<span class="pl-s"><span class="pl-pds">"</span>registry.sonkwotest.com<span class="pl-pds">"</span></span>.auth]
+          ca_file = <span class="pl-s"><span class="pl-pds">"</span>/etc/containerd/registry.xxx.com/1_registry.xxx.com_bundle.crt<span class="pl-pds">"</span></span> <span class="pl-c"><span class="pl-c">#</span> CA 证书</span>
+          cert_file = <span class="pl-s"><span class="pl-pds">"</span>/etc/containerd/registry.xxx.com/1_registry.xxx.com_bundle.crt<span class="pl-pds">"</span></span> <span class="pl-c"><span class="pl-c">#</span> harbor 证书</span>
+          key_file = <span class="pl-s"><span class="pl-pds">"</span>/etc/containerd/registry.xxx.com/2_registry.xxx.com.key<span class="pl-pds">"</span></span> <span class="pl-c"><span class="pl-c">#</span> harbor 私钥 </span>
+        [plugins.<span class="pl-s"><span class="pl-pds">"</span>io.containerd.grpc.v1.cri<span class="pl-pds">"</span></span>.registry.configs.<span class="pl-s"><span class="pl-pds">"</span>registry.xxx.com<span class="pl-pds">"</span></span>.auth]
           username = <span class="pl-s"><span class="pl-pds">"</span>jenkins<span class="pl-pds">"</span></span> <span class="pl-c"><span class="pl-c">#</span> 在harbor里单独创建的用户，授权访问指定项目</span>
           password = <span class="pl-s"><span class="pl-pds">"</span>new2020!Ceasia#<span class="pl-pds">"</span></span></pre></div>
 <h3>配置镜像仓库secrets</h3>
@@ -807,7 +807,7 @@ vim /etc/containerd/config.toml
   sandbox_image = <span class="pl-s"><span class="pl-pds">"</span>registry.aliyuncs.com/google_containers/pause:3.6<span class="pl-pds">"</span></span></pre></div>
 <p><strong>crictl报错</strong></p>
 <div class="highlight highlight-source-shell"><pre class="notranslate">WARN[0000] image connect using default endpoints: [unix:///var/run/dockershim.sock unix:///run/containerd/containerd.sock unix:///run/crio/crio.sock unix:///var/run/cri-dockerd.sock]. As the default settings are now deprecated, you should <span class="pl-c1">set</span> the endpoint instead. 
-E1124 15:59:57.619574 2290376 remote_image.go:171] <span class="pl-s"><span class="pl-pds">"</span>PullImage from image service failed<span class="pl-pds">"</span></span> err=<span class="pl-s"><span class="pl-pds">"</span>rpc error: code = Unavailable desc = connection error: desc = <span class="pl-cce">\"</span>transport: Error while dialing dial unix /var/run/dockershim.sock: connect: no such file or directory<span class="pl-cce">\"</span><span class="pl-pds">"</span></span> image=<span class="pl-s"><span class="pl-pds">"</span>registry.sonkwotest.com/ceasia_test/sk-biz-eureka:20231124152125<span class="pl-pds">"</span></span>
+E1124 15:59:57.619574 2290376 remote_image.go:171] <span class="pl-s"><span class="pl-pds">"</span>PullImage from image service failed<span class="pl-pds">"</span></span> err=<span class="pl-s"><span class="pl-pds">"</span>rpc error: code = Unavailable desc = connection error: desc = <span class="pl-cce">\"</span>transport: Error while dialing dial unix /var/run/dockershim.sock: connect: no such file or directory<span class="pl-cce">\"</span><span class="pl-pds">"</span></span> image=<span class="pl-s"><span class="pl-pds">"</span>registry.xxx.com/ceasia_test/sk-biz-eureka:20231124152125<span class="pl-pds">"</span></span>
 FATA[0000] pulling image: rpc error: code = Unavailable desc = connection error: desc = <span class="pl-s"><span class="pl-pds">"</span>transport: Error while dialing dial unix /var/run/dockershim.sock: connect: no such file or directory<span class="pl-pds">"</span></span> 
 
 crictl config runtime-endpoint unix:///var/run/containerd/containerd.sock</pre></div>
