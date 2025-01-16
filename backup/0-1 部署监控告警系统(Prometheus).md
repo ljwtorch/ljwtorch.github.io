@@ -62,11 +62,10 @@ services:
     restart: always
     volumes:
       - ./dingtalk-webhook/config.yml:/etc/prometheus-webhook-dingtalk/config.yml
-      - ./dingtalk-webhook/prometheus-webhook-dingtalk:/prometheus-webhook-dingtalk
       - ./dingtalk-webhook/templates:/etc/prometheus-webhook-dingtalk/templates
     ports:
       - 8060:8060
-    command: "--web.enable-ui"
+    command: ["--config.file=/etc/prometheus-webhook-dingtalk/config.yml", "--web.enable-ui", "--web.enable-lifecycle"]
     networks:
       - monitor
     container_name: dingtalk-webhook

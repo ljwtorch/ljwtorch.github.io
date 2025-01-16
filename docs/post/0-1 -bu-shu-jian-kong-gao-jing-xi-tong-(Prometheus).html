@@ -74,11 +74,10 @@ services:
     restart: always
     volumes:
       - ./dingtalk-webhook/config.yml:/etc/prometheus-webhook-dingtalk/config.yml
-      - ./dingtalk-webhook/prometheus-webhook-dingtalk:/prometheus-webhook-dingtalk
       - ./dingtalk-webhook/templates:/etc/prometheus-webhook-dingtalk/templates
     ports:
       - 8060:8060
-    command: '--web.enable-ui'
+    command: ['--config.file=/etc/prometheus-webhook-dingtalk/config.yml', '--web.enable-ui', '--web.enable-lifecycle']
     networks:
       - monitor
     container_name: dingtalk-webhook
@@ -617,11 +616,10 @@ services:
     restart: always
     volumes:
       - ./dingtalk-webhook/config.yml:/etc/prometheus-webhook-dingtalk/config.yml
-      - ./dingtalk-webhook/prometheus-webhook-dingtalk:/prometheus-webhook-dingtalk
       - ./dingtalk-webhook/templates:/etc/prometheus-webhook-dingtalk/templates
     ports:
       - 8060:8060
-    command: '--web.enable-ui'
+    command: ['--config.file=/etc/prometheus-webhook-dingtalk/config.yml', '--web.enable-ui', '--web.enable-lifecycle']
     networks:
       - monitor
     container_name: dingtalk-webhook
@@ -1227,11 +1225,10 @@ body{box-sizing: border-box;min-width: 200px;max-width: 900px;margin: 20px auto;
     <span class="pl-ent">restart</span>: <span class="pl-s">always</span>
     <span class="pl-ent">volumes</span>:
       - <span class="pl-s">./dingtalk-webhook/config.yml:/etc/prometheus-webhook-dingtalk/config.yml</span>
-      - <span class="pl-s">./dingtalk-webhook/prometheus-webhook-dingtalk:/prometheus-webhook-dingtalk</span>
       - <span class="pl-s">./dingtalk-webhook/templates:/etc/prometheus-webhook-dingtalk/templates</span>
     <span class="pl-ent">ports</span>:
       - <span class="pl-c1">8060:8060</span>
-    <span class="pl-ent">command</span>: <span class="pl-s"><span class="pl-pds">"</span>--web.enable-ui<span class="pl-pds">"</span></span>
+    <span class="pl-ent">command</span>: <span class="pl-s">["--config.file=/etc/prometheus-webhook-dingtalk/config.yml", "--web.enable-ui", "--web.enable-lifecycle"]</span>
     <span class="pl-ent">networks</span>:
       - <span class="pl-s">monitor</span>
     <span class="pl-ent">container_name</span>: <span class="pl-s">dingtalk-webhook</span>
