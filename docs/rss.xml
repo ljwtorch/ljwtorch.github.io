@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<rss xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/" version="2.0"><channel><title>V's Blog</title><link>https://blog.witter.top</link><description>自有清风常载鹤，从无猜意不惊鸥。</description><copyright>V's Blog</copyright><docs>http://www.rssboard.org/rss-specification</docs><generator>python-feedgen</generator><image><url>https://img.witter.top/file/b037878209903b7d5bb17.jpg</url><title>avatar</title><link>https://blog.witter.top</link></image><lastBuildDate>Wed, 02 Jul 2025 03:13:01 +0000</lastBuildDate><managingEditor>V's Blog</managingEditor><ttl>60</ttl><webMaster>V's Blog</webMaster><item><title>Jenkins Pipeline 分步发布+镜像回滚</title><link>https://blog.witter.top/post/Jenkins%20Pipeline%20-fen-bu-fa-bu-%2B-jing-xiang-hui-gun.html</link><description>```groovy
+<rss xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/" version="2.0"><channel><title>V's Blog</title><link>https://blog.witter.top</link><description>自有清风常载鹤，从无猜意不惊鸥。</description><copyright>V's Blog</copyright><docs>http://www.rssboard.org/rss-specification</docs><generator>python-feedgen</generator><image><url>https://img.witter.top/file/b037878209903b7d5bb17.jpg</url><title>avatar</title><link>https://blog.witter.top</link></image><lastBuildDate>Wed, 16 Jul 2025 15:22:21 +0000</lastBuildDate><managingEditor>V's Blog</managingEditor><ttl>60</ttl><webMaster>V's Blog</webMaster><item><title>Jenkins Pipeline 分步发布+镜像回滚</title><link>https://blog.witter.top/post/Jenkins%20Pipeline%20-fen-bu-fa-bu-%2B-jing-xiang-hui-gun.html</link><description>```groovy
 pipeline {
     agent {
         label 'built-in'
@@ -139,7 +139,9 @@ pipeline {
 }
 ```
 
-- **镜像版本控制**：通过时间戳确保每次构建生成唯一镜像。</description><guid isPermaLink="true">https://blog.witter.top/post/Jenkins%20Pipeline%20-fen-bu-fa-bu-%2B-jing-xiang-hui-gun.html</guid><pubDate>Wed, 02 Jul 2025 03:12:29 +0000</pubDate></item><item><title>Nginx sub_filter指令的使用</title><link>https://blog.witter.top/post/Nginx%20sub_filter-zhi-ling-de-shi-yong.html</link><description>### 配置：
+- **镜像版本控制**：通过时间戳确保每次构建生成唯一镜像。</description><guid isPermaLink="true">https://blog.witter.top/post/Jenkins%20Pipeline%20-fen-bu-fa-bu-%2B-jing-xiang-hui-gun.html</guid><pubDate>Wed, 02 Jul 2025 03:12:29 +0000</pubDate></item><item><title>Nginx部分模块配置的使用</title><link>https://blog.witter.top/post/Nginx-bu-fen-mo-kuai-pei-zhi-de-shi-yong.html</link><description>### sub_filter 指令的使用
+
+#### 配置：
 
  ```nginx
 location / {
@@ -160,7 +162,7 @@ location / {
  ```
 
 1. **`sub_filter`**
-   - 将响应内容中的字符串 `https://static.sonkwo.hk/partner/assets` 替换为 `/build`。</description><guid isPermaLink="true">https://blog.witter.top/post/Nginx%20sub_filter-zhi-ling-de-shi-yong.html</guid><pubDate>Wed, 02 Jul 2025 02:46:30 +0000</pubDate></item><item><title>Docker 配置拉取镜像代理</title><link>https://blog.witter.top/post/Docker%20-pei-zhi-la-qu-jing-xiang-dai-li.html</link><description>&gt; 对 `docker daemon` 配置额外的环境变量，来使 `docker pull` 指令经过网络代理访问&#13;
+   - 将响应内容中的字符串 `https://static.sonkwo.hk/partner/assets` 替换为 `/build`。</description><guid isPermaLink="true">https://blog.witter.top/post/Nginx-bu-fen-mo-kuai-pei-zhi-de-shi-yong.html</guid><pubDate>Wed, 02 Jul 2025 02:46:30 +0000</pubDate></item><item><title>Docker 配置拉取镜像代理</title><link>https://blog.witter.top/post/Docker%20-pei-zhi-la-qu-jing-xiang-dai-li.html</link><description>&gt; 对 `docker daemon` 配置额外的环境变量，来使 `docker pull` 指令经过网络代理访问&#13;
 &gt;&#13;
 &gt; 参考文档：[DockerDocs:Daemon proxy configuration](https://docs.docker.com/engine/daemon/proxy/#environment-variables)&#13;
 &#13;
