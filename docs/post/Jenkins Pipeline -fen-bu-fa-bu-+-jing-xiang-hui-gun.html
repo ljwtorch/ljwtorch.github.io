@@ -505,7 +505,100 @@ body{box-sizing: border-box;min-width: 200px;max-width: 900px;margin: 20px auto;
 <li><strong>安全认证</strong>：使用 Jenkins 凭证管理 Git 和 Docker 仓库的账号密码。</li>
 <li><strong>灰度与回滚</strong>：先停服再更新，保留旧镜像快速回滚。</li>
 <li><strong>人工干预</strong>：关键步骤需人工确认，避免全自动部署的风险</li>
-</ul></div>
+</ul>
+<h2>Jenkins Pipeline 通过接口获取镜像tag并应用</h2>
+<div class="highlight highlight-source-groovy"><pre class="notranslate">pipeline {
+    agent {
+        label <span class="pl-s"><span class="pl-pds">'</span>built-in<span class="pl-pds">'</span></span>
+    }
+    environment {
+        <span class="pl-c1">SERVICE_NAME</span> <span class="pl-k">=</span> <span class="pl-s"><span class="pl-pds">"</span><span class="pl-pds">"</span></span>
+        <span class="pl-c1">DOCKER_REGISTER_CREDS</span> <span class="pl-k">=</span> credentials(<span class="pl-s"><span class="pl-pds">'</span>registry_prod<span class="pl-pds">'</span></span>)
+        <span class="pl-c1">DOCKER_REGISTRY</span> <span class="pl-k">=</span> <span class="pl-s"><span class="pl-pds">"</span>registry-vpc.cn-beijing.aliyuncs.com<span class="pl-pds">"</span></span>
+        <span class="pl-c1">DOCKER_OUTSIDE_REGISTRY</span> <span class="pl-k">=</span> <span class="pl-s"><span class="pl-pds">"</span>registry.cn-beijing.aliyuncs.com<span class="pl-pds">"</span></span>
+        <span class="pl-c1">DOCKER_NAMESPACE</span> <span class="pl-k">=</span> <span class="pl-s"><span class="pl-pds">"</span><span class="pl-pds">"</span></span>
+        <span class="pl-c1">DOCKER_IMAGE</span> <span class="pl-k">=</span> <span class="pl-s"><span class="pl-pds">"</span><span class="pl-s1"><span class="pl-pse">${</span>DOCKER_REGISTRY<span class="pl-pse">}</span></span>/<span class="pl-s1"><span class="pl-pse">${</span>DOCKER_NAMESPACE<span class="pl-pse">}</span></span>/<span class="pl-s1"><span class="pl-pse">${</span>CONTAINER_NAME<span class="pl-pse">}</span></span><span class="pl-pds">"</span></span>
+        <span class="pl-c1">DOCKER_OUTSIDE_IMAGE</span> <span class="pl-k">=</span> <span class="pl-s"><span class="pl-pds">"</span><span class="pl-s1"><span class="pl-pse">${</span>DOCKER_OUTSIDE_REGISTRY<span class="pl-pse">}</span></span>/<span class="pl-s1"><span class="pl-pse">${</span>DOCKER_NAMESPACE<span class="pl-pse">}</span></span>/<span class="pl-s1"><span class="pl-pse">${</span>CONTAINER_NAME<span class="pl-pse">}</span></span><span class="pl-pds">"</span></span>
+        <span class="pl-c1">FULL_IMAGE</span> <span class="pl-k">=</span> <span class="pl-s"><span class="pl-pds">"</span><span class="pl-pds">"</span></span>
+    }
+    stages {
+        stage(<span class="pl-s"><span class="pl-pds">'</span>get image tags<span class="pl-pds">'</span></span>) {
+            steps {
+                script {
+                    <span class="pl-c"><span class="pl-c">//</span> 获取可用 tag 列表</span>
+                    <span class="pl-k">def</span> tags <span class="pl-k">=</span> getTagsFromAPI(env<span class="pl-k">.</span><span class="pl-c1">SERVICE_NAME</span>)
+                    <span class="pl-c"><span class="pl-c">//</span> 使用 input 步骤让用户选择 tag</span>
+                    <span class="pl-k">def</span> selectedTag <span class="pl-k">=</span> input(
+                        <span class="pl-c1">message</span>: <span class="pl-s"><span class="pl-pds">'</span>请选择要部署的镜像 Tag<span class="pl-pds">'</span></span>,
+                        <span class="pl-c1">parameters</span>: [
+                            choice(
+                                <span class="pl-c1">name</span>: <span class="pl-s"><span class="pl-pds">'</span>IMAGE_TAG<span class="pl-pds">'</span></span>,
+                                <span class="pl-c1">choices</span>: tags,
+                                <span class="pl-c1">description</span>: <span class="pl-s"><span class="pl-pds">'</span>可用镜像 Tag 列表<span class="pl-pds">'</span></span>
+                            )
+                        ]
+                    )
+                    <span class="pl-c"><span class="pl-c">//</span> 将选择的 tag 保存到环境变量</span>
+                    env<span class="pl-k">.</span><span class="pl-c1">IMAGE_TAG</span> <span class="pl-k">=</span> selectedTag
+                    <span class="pl-c"><span class="pl-c">//</span> 拼接全局镜像变量</span>
+                    env<span class="pl-k">.</span><span class="pl-c1">FULL_IMAGE</span> <span class="pl-k">=</span> <span class="pl-s"><span class="pl-pds">"</span><span class="pl-s1"><span class="pl-pse">${</span>env.DOCKER_OUTSIDE_REGISTRY<span class="pl-pse">}</span></span>/<span class="pl-s1"><span class="pl-pse">${</span>env.DOCKER_NAMESPACE<span class="pl-pse">}</span></span>/<span class="pl-s1"><span class="pl-pse">${</span>env.SERVICE_NAME<span class="pl-pse">}</span></span>:<span class="pl-s1"><span class="pl-pse">${</span>env.IMAGE_TAG<span class="pl-pse">}</span></span><span class="pl-pds">"</span></span>
+                    echo <span class="pl-s"><span class="pl-pds">"</span>准备镜像回滚服务: <span class="pl-s1"><span class="pl-pse">${</span>env.SERVICE_NAME<span class="pl-pse">}</span></span><span class="pl-pds">"</span></span>
+                    echo <span class="pl-s"><span class="pl-pds">"</span>使用镜像: <span class="pl-s1"><span class="pl-pse">${</span>env.FULL_IMAGE<span class="pl-pse">}</span></span><span class="pl-pds">"</span></span>
+                }
+            }
+        }
+        stage(<span class="pl-s"><span class="pl-pds">'</span>publish cn on xxx<span class="pl-pds">'</span></span>){
+            steps {
+                script {
+                sshagent(<span class="pl-c1">credentials</span>: [<span class="pl-s"><span class="pl-pds">'</span><span class="pl-pds">'</span></span>]) {
+                    sh <span class="pl-s"><span class="pl-pds">"""</span></span>
+<span class="pl-s">                    ssh -o StrictHostKeyChecking=no root@xxx /bin/bash -c '</span>
+<span class="pl-s">                    '</span>
+<span class="pl-s">                    <span class="pl-pds">"""</span></span>
+                }
+                }
+            }
+        }
+        stage(<span class="pl-s"><span class="pl-pds">'</span>publish cn on xxxx<span class="pl-pds">'</span></span>){
+            steps {
+                sshagent(<span class="pl-c1">credentials</span>: [<span class="pl-s"><span class="pl-pds">'</span><span class="pl-pds">'</span></span>]) {
+                sh <span class="pl-s"><span class="pl-pds">"""</span></span>
+<span class="pl-s">                 ssh -o StrictHostKeyChecking=no root@xxxx /bin/bash -c '</span>
+<span class="pl-s">                '</span>
+<span class="pl-s">                <span class="pl-pds">"""</span></span>
+                }
+            }
+        }
+    }
+}
+
+<span class="pl-c"><span class="pl-c">//</span> 从动态 URL 获取标签列表</span>
+<span class="pl-k">def</span> <span class="pl-en">getTagsFromAPI</span>(<span class="pl-v">serviceName</span>) {
+    <span class="pl-k">def</span> url <span class="pl-k">=</span> <span class="pl-s"><span class="pl-pds">"</span>https://xxxx/image_record/<span class="pl-s1"><span class="pl-pse">${</span>serviceName<span class="pl-pse">}</span></span><span class="pl-pds">"</span></span>
+    <span class="pl-k">try</span> {
+        <span class="pl-k">def</span> response <span class="pl-k">=</span> sh(<span class="pl-c1">script</span>: <span class="pl-s"><span class="pl-pds">"</span>curl -s <span class="pl-s1"><span class="pl-pse">${</span>url<span class="pl-pse">}</span></span><span class="pl-pds">"</span></span>, <span class="pl-c1">returnStdout</span>: <span class="pl-c1">true</span>)<span class="pl-k">.</span>trim()
+        <span class="pl-c"><span class="pl-c">//</span> 检查响应是否为空</span>
+        <span class="pl-k">if</span> (<span class="pl-k">!</span>response) {
+            echo <span class="pl-s"><span class="pl-pds">"</span>API 返回空响应，使用默认 tag<span class="pl-pds">"</span></span>
+            <span class="pl-k">return</span> [<span class="pl-s"><span class="pl-pds">'</span>latest<span class="pl-pds">'</span></span>]
+        }
+        <span class="pl-c"><span class="pl-c">//</span> 解析 JSON 响应</span>
+        <span class="pl-k">def</span> json <span class="pl-k">=</span> readJSON <span class="pl-c1">text</span>: response
+        <span class="pl-k">if</span> (json<span class="pl-k">.</span>code <span class="pl-k">==</span> <span class="pl-c1">404</span>) {
+            echo <span class="pl-s"><span class="pl-pds">"</span>API 返回 404 : <span class="pl-s1"><span class="pl-pse">${</span>json.msg ?: '无错误信息'<span class="pl-pse">}</span></span>，使用默认 tag<span class="pl-pds">"</span></span>
+            <span class="pl-k">return</span> [<span class="pl-s"><span class="pl-pds">'</span>latest<span class="pl-pds">'</span></span>]
+        }
+        <span class="pl-k">if</span> (json<span class="pl-k">.</span>tag <span class="pl-k">&amp;&amp;</span> json<span class="pl-k">.</span>tag <span class="pl-k">instanceof</span> <span class="pl-k">List</span> <span class="pl-k">&amp;&amp;</span> <span class="pl-k">!</span>json<span class="pl-k">.</span>tag<span class="pl-k">.</span>isEmpty()) {
+            <span class="pl-k">return</span> json<span class="pl-k">.</span>tag
+        } <span class="pl-k">else</span> {
+            echo <span class="pl-s"><span class="pl-pds">"</span>tag 字段不存在或为空，使用默认 tag<span class="pl-pds">"</span></span>
+            <span class="pl-k">return</span> [<span class="pl-s"><span class="pl-pds">'</span>latest<span class="pl-pds">'</span></span>]
+        }
+    } <span class="pl-k">catch</span> (<span class="pl-k">Exception</span> e) {
+        echo <span class="pl-s"><span class="pl-pds">"</span>获取标签列表失败: <span class="pl-s1"><span class="pl-pse">${</span>e.getMessage()<span class="pl-pse">}</span></span><span class="pl-pds">"</span></span>
+        <span class="pl-k">return</span> [<span class="pl-s"><span class="pl-pds">'</span>latest<span class="pl-pds">'</span></span>] <span class="pl-c"><span class="pl-c">//</span> 返回默认选项</span>
+    }
+}</pre></div></div>
 <div style="font-size:small;margin-top:8px;float:right;">🍺转载文章请注明出处，谢谢！🍺</div>
 
 <button class="btn btn-block" type="button" onclick="openComments()" id="cmButton">评论</button>

@@ -142,3 +142,101 @@ pipeline {
 - **安全认证**：使用 Jenkins 凭证管理 Git 和 Docker 仓库的账号密码。
 - **灰度与回滚**：先停服再更新，保留旧镜像快速回滚。
 - **人工干预**：关键步骤需人工确认，避免全自动部署的风险
+
+## Jenkins Pipeline 通过接口获取镜像tag并应用
+
+```groovy
+pipeline {
+    agent {
+        label 'built-in'
+    }
+    environment {
+        SERVICE_NAME = ""
+        DOCKER_REGISTER_CREDS = credentials('registry_prod')
+        DOCKER_REGISTRY = "registry-vpc.cn-beijing.aliyuncs.com"
+        DOCKER_OUTSIDE_REGISTRY = "registry.cn-beijing.aliyuncs.com"
+        DOCKER_NAMESPACE = ""
+        DOCKER_IMAGE = "${DOCKER_REGISTRY}/${DOCKER_NAMESPACE}/${CONTAINER_NAME}"
+        DOCKER_OUTSIDE_IMAGE = "${DOCKER_OUTSIDE_REGISTRY}/${DOCKER_NAMESPACE}/${CONTAINER_NAME}"
+        FULL_IMAGE = ""
+    }
+    stages {
+        stage('get image tags') {
+            steps {
+                script {
+                    // 获取可用 tag 列表
+                    def tags = getTagsFromAPI(env.SERVICE_NAME)
+                    // 使用 input 步骤让用户选择 tag
+                    def selectedTag = input(
+                        message: '请选择要部署的镜像 Tag',
+                        parameters: [
+                            choice(
+                                name: 'IMAGE_TAG',
+                                choices: tags,
+                                description: '可用镜像 Tag 列表'
+                            )
+                        ]
+                    )
+                    // 将选择的 tag 保存到环境变量
+                    env.IMAGE_TAG = selectedTag
+                    // 拼接全局镜像变量
+                    env.FULL_IMAGE = "${env.DOCKER_OUTSIDE_REGISTRY}/${env.DOCKER_NAMESPACE}/${env.SERVICE_NAME}:${env.IMAGE_TAG}"
+                    echo "准备镜像回滚服务: ${env.SERVICE_NAME}"
+                    echo "使用镜像: ${env.FULL_IMAGE}"
+                }
+            }
+        }
+        stage('publish cn on xxx'){
+            steps {
+                script {
+                sshagent(credentials: ['']) {
+                    sh """
+                    ssh -o StrictHostKeyChecking=no root@xxx /bin/bash -c '
+                    '
+                    """
+                }
+                }
+            }
+        }
+        stage('publish cn on xxxx'){
+            steps {
+                sshagent(credentials: ['']) {
+                sh """
+                 ssh -o StrictHostKeyChecking=no root@xxxx /bin/bash -c '
+                '
+                """
+                }
+            }
+        }
+    }
+}
+
+// 从动态 URL 获取标签列表
+def getTagsFromAPI(serviceName) {
+    def url = "https://xxxx/image_record/${serviceName}"
+    try {
+        def response = sh(script: "curl -s ${url}", returnStdout: true).trim()
+        // 检查响应是否为空
+        if (!response) {
+            echo "API 返回空响应，使用默认 tag"
+            return ['latest']
+        }
+        // 解析 JSON 响应
+        def json = readJSON text: response
+        if (json.code == 404) {
+            echo "API 返回 404 : ${json.msg ?: '无错误信息'}，使用默认 tag"
+            return ['latest']
+        }
+        if (json.tag && json.tag instanceof List && !json.tag.isEmpty()) {
+            return json.tag
+        } else {
+            echo "tag 字段不存在或为空，使用默认 tag"
+            return ['latest']
+        }
+    } catch (Exception e) {
+        echo "获取标签列表失败: ${e.getMessage()}"
+        return ['latest'] // 返回默认选项
+    }
+}
+```
+
