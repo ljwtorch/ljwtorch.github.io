@@ -1097,7 +1097,7 @@ org_role = 'Editor'
 <meta property="og:url" content="https://blog.witter.top/post/0-1%20-bu-shu-jian-kong-gao-jing-xi-tong-%28Prometheus%29.html">
 <meta property="og:image" content="https://img.witter.top/file/b037878209903b7d5bb17.jpg">
 <title>0-1 部署监控告警系统(Prometheus)</title>
-<link href="//unpkg.com/@wooorm/starry-night@2.1.1/style/both.css" rel="stylesheet" />
+
 
 
 </head>
@@ -1121,17 +1121,7 @@ body{box-sizing: border-box;min-width: 200px;max-width: 900px;margin: 20px auto;
     body {padding: 8px;}
     .postTitle{font-size:24px;}
 }
-.copy-feedback {
-    display: none;
-    position: absolute;
-    top: 10px;
-    right: 50px;
-    color: var(--color-fg-on-emphasis);
-    background-color: var(--color-fg-muted);
-    border-radius: 3px;
-    padding: 5px 8px;
-    font-size: 12px;
-}
+
 </style>
 
 
@@ -1164,92 +1154,93 @@ body{box-sizing: border-box;min-width: 200px;max-width: 900px;margin: 20px auto;
 </div>
     <div id="content">
 <div class="markdown-body" id="postBody"><p><strong>完整docker-compose.yml</strong></p>
-<div class="highlight highlight-source-yaml"><pre class="notranslate"><span class="pl-ent">networks</span>:
-  <span class="pl-ent">monitor</span>:
-    <span class="pl-ent">name</span>: <span class="pl-s">monitor</span>
-    <span class="pl-ent">driver</span>: <span class="pl-s">bridge</span>
+<pre lang="yaml" class="notranslate"><code class="notranslate">networks:
+  monitor:
+    name: monitor
+    driver: bridge
 
-<span class="pl-ent">services</span>:
-  <span class="pl-ent">prometheus</span>:
-    <span class="pl-ent">image</span>: <span class="pl-s">prom/prometheus:latest</span>
-    <span class="pl-ent">ports</span>:
-      - <span class="pl-c1">9090:9090</span>
-    <span class="pl-ent">restart</span>: <span class="pl-s">always</span>
-    <span class="pl-ent">volumes</span>:
-      - <span class="pl-s">./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml</span>
-      - <span class="pl-s">./prometheus/:/etc/prometheus</span>
-    <span class="pl-ent">networks</span>:
-      - <span class="pl-s">monitor</span>
-    <span class="pl-ent">container_name</span>: <span class="pl-s">prometheus</span>
-    <span class="pl-ent">environment</span>:
-      - <span class="pl-s">--web.enable-admin-api</span>
-      - <span class="pl-s">--web.enable-lifecycle</span>
+services:
+  prometheus:
+    image: prom/prometheus:latest
+    ports:
+      - 9090:9090
+    restart: always
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - ./prometheus/:/etc/prometheus
+    networks:
+      - monitor
+    container_name: prometheus
+    environment:
+      - --web.enable-admin-api
+      - --web.enable-lifecycle
 
-  <span class="pl-ent">node-exporter</span>:
-    <span class="pl-ent">image</span>: <span class="pl-s">quay.io/prometheus/node-exporter:latest</span>
-    <span class="pl-ent">container_name</span>: <span class="pl-s">node-exporter</span>
-    <span class="pl-ent">restart</span>: <span class="pl-s">always</span>
-    <span class="pl-ent">network_mode</span>: <span class="pl-s">host</span>
-    <span class="pl-ent">pid</span>: <span class="pl-s">host</span>
-    <span class="pl-ent">volumes</span>:
-      - <span class="pl-s">/:/host:ro,rslave</span>
-    <span class="pl-ent">command</span>: <span class="pl-s">--path.rootfs=/host</span>
-    <span class="pl-ent">depends_on</span>:
-      - <span class="pl-s">prometheus</span>
+  node-exporter:
+    image: quay.io/prometheus/node-exporter:latest
+    container_name: node-exporter
+    restart: always
+    network_mode: host
+    pid: host
+    volumes:
+      - /:/host:ro,rslave
+    command: --path.rootfs=/host
+    depends_on:
+      - prometheus
 
-  <span class="pl-ent">blackbox-exporter</span>:
-    <span class="pl-ent">image</span>: <span class="pl-s">quay.io/prometheus/blackbox-exporter:latest</span>
-    <span class="pl-ent">container_name</span>: <span class="pl-s">blackbox-exporter</span>
-    <span class="pl-ent">restart</span>: <span class="pl-s">always</span>
-    <span class="pl-ent">ports</span>:
-      - <span class="pl-s"><span class="pl-pds">"</span>9115:9115<span class="pl-pds">"</span></span>
-    <span class="pl-ent">volumes</span>:
-      - <span class="pl-s">./blackbox-exporter/:/config</span>
-    <span class="pl-ent">command</span>: <span class="pl-s">--config.file=/config/blackbox.yml</span>
-    <span class="pl-ent">depends_on</span>:
-      - <span class="pl-s">prometheus</span>
+  blackbox-exporter:
+    image: quay.io/prometheus/blackbox-exporter:latest
+    container_name: blackbox-exporter
+    restart: always
+    ports:
+      - "9115:9115"
+    volumes:
+      - ./blackbox-exporter/:/config
+    command: --config.file=/config/blackbox.yml
+    depends_on:
+      - prometheus
 
-  <span class="pl-ent">alertmanager</span>:
-      <span class="pl-ent">image</span>: <span class="pl-s">prom/alertmanager:latest</span>
-      <span class="pl-ent">container_name</span>: <span class="pl-s">alertmanager</span>
-      <span class="pl-ent">restart</span>: <span class="pl-s">always</span>
-      <span class="pl-ent">volumes</span>:
-          - <span class="pl-s">./alertmanager/alertmanager.yml:/etc/alertmanager/alertmanager.yml</span>
-      <span class="pl-ent">ports</span>:
-          - <span class="pl-s"><span class="pl-pds">"</span>9093:9093<span class="pl-pds">"</span></span>
-      <span class="pl-ent">networks</span>:
-          - <span class="pl-s">monitor</span>
+  alertmanager:
+      image: prom/alertmanager:latest
+      container_name: alertmanager
+      restart: always
+      volumes:
+          - ./alertmanager/alertmanager.yml:/etc/alertmanager/alertmanager.yml
+      ports:
+          - "9093:9093"
+      networks:
+          - monitor
 
-  <span class="pl-ent">dingtalk-webhook</span>:
-    <span class="pl-ent">image</span>: <span class="pl-s">timonwong/prometheus-webhook-dingtalk:latest</span>
-    <span class="pl-ent">restart</span>: <span class="pl-s">always</span>
-    <span class="pl-ent">volumes</span>:
-      - <span class="pl-s">./dingtalk-webhook/config.yml:/etc/prometheus-webhook-dingtalk/config.yml</span>
-      - <span class="pl-s">./dingtalk-webhook/templates:/etc/prometheus-webhook-dingtalk/templates</span>
-    <span class="pl-ent">ports</span>:
-      - <span class="pl-c1">8060:8060</span>
-    <span class="pl-ent">command</span>: <span class="pl-s">["--config.file=/etc/prometheus-webhook-dingtalk/config.yml", "--web.enable-ui", "--web.enable-lifecycle"]</span>
-    <span class="pl-ent">networks</span>:
-      - <span class="pl-s">monitor</span>
-    <span class="pl-ent">container_name</span>: <span class="pl-s">dingtalk-webhook</span>
-    <span class="pl-ent">depends_on</span>:
-      - <span class="pl-s">prometheus</span>
-      - <span class="pl-s">node-exporter</span>
-      - <span class="pl-s">blackbox-exporter</span>
+  dingtalk-webhook:
+    image: timonwong/prometheus-webhook-dingtalk:latest
+    restart: always
+    volumes:
+      - ./dingtalk-webhook/config.yml:/etc/prometheus-webhook-dingtalk/config.yml
+      - ./dingtalk-webhook/templates:/etc/prometheus-webhook-dingtalk/templates
+    ports:
+      - 8060:8060
+    command: ["--config.file=/etc/prometheus-webhook-dingtalk/config.yml", "--web.enable-ui", "--web.enable-lifecycle"]
+    networks:
+      - monitor
+    container_name: dingtalk-webhook
+    depends_on:
+      - prometheus
+      - node-exporter
+      - blackbox-exporter
 
-  <span class="pl-ent">grafana</span>:
-    <span class="pl-ent">image</span>: <span class="pl-s">grafana/grafana-enterprise</span>
-    <span class="pl-ent">user</span>: <span class="pl-s">root</span>
-    <span class="pl-ent">restart</span>: <span class="pl-s">always</span>
-    <span class="pl-ent">ports</span>:
-      - <span class="pl-c1">3000:3000</span>
-    <span class="pl-ent">networks</span>:
-      - <span class="pl-s">monitor</span>
-    <span class="pl-ent">volumes</span>:
-      - <span class="pl-s">./grafana/data:/var/lib/grafana</span>
-    <span class="pl-ent">container_name</span>: <span class="pl-s">grafana</span>
-    <span class="pl-ent">depends_on</span>:
-      - <span class="pl-s">prometheus</span></pre></div>
+  grafana:
+    image: grafana/grafana-enterprise
+    user: root
+    restart: always
+    ports:
+      - 3000:3000
+    networks:
+      - monitor
+    volumes:
+      - ./grafana/data:/var/lib/grafana
+    container_name: grafana
+    depends_on:
+      - prometheus
+</code></pre>
 <h2>1.Prometheus</h2>
 <blockquote>
 <p>Prometheus只说明进行自我修改的部分，基本的安装步骤不再赘述！</p>
@@ -1257,33 +1248,34 @@ body{box-sizing: border-box;min-width: 200px;max-width: 900px;margin: 20px auto;
 <h3>1.1 部署方式</h3>
 <p><strong>本机部署</strong></p>
 <p>二进制文件[<a href="https://prometheus.io/download/" rel="nofollow">下载链接</a>](<a href="https://prometheus.io/download/" rel="nofollow">https://prometheus.io/download/</a>)</p>
-<div class="highlight highlight-source-shell"><pre class="notranslate"><span class="pl-c"><span class="pl-c">#</span> prometheus-2.53.0.linux-amd64.tar.gz 对下载后的二进制文件进行解压</span>
+<pre lang="shell" class="notranslate"><code class="notranslate"># prometheus-2.53.0.linux-amd64.tar.gz 对下载后的二进制文件进行解压
 
-<span class="pl-c"><span class="pl-c">#</span> 首次启动命令</span>
-nohup ./prometheus --config.file=prometheus.yml --storage.tsdb.retention.time=90d --web.enable-lifecycle <span class="pl-k">&amp;</span>
+# 首次启动命令
+nohup ./prometheus --config.file=prometheus.yml --storage.tsdb.retention.time=90d --web.enable-lifecycle &amp;
 
-<span class="pl-c"><span class="pl-c">#</span> check.sh -&gt; 二进制文件部署方式的热重载脚本</span>
-<span class="pl-c"><span class="pl-c">#</span>========================================</span>
-<span class="pl-c"><span class="pl-c">#!</span>/bin/bash</span>
-<span class="pl-c"><span class="pl-c">#</span> 定义Prometheus配置文件路径</span>
-prometheus_config=<span class="pl-s"><span class="pl-pds">"</span>./prometheus/prometheus.yml<span class="pl-pds">"</span></span>
-<span class="pl-c"><span class="pl-c">#</span> 检查配置文件</span>
-check_result=<span class="pl-s"><span class="pl-pds">$(</span>./promtool check config <span class="pl-s"><span class="pl-pds">"</span><span class="pl-smi">$prometheus_config</span><span class="pl-pds">"</span></span> <span class="pl-k">2&gt;&amp;1</span><span class="pl-pds">)</span></span>
-<span class="pl-k">if</span> [[ <span class="pl-smi">$check_result</span> <span class="pl-k">=~</span> <span class="pl-s"><span class="pl-pds">"</span>FAILED<span class="pl-pds">"</span></span> ]]<span class="pl-k">;</span> <span class="pl-k">then</span>
-  <span class="pl-c"><span class="pl-c">#</span> 配置文件检查失败，输出错误信息</span>
-  <span class="pl-c1">echo</span> <span class="pl-s"><span class="pl-pds">"</span>Prometheus config check failed!<span class="pl-pds">"</span></span>
-  <span class="pl-c1">echo</span> <span class="pl-s"><span class="pl-pds">"</span><span class="pl-smi">$check_result</span><span class="pl-pds">"</span></span>
-  <span class="pl-c1">exit</span> 1
-<span class="pl-k">else</span>
-  <span class="pl-c"><span class="pl-c">#</span> 配置文件检查成功，执行重载</span>
+# check.sh -&gt; 二进制文件部署方式的热重载脚本
+#========================================
+#!/bin/bash
+# 定义Prometheus配置文件路径
+prometheus_config="./prometheus/prometheus.yml"
+# 检查配置文件
+check_result=$(./promtool check config "$prometheus_config" 2&gt;&amp;1)
+if [[ $check_result =~ "FAILED" ]]; then
+  # 配置文件检查失败，输出错误信息
+  echo "Prometheus config check failed!"
+  echo "$check_result"
+  exit 1
+else
+  # 配置文件检查成功，执行重载
   curl -X POST http://localhost:9090/-/reload
-  <span class="pl-c1">echo</span> <span class="pl-s"><span class="pl-pds">"</span>Prometheus config check successful!<span class="pl-pds">"</span></span>
-<span class="pl-k">fi</span>
-<span class="pl-c"><span class="pl-c">#</span>========================================</span></pre></div>
+  echo "Prometheus config check successful!"
+fi
+#========================================
+</code></pre>
 <p><strong>systemd部署</strong></p>
-<div class="highlight highlight-source-shell"><pre class="notranslate"><span class="pl-c"><span class="pl-c">#</span> 可选添加用户</span>
+<pre lang="shell" class="notranslate"><code class="notranslate"># 可选添加用户
 sudo useradd --no-create-home --shell /bin/false prometheus
-<span class="pl-c"><span class="pl-c">#</span> prometheus.service 文件，优化tsdb存储空间、日志输出路径、文件打开数限制</span>
+# prometheus.service 文件，优化tsdb存储空间、日志输出路径、文件打开数限制
 
 [Unit]
 Description=Prometheus Monitoring System
@@ -1291,14 +1283,14 @@ After=network.target
 
 [Service]
 Type=simple
-ExecStart=/bin/bash -c <span class="pl-s"><span class="pl-pds">'</span>/home/xxx/monitor/prometheus/prometheus \</span>
-<span class="pl-s">  --config.file=/home/xxx/monitor/prometheus/prometheus.yml \</span>
-<span class="pl-s">  --storage.tsdb.retention.time=90d \</span>
-<span class="pl-s">  --storage.tsdb.min-block-duration=3h \</span>
-<span class="pl-s">  --storage.tsdb.max-block-duration=24h \</span>
-<span class="pl-s">  --web.external-url=http://xxxx \</span>
-<span class="pl-s">  --web.enable-lifecycle \</span>
-<span class="pl-s">  --log.level=info 2&gt;&amp;1 | tee -a /var/log/prometheus/prometheus.log<span class="pl-pds">'</span></span>
+ExecStart=/bin/bash -c '/home/xxx/monitor/prometheus/prometheus \
+  --config.file=/home/xxx/monitor/prometheus/prometheus.yml \
+  --storage.tsdb.retention.time=90d \
+  --storage.tsdb.min-block-duration=3h \
+  --storage.tsdb.max-block-duration=24h \
+  --web.external-url=http://xxxx \
+  --web.enable-lifecycle \
+  --log.level=info 2&gt;&amp;1 | tee -a /var/log/prometheus/prometheus.log'
 Restart=on-failure
 User=root
 LimitNOFILE=102400
@@ -1307,242 +1299,250 @@ WorkingDirectory=/home/xxx/monitor/prometheus
 [Install]
 WantedBy=multi-user.target
 
-<span class="pl-c"><span class="pl-c">#</span> 进行对应的初次重载命令</span>
+# 进行对应的初次重载命令
 sudo systemctl daemon-reload
-sudo systemctl <span class="pl-c1">enable</span> prometheus
+sudo systemctl enable prometheus
 sudo systemctl start prometheus
-sudo systemctl status prometheus</pre></div>
+sudo systemctl status prometheus
+</code></pre>
 <p><strong>docker-compose部署</strong></p>
-<div class="highlight highlight-source-yaml"><pre class="notranslate"><span class="pl-ent">networks</span>:
-  <span class="pl-ent">monitor</span>:
-    <span class="pl-ent">name</span>: <span class="pl-s">monitor</span>
-    <span class="pl-ent">driver</span>: <span class="pl-s">bridge</span>
+<pre lang="yaml" class="notranslate"><code class="notranslate">networks:
+  monitor:
+    name: monitor
+    driver: bridge
 
-<span class="pl-ent">services</span>:
-  <span class="pl-ent">prometheus</span>:
-    <span class="pl-ent">image</span>: <span class="pl-s">prom/prometheus:latest</span>
-    <span class="pl-ent">ports</span>:
-      - <span class="pl-c1">9090:9090</span>
-    <span class="pl-ent">restart</span>: <span class="pl-s">always</span>
-    <span class="pl-ent">volumes</span>:
-      - <span class="pl-s">./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml</span>
-      - <span class="pl-s">./prometheus/:/etc/prometheus</span>
-    <span class="pl-ent">networks</span>:
-      - <span class="pl-s">monitor</span>
-    <span class="pl-ent">container_name</span>: <span class="pl-s">prometheus</span>
-    <span class="pl-ent">environment</span>:
-      - <span class="pl-s">--web.enable-admin-api</span>
-      - <span class="pl-s">--web.enable-lifecycle</span></pre></div>
+services:
+  prometheus:
+    image: prom/prometheus:latest
+    ports:
+      - 9090:9090
+    restart: always
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - ./prometheus/:/etc/prometheus
+    networks:
+      - monitor
+    container_name: prometheus
+    environment:
+      - --web.enable-admin-api
+      - --web.enable-lifecycle
+</code></pre>
 <h3>1.2 主配置文件</h3>
 <blockquote>
 <p>采用Git+Jenkins(CI/CD)+Docker方式，通过本地编辑 -&gt; 推送Git -&gt; CI/CD执行拉取和热更新 -&gt; 完成配置文件修改步骤</p>
 </blockquote>
 <p><code class="notranslate">prometheus.yml</code></p>
-<div class="highlight highlight-source-yaml"><pre class="notranslate"><span class="pl-c"><span class="pl-c">#</span> my global config</span>
-<span class="pl-ent">global</span>:
-  <span class="pl-ent">scrape_interval</span>: <span class="pl-c1">15s</span> <span class="pl-c"><span class="pl-c">#</span> Set the scrape interval to every 15 seconds. Default is every 1 minute.</span>
-  <span class="pl-ent">evaluation_interval</span>: <span class="pl-c1">15s</span> <span class="pl-c"><span class="pl-c">#</span> Evaluate rules every 15 seconds. The default is every 1 minute.</span>
-  <span class="pl-c"><span class="pl-c">#</span> scrape_timeout is set to the global default (10s).</span>
+<pre lang="yaml" class="notranslate"><code class="notranslate"># my global config
+global:
+  scrape_interval: 15s # Set the scrape interval to every 15 seconds. Default is every 1 minute.
+  evaluation_interval: 15s # Evaluate rules every 15 seconds. The default is every 1 minute.
+  # scrape_timeout is set to the global default (10s).
 
-<span class="pl-c"><span class="pl-c">#</span> Alertmanager configuration</span>
-<span class="pl-ent">alerting</span>:
-  <span class="pl-ent">alertmanagers</span>:
-    - <span class="pl-ent">static_configs</span>:
-        - <span class="pl-ent">targets</span>:
-           - <span class="pl-s">alertmanager:9093</span>
+# Alertmanager configuration
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets:
+           - alertmanager:9093
 
-<span class="pl-c"><span class="pl-c">#</span> Load rules once and periodically evaluate them according to the global 'evaluation_interval'.</span>
-<span class="pl-c"><span class="pl-c">#</span> 可以为通配符路径，注意是宿主机路径还是容器路径</span>
-<span class="pl-ent">rule_files</span>:
-  <span class="pl-c"><span class="pl-c">#</span> - "first_rules.yml"</span>
-  <span class="pl-c"><span class="pl-c">#</span> - "second_rules.yml"</span>
-  - <span class="pl-s">./rules/*.yml</span>
+# Load rules once and periodically evaluate them according to the global 'evaluation_interval'.
+# 可以为通配符路径，注意是宿主机路径还是容器路径
+rule_files:
+  # - "first_rules.yml"
+  # - "second_rules.yml"
+  - ./rules/*.yml
 
-<span class="pl-c"><span class="pl-c">#</span> A scrape configuration containing exactly one endpoint to scrape:</span>
-<span class="pl-c"><span class="pl-c">#</span> Here it's Prometheus itself.</span>
-<span class="pl-ent">scrape_configs</span>:
-  <span class="pl-c"><span class="pl-c">#</span> The job name is added as a label `job=&lt;job_name&gt;` to any timeseries scraped from this config.</span>
-  - <span class="pl-ent">job_name</span>: <span class="pl-s"><span class="pl-pds">"</span>prometheus<span class="pl-pds">"</span></span>
-    <span class="pl-c"><span class="pl-c">#</span> metrics_path defaults to '/metrics'</span>
-    <span class="pl-c"><span class="pl-c">#</span> scheme defaults to 'http'.</span>
-    <span class="pl-ent">static_configs</span>:
-      - <span class="pl-ent">targets</span>: <span class="pl-s">["localhost:9090"]</span>
+# A scrape configuration containing exactly one endpoint to scrape:
+# Here it's Prometheus itself.
+scrape_configs:
+  # The job name is added as a label `job=&lt;job_name&gt;` to any timeseries scraped from this config.
+  - job_name: "prometheus"
+    # metrics_path defaults to '/metrics'
+    # scheme defaults to 'http'.
+    static_configs:
+      - targets: ["localhost:9090"]
 
-  - <span class="pl-ent">job_name</span>: <span class="pl-s"><span class="pl-pds">"</span>node_exporter<span class="pl-pds">"</span></span>
-    <span class="pl-ent">metrics_path</span>: <span class="pl-s">/metrics</span>
-    <span class="pl-ent">static_configs</span>:
-    <span class="pl-ent">file_sd_configs</span>:
-      - <span class="pl-ent">files</span>: <span class="pl-s">['./node-exporter/*.yml']</span>
-        <span class="pl-ent">refresh_interval</span>: <span class="pl-c1">15s</span>
-    <span class="pl-ent">relabel_configs</span>:
-      - <span class="pl-ent">source_labels</span>: <span class="pl-s">[__address__]</span>
-        <span class="pl-ent">regex</span>: <span class="pl-s">(.*)</span>
-        <span class="pl-ent">target_label</span>: <span class="pl-s">__address__</span>
-        <span class="pl-ent">replacement</span>: <span class="pl-c1">$1</span>
+  - job_name: "node_exporter"
+    metrics_path: /metrics
+    static_configs:
+    file_sd_configs:
+      - files: ['./node-exporter/*.yml']
+        refresh_interval: 15s
+    relabel_configs:
+      - source_labels: [__address__]
+        regex: (.*)
+        target_label: __address__
+        replacement: $1
 
-  - <span class="pl-ent">job_name</span>: <span class="pl-s"><span class="pl-pds">"</span>blackbox_http_2xx<span class="pl-pds">"</span></span>
-    <span class="pl-ent">scrape_interval</span>: <span class="pl-c1">90s</span>
-    <span class="pl-ent">metrics_path</span>: <span class="pl-s">/probe</span>
-    <span class="pl-ent">params</span>:
-      <span class="pl-ent">module</span>:
-      - <span class="pl-s">http_2xx</span>
-    <span class="pl-ent">static_configs</span>:
-    <span class="pl-ent">file_sd_configs</span>:
-      - <span class="pl-ent">files</span>: <span class="pl-s">['./blackbox_http_2xx/*.yml']</span>
-        <span class="pl-ent">refresh_interval</span>: <span class="pl-c1">15s</span>
-    <span class="pl-ent">relabel_configs</span>:
-      - <span class="pl-ent">source_labels</span>: <span class="pl-s">[__address__]</span>
-        <span class="pl-ent">target_label</span>: <span class="pl-s">__param_target</span>
-      - <span class="pl-ent">source_labels</span>: <span class="pl-s">[__param_target]</span>
-        <span class="pl-ent">target_label</span>: <span class="pl-s">instance</span>
-      - <span class="pl-ent">target_label</span>: <span class="pl-s">__address__</span>
-        <span class="pl-ent">replacement</span>: <span class="pl-s">localhost:9115  </span><span class="pl-c"><span class="pl-c">#</span> blackbox_exporter所在的机器和端口</span>
+  - job_name: "blackbox_http_2xx"
+    scrape_interval: 90s
+    metrics_path: /probe
+    params:
+      module:
+      - http_2xx
+    static_configs:
+    file_sd_configs:
+      - files: ['./blackbox_http_2xx/*.yml']
+        refresh_interval: 15s
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: __param_target
+      - source_labels: [__param_target]
+        target_label: instance
+      - target_label: __address__
+        replacement: localhost:9115  # blackbox_exporter所在的机器和端口
 
-  - <span class="pl-ent">job_name</span>: <span class="pl-s"><span class="pl-pds">"</span>blackbox_http_3min<span class="pl-pds">"</span></span>
-    <span class="pl-ent">scrape_interval</span>: <span class="pl-c1">3m</span> <span class="pl-c"><span class="pl-c">#</span> 可以单独调整blackbox的抓取频率</span>
-    <span class="pl-ent">metrics_path</span>: <span class="pl-s">/probe</span>
-    <span class="pl-ent">params</span>:
-      <span class="pl-ent">module</span>:
-      - <span class="pl-s">http_2xx</span>
-    <span class="pl-ent">static_configs</span>:
-    <span class="pl-ent">file_sd_configs</span>:
-      - <span class="pl-ent">files</span>: <span class="pl-s">['./blackbox_http_3min/*.yml']</span>
-        <span class="pl-ent">refresh_interval</span>: <span class="pl-c1">15s</span>
-    <span class="pl-ent">relabel_configs</span>:
-      - <span class="pl-ent">source_labels</span>: <span class="pl-s">[__address__]</span>
-        <span class="pl-ent">target_label</span>: <span class="pl-s">__param_target</span>
-      - <span class="pl-ent">source_labels</span>: <span class="pl-s">[__param_target]</span>
-        <span class="pl-ent">target_label</span>: <span class="pl-s">instance</span>
-      - <span class="pl-ent">target_label</span>: <span class="pl-s">__address__</span>
-        <span class="pl-ent">replacement</span>: <span class="pl-s">localhost:9115  </span><span class="pl-c"><span class="pl-c">#</span> blackbox_exporter所在的机器和端口</span>
+  - job_name: "blackbox_http_3min"
+    scrape_interval: 3m # 可以单独调整blackbox的抓取频率
+    metrics_path: /probe
+    params:
+      module:
+      - http_2xx
+    static_configs:
+    file_sd_configs:
+      - files: ['./blackbox_http_3min/*.yml']
+        refresh_interval: 15s
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: __param_target
+      - source_labels: [__param_target]
+        target_label: instance
+      - target_label: __address__
+        replacement: localhost:9115  # blackbox_exporter所在的机器和端口
 
-  - <span class="pl-ent">job_name</span>: <span class="pl-s"><span class="pl-pds">"</span>blackbox_tcp_connect<span class="pl-pds">"</span></span>
-    <span class="pl-ent">metrics_path</span>: <span class="pl-s">/probe</span>
-    <span class="pl-ent">params</span>:
-      <span class="pl-ent">module</span>:
-      - <span class="pl-s">tcp_connect</span>
-    <span class="pl-ent">static_configs</span>:
-    <span class="pl-ent">file_sd_configs</span>:
-      - <span class="pl-ent">files</span>: <span class="pl-s">['./blackbox_tcp_connect/*.yml']</span>
-        <span class="pl-ent">refresh_interval</span>: <span class="pl-c1">15s</span>
-    <span class="pl-ent">relabel_configs</span>:
-      - <span class="pl-ent">source_labels</span>: <span class="pl-s">[__address__]</span>
-        <span class="pl-ent">target_label</span>: <span class="pl-s">__param_target</span>
-      - <span class="pl-ent">source_labels</span>: <span class="pl-s">[__param_target]</span>
-        <span class="pl-ent">target_label</span>: <span class="pl-s">instance</span>
-      - <span class="pl-ent">target_label</span>: <span class="pl-s">__address__</span>
-        <span class="pl-ent">replacement</span>: <span class="pl-s">localhost:9115  </span><span class="pl-c"><span class="pl-c">#</span> blackbox_exporter所在的机器和端口</span>
+  - job_name: "blackbox_tcp_connect"
+    metrics_path: /probe
+    params:
+      module:
+      - tcp_connect
+    static_configs:
+    file_sd_configs:
+      - files: ['./blackbox_tcp_connect/*.yml']
+        refresh_interval: 15s
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: __param_target
+      - source_labels: [__param_target]
+        target_label: instance
+      - target_label: __address__
+        replacement: localhost:9115  # blackbox_exporter所在的机器和端口
 
-  - <span class="pl-ent">job_name</span>: <span class="pl-s"><span class="pl-pds">"</span>blackbox_ping<span class="pl-pds">"</span></span>
-    <span class="pl-ent">metrics_path</span>: <span class="pl-s">/probe</span>
-    <span class="pl-ent">params</span>:
-      <span class="pl-ent">module</span>:
-      - <span class="pl-s">icmp</span>
-    <span class="pl-ent">static_configs</span>:
-    <span class="pl-ent">file_sd_configs</span>:
-      - <span class="pl-ent">files</span>: <span class="pl-s">['./blackbox_ping/*.yml']</span>
-        <span class="pl-ent">refresh_interval</span>: <span class="pl-c1">15s</span>
-    <span class="pl-ent">relabel_configs</span>:
-      - <span class="pl-ent">source_labels</span>: <span class="pl-s">[__address__]</span>
-        <span class="pl-ent">target_label</span>: <span class="pl-s">__param_target</span>
-      - <span class="pl-ent">source_labels</span>: <span class="pl-s">[__param_target]</span>
-        <span class="pl-ent">target_label</span>: <span class="pl-s">instance</span>
-      - <span class="pl-ent">target_label</span>: <span class="pl-s">__address__</span>
-        <span class="pl-ent">replacement</span>: <span class="pl-s">localhost:9115  </span><span class="pl-c"><span class="pl-c">#</span> blackbox_exporter所在的机器和端口</span>
+  - job_name: "blackbox_ping"
+    metrics_path: /probe
+    params:
+      module:
+      - icmp
+    static_configs:
+    file_sd_configs:
+      - files: ['./blackbox_ping/*.yml']
+        refresh_interval: 15s
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: __param_target
+      - source_labels: [__param_target]
+        target_label: instance
+      - target_label: __address__
+        replacement: localhost:9115  # blackbox_exporter所在的机器和端口
 
-<span class="pl-c"><span class="pl-c">#</span> 以下为大数据Hadoop所需的exporter</span>
-  - <span class="pl-ent">job_name</span>: <span class="pl-s"><span class="pl-pds">"</span>fsimage<span class="pl-pds">"</span></span>
-    <span class="pl-ent">scrape_interval</span>: <span class="pl-c1">1m</span>   <span class="pl-c"><span class="pl-c">#</span> Depends on how often the name node writes a fsimage file.</span>
-    <span class="pl-ent">scrape_timeout</span>: <span class="pl-c1">40s</span>    <span class="pl-c"><span class="pl-c">#</span> Depends on size</span>
-    <span class="pl-ent">static_configs</span>:
-      - <span class="pl-ent">targets</span>: <span class="pl-s">[ 'xxxx:9709' ]</span>
-        <span class="pl-ent">labels</span>:
-          <span class="pl-ent">project</span>: <span class="pl-s">fsimage</span>
+# 以下为大数据Hadoop所需的exporter
+  - job_name: "fsimage"
+    scrape_interval: 1m   # Depends on how often the name node writes a fsimage file.
+    scrape_timeout: 40s    # Depends on size
+    static_configs:
+      - targets: [ 'xxxx:9709' ]
+        labels:
+          project: fsimage
 
-  - <span class="pl-ent">job_name</span>: <span class="pl-s"><span class="pl-pds">"</span>kafka-exporter<span class="pl-pds">"</span></span>
-    <span class="pl-ent">scrape_interval</span>: <span class="pl-c1">20s</span>
-    <span class="pl-ent">scrape_timeout</span>: <span class="pl-c1">15s</span>
-    <span class="pl-ent">static_configs</span>:
-      - <span class="pl-ent">targets</span>: <span class="pl-s">['xxxx:9308']</span>
-        <span class="pl-ent">labels</span>:
-          <span class="pl-ent">project</span>: <span class="pl-s">kafka-exporter</span>
-          <span class="pl-ent">instance</span>: <span class="pl-s">xxxx:9308</span>
+  - job_name: "kafka-exporter"
+    scrape_interval: 20s
+    scrape_timeout: 15s
+    static_configs:
+      - targets: ['xxxx:9308']
+        labels:
+          project: kafka-exporter
+          instance: xxxx:9308
 
-  - <span class="pl-ent">job_name</span>: <span class="pl-s"><span class="pl-pds">"</span>jmx-exporter<span class="pl-pds">"</span></span>
-    <span class="pl-ent">metrics_path</span>: <span class="pl-s">/metrics</span>
-    <span class="pl-ent">static_configs</span>:
-    <span class="pl-ent">file_sd_configs</span>:
-      - <span class="pl-ent">files</span>: <span class="pl-s">['./jmx-exporter/*.yml']</span>
-        <span class="pl-ent">refresh_interval</span>: <span class="pl-c1">15s</span></pre></div>
+  - job_name: "jmx-exporter"
+    metrics_path: /metrics
+    static_configs:
+    file_sd_configs:
+      - files: ['./jmx-exporter/*.yml']
+        refresh_interval: 15s
+</code></pre>
 <h3>1.3 从配置文件</h3>
 <p><code class="notranslate">node-exporter.yml</code></p>
-<div class="highlight highlight-source-yaml"><pre class="notranslate">- <span class="pl-ent">targets</span>:
-  - <span class="pl-s">xxxx:9100</span>
-  <span class="pl-ent">labels</span>:    
-    <span class="pl-ent">project</span>: <span class="pl-s">configure by ur self</span>
-    <span class="pl-ent">instance</span>: <span class="pl-s">xxx:9100</span>
-    <span class="pl-ent">name</span>: <span class="pl-s">configure by ur self</span></pre></div>
+<pre lang="yaml" class="notranslate"><code class="notranslate">- targets:
+  - xxxx:9100
+  labels:    
+    project: configure by ur self
+    instance: xxx:9100
+    name: configure by ur self
+</code></pre>
 <p><code class="notranslate">blackbox-exporter.yml</code></p>
-<div class="highlight highlight-source-yaml"><pre class="notranslate">- <span class="pl-ent">targets</span>:
-  - <span class="pl-s">put a url on this line, include https or http</span>
-  <span class="pl-ent">labels</span>:
-    <span class="pl-ent">project</span>: <span class="pl-s">configure by ur self</span>
-    <span class="pl-ent">service</span>: <span class="pl-s">xxx</span></pre></div>
+<pre lang="yaml" class="notranslate"><code class="notranslate">- targets:
+  - put a url on this line, include https or http
+  labels:
+    project: configure by ur self
+    service: xxx
+</code></pre>
 <p><code class="notranslate">jmx-exporter.yml</code></p>
-<div class="highlight highlight-source-yaml"><pre class="notranslate">- <span class="pl-ent">targets</span>:
-    - <span class="pl-s">kafka:9803</span>
-  <span class="pl-ent">labels</span>:
-    <span class="pl-ent">project</span>: <span class="pl-s">node-exporter</span>
-    <span class="pl-ent">instance</span>: <span class="pl-s">kafka:9803</span>
-    <span class="pl-ent">process</span>: <span class="pl-s">kafka</span></pre></div>
+<pre lang="yaml" class="notranslate"><code class="notranslate">- targets:
+    - kafka:9803
+  labels:
+    project: node-exporter
+    instance: kafka:9803
+    process: kafka
+</code></pre>
 <p><code class="notranslate">node-rules.yml</code></p>
-<div class="highlight highlight-source-yaml"><pre class="notranslate"><span class="pl-ent">groups</span>:
-  - <span class="pl-ent">name</span>: <span class="pl-s">服务器状态监控</span>
-    <span class="pl-ent">rules</span>:
-      - <span class="pl-ent">alert</span>: <span class="pl-s">CPU 监控</span>
-        <span class="pl-ent">expr</span>: <span class="pl-s">round((1 - avg(rate(node_cpu_seconds_total{instance="xxxxx:9100",mode="idle"}[1m])) by (instance)) * 100, 0.01) &gt; 80</span>
-        <span class="pl-ent">for</span>: <span class="pl-c1">1m</span>
-        <span class="pl-ent">labels</span>:
-          <span class="pl-ent">severity</span>: <span class="pl-s">critical</span>
-        <span class="pl-ent">annotations</span>:
-          <span class="pl-ent">summary</span>: <span class="pl-s">服务器CPU占用率高</span>
-          <span class="pl-ent">description</span>: <span class="pl-s"><span class="pl-pds">"</span>{{$labels.instance}}服务器 CPU 已使用: {{$value}}%<span class="pl-pds">"</span></span>
-      - <span class="pl-ent">alert</span>: <span class="pl-s">内存监控</span>
-        <span class="pl-ent">expr</span>: <span class="pl-s">round((1 - (node_memory_MemAvailable_bytes{instance="xxxxx:9100"} / (node_memory_MemTotal_bytes{instance="xxxxx:9100"})))* 100,0.01) &gt; 95</span>
-        <span class="pl-ent">for</span>: <span class="pl-c1">1m</span>
-        <span class="pl-ent">labels</span>:
-          <span class="pl-ent">severity</span>: <span class="pl-s">critical</span>
-        <span class="pl-ent">annotations</span>:
-          <span class="pl-ent">summary</span>: <span class="pl-s">服务器内存占用过高</span>
-          <span class="pl-ent">description</span>: <span class="pl-s"><span class="pl-pds">"</span>{{$labels.instance}}服务器内存已使用: {{$value}}%<span class="pl-pds">"</span></span>
-      - <span class="pl-ent">alert</span>: <span class="pl-s">磁盘监控</span>
-        <span class="pl-ent">expr</span>: <span class="pl-s">round((node_filesystem_size_bytes{instance="xxxxx:9100",mountpoint="/"}-node_filesystem_free_bytes{instance="xxxxx:9100",mountpoint="/"})*100/(node_filesystem_avail_bytes{instance="xxxxx:9100",mountpoint="/"}+(node_filesystem_size_bytes{instance="xxxxx:9100",mountpoint="/"}-node_filesystem_free_bytes{instance="xxxxx:9100",mountpoint="/"})),0.01) &gt; 90</span>
-        <span class="pl-ent">for</span>: <span class="pl-c1">1m</span>
-        <span class="pl-ent">labels</span>:
-          <span class="pl-ent">severity</span>: <span class="pl-s">critical</span>
-        <span class="pl-ent">annotations</span>:
-          <span class="pl-ent">summary</span>: <span class="pl-s">服务器磁盘占用过高</span>
-          <span class="pl-ent">description</span>: <span class="pl-s"><span class="pl-pds">"</span>{{$labels.instance}}服务器磁盘已使用: {{$value}}%<span class="pl-pds">"</span></span>
-      - <span class="pl-ent">alert</span>: <span class="pl-s">网络连接数监控</span>
-        <span class="pl-ent">expr</span>: <span class="pl-s">node_netstat_Tcp_CurrEstab{instance="xxxxx:9100"} &gt; 500</span>
-        <span class="pl-ent">for</span>: <span class="pl-c1">1m</span>
-        <span class="pl-ent">labels</span>:
-          <span class="pl-ent">severity</span>: <span class="pl-s">critical</span>
-        <span class="pl-ent">annotations</span>:
-          <span class="pl-ent">summary</span>: <span class="pl-s">服务器网络连接数过高</span>
-          <span class="pl-ent">description</span>: <span class="pl-s"><span class="pl-pds">"</span>{{$labels.instance}}服务器当前网络连接数: {{$value}}<span class="pl-pds">"</span></span></pre></div>
+<pre lang="yaml" class="notranslate"><code class="notranslate">groups:
+  - name: 服务器状态监控
+    rules:
+      - alert: CPU 监控
+        expr: round((1 - avg(rate(node_cpu_seconds_total{instance="xxxxx:9100",mode="idle"}[1m])) by (instance)) * 100, 0.01) &gt; 80
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: 服务器CPU占用率高
+          description: "{{$labels.instance}}服务器 CPU 已使用: {{$value}}%"
+      - alert: 内存监控
+        expr: round((1 - (node_memory_MemAvailable_bytes{instance="xxxxx:9100"} / (node_memory_MemTotal_bytes{instance="xxxxx:9100"})))* 100,0.01) &gt; 95
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: 服务器内存占用过高
+          description: "{{$labels.instance}}服务器内存已使用: {{$value}}%"
+      - alert: 磁盘监控
+        expr: round((node_filesystem_size_bytes{instance="xxxxx:9100",mountpoint="/"}-node_filesystem_free_bytes{instance="xxxxx:9100",mountpoint="/"})*100/(node_filesystem_avail_bytes{instance="xxxxx:9100",mountpoint="/"}+(node_filesystem_size_bytes{instance="xxxxx:9100",mountpoint="/"}-node_filesystem_free_bytes{instance="xxxxx:9100",mountpoint="/"})),0.01) &gt; 90
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: 服务器磁盘占用过高
+          description: "{{$labels.instance}}服务器磁盘已使用: {{$value}}%"
+      - alert: 网络连接数监控
+        expr: node_netstat_Tcp_CurrEstab{instance="xxxxx:9100"} &gt; 500
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: 服务器网络连接数过高
+          description: "{{$labels.instance}}服务器当前网络连接数: {{$value}}"
+</code></pre>
 <p><code class="notranslate">blackbox-rules.yml</code></p>
-<div class="highlight highlight-source-yaml"><pre class="notranslate"><span class="pl-ent">groups</span>:
-- <span class="pl-ent">name</span>: <span class="pl-s">hosts监控</span>
-  <span class="pl-ent">rules</span>:
-  - <span class="pl-ent">alert</span>: <span class="pl-s">状态码监控(monitor)</span>
-    <span class="pl-ent">expr</span>: <span class="pl-s">probe_http_status_code{service="xxx"} != 200</span>
-    <span class="pl-ent">for</span>: <span class="pl-c1">1m</span>
-    <span class="pl-ent">labels</span>:
-      <span class="pl-ent">severity</span>: <span class="pl-s">critical</span>
-    <span class="pl-ent">annotations</span>:
-      <span class="pl-ent">summary</span>: <span class="pl-s">xxx状态码不为200(monitor)</span>
-      <span class="pl-ent">description</span>: <span class="pl-s"><span class="pl-pds">'</span>检测服务: {{$labels.service}}, 状态码为: {{$value}}<span class="pl-pds">'</span></span></pre></div>
+<pre lang="yaml" class="notranslate"><code class="notranslate">groups:
+- name: hosts监控
+  rules:
+  - alert: 状态码监控(monitor)
+    expr: probe_http_status_code{service="xxx"} != 200
+    for: 1m
+    labels:
+      severity: critical
+    annotations:
+      summary: xxx状态码不为200(monitor)
+      description: '检测服务: {{$labels.service}}, 状态码为: {{$value}}'
+</code></pre>
 <h2>2.Grafana</h2>
 <blockquote>
 <p>Grafana不在赘述配置dashboard等基础环节，只写一些流传较为少的配置方法</p>
@@ -1550,103 +1550,106 @@ sudo systemctl status prometheus</pre></div>
 <h3>2.1 部署方式</h3>
 <p><strong>docker-compose部署</strong></p>
 <p><em>在执行docker compose up -d之前，需要先执行docker run的步骤将想要持久化的容器内文件通过docker cp拷贝到宿主机上！</em></p>
-<div class="highlight highlight-source-yaml"><pre class="notranslate">  <span class="pl-ent">grafana</span>:
-    <span class="pl-ent">image</span>: <span class="pl-s">grafana/grafana-enterprise</span>
-    <span class="pl-ent">user</span>: <span class="pl-s">root</span>
-    <span class="pl-ent">restart</span>: <span class="pl-s">always</span>
-    <span class="pl-ent">ports</span>:
-      - <span class="pl-c1">3000:3000</span>
-    <span class="pl-ent">networks</span>:
-      - <span class="pl-s">monitor</span>
-    <span class="pl-ent">volumes</span>:
-      - <span class="pl-s">./grafana/data:/var/lib/grafana</span>
-      - <span class="pl-s">./grafana/plugins:/var/lib/grafana/plugins</span>
-      - <span class="pl-s">./grafana/log:/var/log/grafana</span>
-      - <span class="pl-s">./grafana/conf:/etc/grafana</span>
-    <span class="pl-ent">container_name</span>: <span class="pl-s">grafana</span>
-    <span class="pl-ent">depends_on</span>:
-      - <span class="pl-s">prometheus</span>
-    <span class="pl-ent">extra_hosts</span>:
-      - <span class="pl-s"><span class="pl-pds">"</span>url:ip_address<span class="pl-pds">"</span></span></pre></div>
+<pre lang="yaml" class="notranslate"><code class="notranslate">  grafana:
+    image: grafana/grafana-enterprise
+    user: root
+    restart: always
+    ports:
+      - 3000:3000
+    networks:
+      - monitor
+    volumes:
+      - ./grafana/data:/var/lib/grafana
+      - ./grafana/plugins:/var/lib/grafana/plugins
+      - ./grafana/log:/var/log/grafana
+      - ./grafana/conf:/etc/grafana
+    container_name: grafana
+    depends_on:
+      - prometheus
+    extra_hosts:
+      - "url:ip_address"
+</code></pre>
 <h3>2.2 连接LDAP</h3>
 <p><strong>设置配置文件中的auth.ldap为true  文件路径：<code class="notranslate">/usr/share/grafana/conf/defaults.ini</code></strong></p>
-<div class="highlight highlight-source-ini"><pre class="notranslate"><span class="pl-en">[auth.ldap]</span>
-<span class="pl-c"><span class="pl-c">#</span> Set to `true` to enable LDAP integration (default: `false`)</span>
-<span class="pl-k">enabled</span> = true
+<pre lang="ini" class="notranslate"><code class="notranslate">[auth.ldap]
+# Set to `true` to enable LDAP integration (default: `false`)
+enabled = true
 
-<span class="pl-c"><span class="pl-c">#</span> Path to the LDAP specific configuration file (default: `/etc/grafana/ldap.toml`)</span>
-<span class="pl-k">config_file</span> = /etc/grafana/ldap.toml
+# Path to the LDAP specific configuration file (default: `/etc/grafana/ldap.toml`)
+config_file = /etc/grafana/ldap.toml
 
-<span class="pl-c"><span class="pl-c">#</span> Allow sign-up should be `true` (default) to allow Grafana to create users on successful LDAP authentication.</span>
-<span class="pl-c"><span class="pl-c">#</span> If set to `false` only already existing Grafana users will be able to login.</span>
-<span class="pl-k">allow_sign_up</span> = true</pre></div>
+# Allow sign-up should be `true` (default) to allow Grafana to create users on successful LDAP authentication.
+# If set to `false` only already existing Grafana users will be able to login.
+allow_sign_up = true
+</code></pre>
 <p><strong>添加ldap相关的设置   文件路径：<code class="notranslate">/etc/grafana/ldap.toml</code></strong></p>
-<div class="highlight highlight-source-toml"><pre class="notranslate"><span class="pl-c"><span class="pl-c">#</span> To troubleshoot and get more log info enable ldap debug logging in grafana.ini</span>
-<span class="pl-c"><span class="pl-c">#</span> [log]</span>
-<span class="pl-c"><span class="pl-c">#</span> filters = ldap:debug</span>
-[[<span class="pl-en">servers</span>]]
-<span class="pl-c"><span class="pl-c">#</span> Ldap server host (specify multiple hosts space separated)</span>
-<span class="pl-smi">host</span> = <span class="pl-s"><span class="pl-pds">"</span>xxxxx<span class="pl-pds">"</span></span>
-<span class="pl-c"><span class="pl-c">#</span> Default port is 389 or 636 if use_ssl = true</span>
-<span class="pl-smi">port</span> = <span class="pl-c1">636</span>
-<span class="pl-c"><span class="pl-c">#</span> Set to true if LDAP server should use an encrypted TLS connection (either with STARTTLS or LDAPS)</span>
-<span class="pl-smi">use_ssl</span> = <span class="pl-c1">true</span>
-<span class="pl-c"><span class="pl-c">#</span> If set to true, use LDAP with STARTTLS instead of LDAPS</span>
-<span class="pl-smi">start_tls</span> = <span class="pl-c1">false</span>
-<span class="pl-c"><span class="pl-c">#</span> set to true if you want to skip ssl cert validation</span>
-<span class="pl-smi">ssl_skip_verify</span> = <span class="pl-c1">false</span>
-<span class="pl-c"><span class="pl-c">#</span> set to the path to your root CA certificate or leave unset to use system defaults</span>
-<span class="pl-c"><span class="pl-c">#</span> root_ca_cert = "/path/to/certificate.crt"</span>
-<span class="pl-c"><span class="pl-c">#</span> Authentication against LDAP servers requiring client certificates</span>
-<span class="pl-c"><span class="pl-c">#</span> client_cert = "/path/to/client.crt"</span>
-<span class="pl-c"><span class="pl-c">#</span> client_key = "/path/to/client.key"</span>
+<pre lang="toml" class="notranslate"><code class="notranslate"># To troubleshoot and get more log info enable ldap debug logging in grafana.ini
+# [log]
+# filters = ldap:debug
+[[servers]]
+# Ldap server host (specify multiple hosts space separated)
+host = "xxxxx"
+# Default port is 389 or 636 if use_ssl = true
+port = 636
+# Set to true if LDAP server should use an encrypted TLS connection (either with STARTTLS or LDAPS)
+use_ssl = true
+# If set to true, use LDAP with STARTTLS instead of LDAPS
+start_tls = false
+# set to true if you want to skip ssl cert validation
+ssl_skip_verify = false
+# set to the path to your root CA certificate or leave unset to use system defaults
+# root_ca_cert = "/path/to/certificate.crt"
+# Authentication against LDAP servers requiring client certificates
+# client_cert = "/path/to/client.crt"
+# client_key = "/path/to/client.key"
 
-<span class="pl-c"><span class="pl-c">#</span> Search user bind dn</span>
-<span class="pl-smi">bind_dn</span> = <span class="pl-s"><span class="pl-pds">"</span>uid=xxxxx,cn=users,cn=accounts,dc=xxxxxxx,dc=cn<span class="pl-pds">"</span></span>
-<span class="pl-c"><span class="pl-c">#</span> Search user bind password</span>
-<span class="pl-c"><span class="pl-c">#</span> If the password contains # or ; you have to wrap it with triple quotes. Ex """#password;"""</span>
-<span class="pl-smi">bind_password</span> = <span class="pl-s"><span class="pl-pds">"""</span><span class="pl-pds">"""</span></span>
+# Search user bind dn
+bind_dn = "uid=xxxxx,cn=users,cn=accounts,dc=xxxxxxx,dc=cn"
+# Search user bind password
+# If the password contains # or ; you have to wrap it with triple quotes. Ex """#password;"""
+bind_password = """"""
 
-<span class="pl-c"><span class="pl-c">#</span> Timeout in seconds (applies to each host specified in the 'host' entry (space separated))</span>
-<span class="pl-smi">timeout</span> = <span class="pl-c1">10</span>
+# Timeout in seconds (applies to each host specified in the 'host' entry (space separated))
+timeout = 10
 
-<span class="pl-c"><span class="pl-c">#</span> User search filter, for example "(cn=%s)" or "(sAMAccountName=%s)" or "(uid=%s)"</span>
-<span class="pl-smi">search_filter</span> = <span class="pl-s"><span class="pl-pds">"</span>(uid=%s)<span class="pl-pds">"</span></span>
+# User search filter, for example "(cn=%s)" or "(sAMAccountName=%s)" or "(uid=%s)"
+search_filter = "(uid=%s)"
 
-<span class="pl-c"><span class="pl-c">#</span> An array of base dns to search through</span>
-<span class="pl-smi">search_base_dns</span> = [<span class="pl-s"><span class="pl-pds">"</span>cn=users,cn=accounts,dc=xxx,dc=cn<span class="pl-pds">"</span></span>]
+# An array of base dns to search through
+search_base_dns = ["cn=users,cn=accounts,dc=xxx,dc=cn"]
 
-<span class="pl-c"><span class="pl-c">#</span># For Posix or LDAP setups that does not support member_of attribute you can define the below settings</span>
-<span class="pl-c"><span class="pl-c">#</span># Please check grafana LDAP docs for examples</span>
-<span class="pl-c"><span class="pl-c">#</span>group_search_filter = "(&amp;(objectClass=groupOfNames)(memberOf=%s))"</span>
-<span class="pl-c"><span class="pl-c">#</span>group_search_base_dns = ["cn=groups,cn=accounts,dc=xxx,dc=cn"]</span>
-<span class="pl-c"><span class="pl-c">#</span>group_search_filter_user_attribute = "uid"</span>
+## For Posix or LDAP setups that does not support member_of attribute you can define the below settings
+## Please check grafana LDAP docs for examples
+#group_search_filter = "(&amp;(objectClass=groupOfNames)(memberOf=%s))"
+#group_search_base_dns = ["cn=groups,cn=accounts,dc=xxx,dc=cn"]
+#group_search_filter_user_attribute = "uid"
 
-<span class="pl-c"><span class="pl-c">#</span> Specify names of the ldap attributes your ldap uses</span>
-[<span class="pl-en">servers</span>.<span class="pl-en">attributes</span>]
-<span class="pl-smi">name</span> = <span class="pl-s"><span class="pl-pds">"</span>givenName<span class="pl-pds">"</span></span>
-<span class="pl-smi">surname</span> = <span class="pl-s"><span class="pl-pds">"</span>uid<span class="pl-pds">"</span></span>
-<span class="pl-smi">username</span> = <span class="pl-s"><span class="pl-pds">"</span>uid<span class="pl-pds">"</span></span>
-<span class="pl-smi">member_of</span> = <span class="pl-s"><span class="pl-pds">"</span>memberOf<span class="pl-pds">"</span></span>
-<span class="pl-smi">email</span> =  <span class="pl-s"><span class="pl-pds">"</span>mail<span class="pl-pds">"</span></span>
+# Specify names of the ldap attributes your ldap uses
+[servers.attributes]
+name = "givenName"
+surname = "uid"
+username = "uid"
+member_of = "memberOf"
+email =  "mail"
 
-<span class="pl-c"><span class="pl-c">#</span> Map ldap groups to grafana org roles</span>
-[[<span class="pl-en">servers</span>.<span class="pl-en">group_mappings</span>]]
-<span class="pl-smi">group_dn</span> = <span class="pl-s"><span class="pl-pds">"</span>cn=admins,cn=groups,cn=accounts,dc=xxxxx,dc=cn<span class="pl-pds">"</span></span>
-<span class="pl-smi">org_role</span> = <span class="pl-s"><span class="pl-pds">"</span>Admin<span class="pl-pds">"</span></span>
-<span class="pl-c"><span class="pl-c">#</span> To make user an instance admin  (Grafana Admin) uncomment line below</span>
-<span class="pl-smi">grafana_admin</span> = <span class="pl-c1">true</span>
-<span class="pl-c"><span class="pl-c">#</span> The Grafana organization database id, optional, if left out the default org (id 1) will be used</span>
-<span class="pl-c"><span class="pl-c">#</span> org_id = 1</span>
+# Map ldap groups to grafana org roles
+[[servers.group_mappings]]
+group_dn = "cn=admins,cn=groups,cn=accounts,dc=xxxxx,dc=cn"
+org_role = "Admin"
+# To make user an instance admin  (Grafana Admin) uncomment line below
+grafana_admin = true
+# The Grafana organization database id, optional, if left out the default org (id 1) will be used
+# org_id = 1
 
-[[<span class="pl-en">servers</span>.<span class="pl-en">group_mappings</span>]]
-<span class="pl-smi">group_dn</span> = <span class="pl-s"><span class="pl-pds">"</span>cn=users,cn=groups,cn=accounts,dc=xxxxx,dc=cn<span class="pl-pds">"</span></span>
-<span class="pl-smi">org_role</span> = <span class="pl-s"><span class="pl-pds">"</span>Editor<span class="pl-pds">"</span></span>
+[[servers.group_mappings]]
+group_dn = "cn=users,cn=groups,cn=accounts,dc=xxxxx,dc=cn"
+org_role = "Editor"
 
-<span class="pl-c"><span class="pl-c">#</span>[[servers.group_mappings]]</span>
-<span class="pl-c"><span class="pl-c">#</span> If you want to match all (or no ldap groups) then you can use wildcard</span>
-<span class="pl-c"><span class="pl-c">#</span>group_dn = "*"</span>
-<span class="pl-c"><span class="pl-c">#</span>org_role = "Viewer"</span></pre></div></div>
+#[[servers.group_mappings]]
+# If you want to match all (or no ldap groups) then you can use wildcard
+#group_dn = "*"
+#org_role = "Viewer"
+</code></pre></div>
 <div style="font-size:small;margin-top:8px;float:right;">🍺转载文章请注明出处，谢谢！🍺</div>
 
 <button class="btn btn-block" type="button" onclick="openComments()" id="cmButton">评论</button>
@@ -1671,7 +1674,7 @@ if("06/20/2024"!=""){
 </script></div>
 </body>
 <script>
-var IconList={'sun': 'M8 10.5a2.5 2.5 0 100-5 2.5 2.5 0 000 5zM8 12a4 4 0 100-8 4 4 0 000 8zM8 0a.75.75 0 01.75.75v1.5a.75.75 0 01-1.5 0V.75A.75.75 0 018 0zm0 13a.75.75 0 01.75.75v1.5a.75.75 0 01-1.5 0v-1.5A.75.75 0 018 13zM2.343 2.343a.75.75 0 011.061 0l1.06 1.061a.75.75 0 01-1.06 1.06l-1.06-1.06a.75.75 0 010-1.06zm9.193 9.193a.75.75 0 011.06 0l1.061 1.06a.75.75 0 01-1.06 1.061l-1.061-1.06a.75.75 0 010-1.061zM16 8a.75.75 0 01-.75.75h-1.5a.75.75 0 010-1.5h1.5A.75.75 0 0116 8zM3 8a.75.75 0 01-.75.75H.75a.75.75 0 010-1.5h1.5A.75.75 0 013 8zm10.657-5.657a.75.75 0 010 1.061l-1.061 1.06a.75.75 0 11-1.06-1.06l1.06-1.06a.75.75 0 011.06 0zm-9.193 9.193a.75.75 0 010 1.06l-1.06 1.061a.75.75 0 11-1.061-1.06l1.06-1.061a.75.75 0 011.061 0z', 'moon': 'M9.598 1.591a.75.75 0 01.785-.175 7 7 0 11-8.967 8.967.75.75 0 01.961-.96 5.5 5.5 0 007.046-7.046.75.75 0 01.175-.786zm1.616 1.945a7 7 0 01-7.678 7.678 5.5 5.5 0 107.678-7.678z', 'sync': 'M1.705 8.005a.75.75 0 0 1 .834.656 5.5 5.5 0 0 0 9.592 2.97l-1.204-1.204a.25.25 0 0 1 .177-.427h3.646a.25.25 0 0 1 .25.25v3.646a.25.25 0 0 1-.427.177l-1.38-1.38A7.002 7.002 0 0 1 1.05 8.84a.75.75 0 0 1 .656-.834ZM8 2.5a5.487 5.487 0 0 0-4.131 1.869l1.204 1.204A.25.25 0 0 1 4.896 6H1.25A.25.25 0 0 1 1 5.75V2.104a.25.25 0 0 1 .427-.177l1.38 1.38A7.002 7.002 0 0 1 14.95 7.16a.75.75 0 0 1-1.49.178A5.5 5.5 0 0 0 8 2.5Z', 'home': 'M6.906.664a1.749 1.749 0 0 1 2.187 0l5.25 4.2c.415.332.657.835.657 1.367v7.019A1.75 1.75 0 0 1 13.25 15h-3.5a.75.75 0 0 1-.75-.75V9H7v5.25a.75.75 0 0 1-.75.75h-3.5A1.75 1.75 0 0 1 1 13.25V6.23c0-.531.242-1.034.657-1.366l5.25-4.2Zm1.25 1.171a.25.25 0 0 0-.312 0l-5.25 4.2a.25.25 0 0 0-.094.196v7.019c0 .138.112.25.25.25H5.5V8.25a.75.75 0 0 1 .75-.75h3.5a.75.75 0 0 1 .75.75v5.25h2.75a.25.25 0 0 0 .25-.25V6.23a.25.25 0 0 0-.094-.195Z', 'github': 'M8 0c4.42 0 8 3.58 8 8a8.013 8.013 0 0 1-5.45 7.59c-.4.08-.55-.17-.55-.38 0-.27.01-1.13.01-2.2 0-.75-.25-1.23-.54-1.48 1.78-.2 3.65-.88 3.65-3.95 0-.88-.31-1.59-.82-2.15.08-.2.36-1.02-.08-2.12 0 0-.67-.22-2.2.82-.64-.18-1.32-.27-2-.27-.68 0-1.36.09-2 .27-1.53-1.03-2.2-.82-2.2-.82-.44 1.1-.16 1.92-.08 2.12-.51.56-.82 1.28-.82 2.15 0 3.06 1.86 3.75 3.64 3.95-.23.2-.44.55-.51 1.07-.46.21-1.61.55-2.33-.66-.15-.24-.6-.83-1.23-.82-.67.01-.27.38.01.53.34.19.73.9.82 1.13.16.45.68 1.31 2.69.94 0 .67.01 1.3.01 1.49 0 .21-.15.45-.55.38A7.995 7.995 0 0 1 0 8c0-4.42 3.58-8 8-8Z', 'copy': 'M0 6.75C0 5.784.784 5 1.75 5h1.5a.75.75 0 0 1 0 1.5h-1.5a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 0 0 .25-.25v-1.5a.75.75 0 0 1 1.5 0v1.5A1.75 1.75 0 0 1 9.25 16h-7.5A1.75 1.75 0 0 1 0 14.25Z M5 1.75C5 .784 5.784 0 6.75 0h7.5C15.216 0 16 .784 16 1.75v7.5A1.75 1.75 0 0 1 14.25 11h-7.5A1.75 1.75 0 0 1 5 9.25Zm1.75-.25a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 0 0 .25-.25v-7.5a.25.25 0 0 0-.25-.25Z', 'check': 'M13.78 4.22a.75.75 0 0 1 0 1.06l-7.25 7.25a.75.75 0 0 1-1.06 0L2.22 9.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018L6 10.94l6.72-6.72a.75.75 0 0 1 1.06 0Z'};
+var IconList={'sun': 'M8 10.5a2.5 2.5 0 100-5 2.5 2.5 0 000 5zM8 12a4 4 0 100-8 4 4 0 000 8zM8 0a.75.75 0 01.75.75v1.5a.75.75 0 01-1.5 0V.75A.75.75 0 018 0zm0 13a.75.75 0 01.75.75v1.5a.75.75 0 01-1.5 0v-1.5A.75.75 0 018 13zM2.343 2.343a.75.75 0 011.061 0l1.06 1.061a.75.75 0 01-1.06 1.06l-1.06-1.06a.75.75 0 010-1.06zm9.193 9.193a.75.75 0 011.06 0l1.061 1.06a.75.75 0 01-1.06 1.061l-1.061-1.06a.75.75 0 010-1.061zM16 8a.75.75 0 01-.75.75h-1.5a.75.75 0 010-1.5h1.5A.75.75 0 0116 8zM3 8a.75.75 0 01-.75.75H.75a.75.75 0 010-1.5h1.5A.75.75 0 013 8zm10.657-5.657a.75.75 0 010 1.061l-1.061 1.06a.75.75 0 11-1.06-1.06l1.06-1.06a.75.75 0 011.06 0zm-9.193 9.193a.75.75 0 010 1.06l-1.06 1.061a.75.75 0 11-1.061-1.06l1.06-1.061a.75.75 0 011.061 0z', 'moon': 'M9.598 1.591a.75.75 0 01.785-.175 7 7 0 11-8.967 8.967.75.75 0 01.961-.96 5.5 5.5 0 007.046-7.046.75.75 0 01.175-.786zm1.616 1.945a7 7 0 01-7.678 7.678 5.5 5.5 0 107.678-7.678z', 'sync': 'M1.705 8.005a.75.75 0 0 1 .834.656 5.5 5.5 0 0 0 9.592 2.97l-1.204-1.204a.25.25 0 0 1 .177-.427h3.646a.25.25 0 0 1 .25.25v3.646a.25.25 0 0 1-.427.177l-1.38-1.38A7.002 7.002 0 0 1 1.05 8.84a.75.75 0 0 1 .656-.834ZM8 2.5a5.487 5.487 0 0 0-4.131 1.869l1.204 1.204A.25.25 0 0 1 4.896 6H1.25A.25.25 0 0 1 1 5.75V2.104a.25.25 0 0 1 .427-.177l1.38 1.38A7.002 7.002 0 0 1 14.95 7.16a.75.75 0 0 1-1.49.178A5.5 5.5 0 0 0 8 2.5Z', 'home': 'M6.906.664a1.749 1.749 0 0 1 2.187 0l5.25 4.2c.415.332.657.835.657 1.367v7.019A1.75 1.75 0 0 1 13.25 15h-3.5a.75.75 0 0 1-.75-.75V9H7v5.25a.75.75 0 0 1-.75.75h-3.5A1.75 1.75 0 0 1 1 13.25V6.23c0-.531.242-1.034.657-1.366l5.25-4.2Zm1.25 1.171a.25.25 0 0 0-.312 0l-5.25 4.2a.25.25 0 0 0-.094.196v7.019c0 .138.112.25.25.25H5.5V8.25a.75.75 0 0 1 .75-.75h3.5a.75.75 0 0 1 .75.75v5.25h2.75a.25.25 0 0 0 .25-.25V6.23a.25.25 0 0 0-.094-.195Z', 'github': 'M8 0c4.42 0 8 3.58 8 8a8.013 8.013 0 0 1-5.45 7.59c-.4.08-.55-.17-.55-.38 0-.27.01-1.13.01-2.2 0-.75-.25-1.23-.54-1.48 1.78-.2 3.65-.88 3.65-3.95 0-.88-.31-1.59-.82-2.15.08-.2.36-1.02-.08-2.12 0 0-.67-.22-2.2.82-.64-.18-1.32-.27-2-.27-.68 0-1.36.09-2 .27-1.53-1.03-2.2-.82-2.2-.82-.44 1.1-.16 1.92-.08 2.12-.51.56-.82 1.28-.82 2.15 0 3.06 1.86 3.75 3.64 3.95-.23.2-.44.55-.51 1.07-.46.21-1.61.55-2.33-.66-.15-.24-.6-.83-1.23-.82-.67.01-.27.38.01.53.34.19.73.9.82 1.13.16.45.68 1.31 2.69.94 0 .67.01 1.3.01 1.49 0 .21-.15.45-.55.38A7.995 7.995 0 0 1 0 8c0-4.42 3.58-8 8-8Z'};
 var utterancesLoad=0;
 
 let themeSettings={
@@ -1744,70 +1747,7 @@ function iFrameLoading(){
     }
 }
 
-document.addEventListener('DOMContentLoaded', () => {
-    const createClipboardHTML = (codeContent, additionalClasses = '') => `
-        <pre class="notranslate"><code class="notranslate">${codeContent}</code></pre>
-        <div class="clipboard-container position-absolute right-0 top-0 ${additionalClasses}">
-            <clipboard-copy class="ClipboardButton btn m-2 p-0" role="button" style="display: inherit;">
-                <svg height="16" width="16" class="octicon octicon-copy m-2"><path d="${IconList["copy"]}"></path></svg>
-                <svg height="16" width="16" class="octicon octicon-check color-fg-success m-2 d-none"><path d="${IconList["check"]}"></path></svg>
-            </clipboard-copy>
-            <div class="copy-feedback">Copied!</div>
-        </div>
-    `;
 
-    const handleCodeElements = (selector = '') => {
-        document.querySelectorAll(selector).forEach(codeElement => {
-            const codeContent = codeElement.innerHTML;
-            const newStructure = document.createElement('div');
-            newStructure.className = 'snippet-clipboard-content position-relative overflow-auto';
-            newStructure.innerHTML = createClipboardHTML(codeContent);
-
-            const parentElement = codeElement.parentElement;
-            if (selector.includes('highlight')) {
-                parentElement.insertBefore(newStructure, codeElement.nextSibling);
-                parentElement.removeChild(codeElement);
-            } else {
-                parentElement.parentElement.replaceChild(newStructure, parentElement);
-            }
-        });
-    };
-
-    handleCodeElements('pre.notranslate > code.notranslate');
-    handleCodeElements('div.highlight > pre.notranslate');
-
-    let currentFeedback = null;
-    document.querySelectorAll('clipboard-copy').forEach(copyButton => {
-        copyButton.addEventListener('click', () => {
-            const codeContent = copyButton.closest('.snippet-clipboard-content').innerText;
-            const tempTextArea = document.createElement('textarea');
-            tempTextArea.value = codeContent;
-            document.body.appendChild(tempTextArea);
-            tempTextArea.select();
-            document.execCommand('copy');
-            document.body.removeChild(tempTextArea);
-
-            const copyIcon = copyButton.querySelector('.octicon-copy');
-            const checkIcon = copyButton.querySelector('.octicon-check');
-            const copyFeedback = copyButton.nextElementSibling;
-
-            if (currentFeedback && currentFeedback !== copyFeedback) {currentFeedback.style.display = 'none';}
-            currentFeedback = copyFeedback;
-
-            copyIcon.classList.add('d-none');
-            checkIcon.classList.remove('d-none');
-            copyFeedback.style.display = 'block';
-            copyButton.style.borderColor = 'var(--color-success-fg)';
-
-            setTimeout(() => {
-                copyIcon.classList.remove('d-none');
-                checkIcon.classList.add('d-none');
-                copyFeedback.style.display = 'none';
-                copyButton.style.borderColor = '';
-            }, 2000);
-        });
-    });
-});
 
 </script>
 <script defer src="http://ssh.witter.top:10012/script.js" data-website-id="b891c729-62b4-46cb-bdca-d622dc706106"></script>
