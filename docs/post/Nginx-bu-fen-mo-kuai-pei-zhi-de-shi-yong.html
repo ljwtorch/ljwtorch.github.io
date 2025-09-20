@@ -131,21 +131,21 @@ body{box-sizing: border-box;min-width: 200px;max-width: 900px;margin: 20px auto;
     <div id="content">
 <div class="markdown-body" id="postBody"><h3>sub_filter 指令的使用</h3>
 <h4>配置：</h4>
-<div class="highlight highlight-source-nginx"><pre class="notranslate"><span class="pl-k">location</span> <span class="pl-en">/ </span>{
-       <span class="pl-k">sub_filter</span> <span class="pl-s">'https://static.xxxx.hk/partner/assets'</span> <span class="pl-s">'/build'</span>;
-       <span class="pl-k">sub_filter_once</span> off;
-       <span class="pl-k">sub_filter_types</span> *;
-       <span class="pl-k">proxy_set_header</span> Accept-Encoding <span class="pl-s">""</span>;
-       <span class="pl-k">proxy_redirect</span><span class="pl-c1"> off</span>;
-       <span class="pl-k">proxy_set_header</span> Host <span class="pl-smi">$host</span>;
-       <span class="pl-k">proxy_set_header</span> X-Forwarded-Host <span class="pl-smi">$host</span>;
-       <span class="pl-k">proxy_set_header</span> X-Forwarded-Server <span class="pl-smi">$host</span>;
-       <span class="pl-k">proxy_set_header</span> X-Real-IP <span class="pl-smi">$remote_addr</span>;
-       <span class="pl-k">proxy_set_header</span> X-Forwarded-For <span class="pl-smi">$proxy_add_x_forwarded_for</span>;
-       <span class="pl-k">include</span> vhost/ipdb;
-       <span class="pl-k">proxy_buffering</span><span class="pl-c1"> on</span>;
-       <span class="pl-k">proxy_pass</span> http://192.168.8.100:3343;
-}</pre></div>
+<div class="highlight highlight-source-nginx"><pre class="notranslate"><span class="pl-c1">location</span> / <span class="pl-c1">{</span>
+       <span class="pl-c1">sub_filter</span> <span class="pl-s">'https://static.xxxx.hk/partner/assets' '/build'</span><span class="pl-c1">;</span>
+       <span class="pl-c1">sub_filter_once</span> off<span class="pl-c1">;</span>
+       <span class="pl-c1">sub_filter_types</span> *<span class="pl-c1">;</span>
+       <span class="pl-c1">proxy_set_header</span> Accept-Encoding <span class="pl-s">""</span><span class="pl-c1">;</span>
+       <span class="pl-c1">proxy_redirect</span> off<span class="pl-c1">;</span>
+       <span class="pl-c1">proxy_set_header</span> Host <span class="pl-v">$host</span><span class="pl-c1">;</span>
+       <span class="pl-c1">proxy_set_header</span> X-Forwarded-Host <span class="pl-v">$host</span><span class="pl-c1">;</span>
+       <span class="pl-c1">proxy_set_header</span> X-Forwarded-Server <span class="pl-v">$host</span><span class="pl-c1">;</span>
+       <span class="pl-c1">proxy_set_header</span> X-Real-IP <span class="pl-v">$remote_addr</span><span class="pl-c1">;</span>
+       <span class="pl-c1">proxy_set_header</span> X-Forwarded-For <span class="pl-v">$proxy_add_x_forwarded_for</span><span class="pl-c1">;</span>
+       <span class="pl-c1">include</span> vhost/ipdb<span class="pl-c1">;</span>
+       <span class="pl-c1">proxy_buffering</span> on<span class="pl-c1">;</span>
+       <span class="pl-c1">proxy_pass</span> <span class="pl-c1">http</span>://<span class="pl-c1">192.168.8.100:3343</span><span class="pl-c1">;</span>
+<span class="pl-c1">}</span></pre></div>
 <ol>
 <li><strong><code class="notranslate">sub_filter</code></strong>
 <ul>
@@ -191,20 +191,20 @@ body{box-sizing: border-box;min-width: 200px;max-width: 900px;margin: 20px auto;
 </ul>
 <h3>limit_except 限制某些请求访问</h3>
 <h4>配置：</h4>
-<div class="highlight highlight-source-nginx"><pre class="notranslate"><span class="pl-k">location</span> <span class="pl-en">/ </span>{
-    <span class="pl-k">limit_except</span> GET HEAD OPTIONS{
-        deny<span class="pl-c1"> all</span>;
-    }
-    <span class="pl-k">proxy_redirect</span>    <span class="pl-c1"> off</span>;
-    <span class="pl-k">proxy_set_header</span>   Host <span class="pl-smi">$host</span>;
-    <span class="pl-k">proxy_set_header</span>   X-Forwarded-Host <span class="pl-smi">$host</span>;
-    <span class="pl-k">proxy_set_header</span>   X-Forwarded-Server <span class="pl-smi">$host</span>;
-    <span class="pl-k">proxy_set_header</span>   X-Real-IP        <span class="pl-smi">$remote_addr</span>;
-    <span class="pl-k">proxy_set_header</span>   X-Forwarded-For  <span class="pl-smi">$proxy_add_x_forwarded_for</span>;
-    <span class="pl-k">include</span> vhost/ipdb;
-    <span class="pl-k">proxy_buffering</span>   <span class="pl-c1"> on</span>;
-    <span class="pl-k">proxy_pass</span>         http://xxxx;
-}</pre></div>
+<div class="highlight highlight-source-nginx"><pre class="notranslate"><span class="pl-c1">location</span> / <span class="pl-c1">{</span>
+    <span class="pl-c1">limit_except</span> GET HEAD OPTIONS<span class="pl-c1">{</span>
+        <span class="pl-c1">deny</span> all<span class="pl-c1">;</span>
+    <span class="pl-c1">}</span>
+    <span class="pl-c1">proxy_redirect</span>     off<span class="pl-c1">;</span>
+    <span class="pl-c1">proxy_set_header</span>   Host <span class="pl-v">$host</span><span class="pl-c1">;</span>
+    <span class="pl-c1">proxy_set_header</span>   X-Forwarded-Host <span class="pl-v">$host</span><span class="pl-c1">;</span>
+    <span class="pl-c1">proxy_set_header</span>   X-Forwarded-Server <span class="pl-v">$host</span><span class="pl-c1">;</span>
+    <span class="pl-c1">proxy_set_header</span>   X-Real-IP        <span class="pl-v">$remote_addr</span><span class="pl-c1">;</span>
+    <span class="pl-c1">proxy_set_header</span>   X-Forwarded-For  <span class="pl-v">$proxy_add_x_forwarded_for</span><span class="pl-c1">;</span>
+    <span class="pl-c1">include</span> vhost/ipdb<span class="pl-c1">;</span>
+    <span class="pl-c1">proxy_buffering</span>    on<span class="pl-c1">;</span>
+    <span class="pl-c1">proxy_pass</span>         <span class="pl-c1">http</span>://xxxx<span class="pl-c1">;</span>
+<span class="pl-c1">}</span></pre></div>
 <h4>用途：</h4>
 <ol>
 <li><code class="notranslate">limit_except</code> 是 Nginx 的 <code class="notranslate">ngx_http_access_module</code> 模块的一部分，用于对除指定 HTTP 方法外的其他方法应用访问控制规则；</li>
