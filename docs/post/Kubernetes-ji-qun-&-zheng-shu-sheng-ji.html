@@ -529,7 +529,7 @@ kubectl -n kube-system delete po etcd-xxx kube-apiserver-xxx kube-controller-man
 <meta property="og:url" content="https://blog.witter.top/post/Kubernetes-ji-qun-%26-zheng-shu-sheng-ji.html">
 <meta property="og:image" content="https://img.witter.top/file/b037878209903b7d5bb17.jpg">
 <title>Kubernetes集群&证书升级</title>
-
+<link href="//unpkg.com/@wooorm/starry-night@2.1.1/style/both.css" rel="stylesheet" />
 
 
 </head>
@@ -553,7 +553,17 @@ body{box-sizing: border-box;min-width: 200px;max-width: 900px;margin: 20px auto;
     body {padding: 8px;}
     .postTitle{font-size:24px;}
 }
-
+.copy-feedback {
+    display: none;
+    position: absolute;
+    top: 10px;
+    right: 50px;
+    color: var(--color-fg-on-emphasis);
+    background-color: var(--color-fg-muted);
+    border-radius: 3px;
+    padding: 5px 8px;
+    font-size: 12px;
+}
 </style>
 
 
@@ -593,51 +603,49 @@ body{box-sizing: border-box;min-width: 200px;max-width: 900px;margin: 20px auto;
 <blockquote>
 <p>这里使用的是<a href="https://mirrors.tuna.tsinghua.edu.cn/help/kubernetes/" rel="nofollow">清华镜像源地址</a>，宿主机使用的包管理器为apt，在以下 URL 中，所有仓库的公钥均相同，只需要将仓库地址中的 <code class="notranslate">v1.28</code> 修改为所需的版本</p>
 </blockquote>
-<pre lang="shell" class="notranslate"><code class="notranslate">curl -fsSL https://pkgs.k8s.io/core:/stable:/v1.28/deb/Release.key | gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg
+<div class="highlight highlight-source-shell"><pre class="notranslate">curl -fsSL https://pkgs.k8s.io/core:/stable:/v1.28/deb/Release.key <span class="pl-k">|</span> gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg
 
 vim /etc/apt/sources.list.d/kubernetes.list
-deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://mirrors.tuna.tsinghua.edu.cn/kubernetes/core:/stable:/v1.27/deb/ /
-# deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://mirrors.tuna.tsinghua.edu.cn/kubernetes/addons:/cri-o:/stable:/v1.27/deb/ /
-</code></pre>
+deb [signed-by<span class="pl-k">=</span>/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://mirrors.tuna.tsinghua.edu.cn/kubernetes/core:/stable:/v1.27/deb/ /
+<span class="pl-c"><span class="pl-c">#</span> deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://mirrors.tuna.tsinghua.edu.cn/kubernetes/addons:/cri-o:/stable:/v1.27/deb/ /</span></pre></div>
 <h4>2.确定要升级到哪个版本</h4>
-<pre lang="shell" class="notranslate"><code class="notranslate"># Find the latest 1.30 version in the list.
-# It should look like 1.30.x-*, where x is the latest patch.
+<div class="highlight highlight-source-shell"><pre class="notranslate"><span class="pl-c"><span class="pl-c">#</span> Find the latest 1.30 version in the list.</span>
+<span class="pl-c"><span class="pl-c">#</span> It should look like 1.30.x-*, where x is the latest patch.</span>
 sudo apt update
-sudo apt-cache madison kubeadm
-</code></pre>
+sudo apt-cache madison kubeadm</pre></div>
 <h4>3.升级control-plane节点（kubeadm）</h4>
 <blockquote>
 <p>该节点必须具有<code class="notranslate">/etc/kubernetes/admin.conf</code>文件，<strong>v1.28版本是一个分界点，之前的版本会立即升级所有插件（包括coredns和kube-proxy），需要注意是否还有未升级的其他control-plane节点</strong></p>
 </blockquote>
-<pre lang="shell" class="notranslate"><code class="notranslate"># replace x in 1.30.x-* with the latest patch version
-# 此时目标升级至 v1.27.16 需替换下面的版本
-sudo apt-mark unhold kubeadm &amp;&amp; \
-sudo apt-get update &amp;&amp; sudo apt-get install -y kubeadm='1.30.x-*' &amp;&amp; \
+<div class="highlight highlight-source-shell"><pre class="notranslate"><span class="pl-c"><span class="pl-c">#</span> replace x in 1.30.x-* with the latest patch version</span>
+<span class="pl-c"><span class="pl-c">#</span> 此时目标升级至 v1.27.16 需替换下面的版本</span>
+sudo apt-mark unhold kubeadm <span class="pl-k">&amp;&amp;</span> \
+sudo apt-get update <span class="pl-k">&amp;&amp;</span> sudo apt-get install -y kubeadm=<span class="pl-s"><span class="pl-pds">'</span>1.30.x-*<span class="pl-pds">'</span></span> <span class="pl-k">&amp;&amp;</span> \
 sudo apt-mark hold kubeadm
 
-# 验证是否为预期版本
+<span class="pl-c"><span class="pl-c">#</span> 验证是否为预期版本</span>
 kubeadm version
 
-# 验证升级计划
+<span class="pl-c"><span class="pl-c">#</span> 验证升级计划</span>
 kubeadm upgrade plan
-	# 以下为输出内容
+	<span class="pl-c"><span class="pl-c">#</span> 以下为输出内容</span>
 [upgrade/config] Making sure the configuration is correct:
 [upgrade/config] Reading configuration from the cluster...
-[upgrade/config] FYI: You can look at this config file with 'kubectl -n kube-system get cm kubeadm-config -o yaml'
+[upgrade/config] FYI: You can look at this config file with <span class="pl-s"><span class="pl-pds">'</span>kubectl -n kube-system get cm kubeadm-config -o yaml<span class="pl-pds">'</span></span>
 [preflight] Running pre-flight checks.
 [upgrade] Running cluster health checks
 [upgrade] Fetching available versions to upgrade to
 [upgrade/versions] Cluster version: v1.27.7
 [upgrade/versions] kubeadm version: v1.27.16
-I0728 14:52:53.611082 1225480 version.go:256] remote version is much newer: v1.30.3; falling back to: stable-1.27
+I0728 14:52:53.611082 1225480 version.go:256] remote version is much newer: v1.30.3<span class="pl-k">;</span> falling back to: stable-1.27
 [upgrade/versions] Target version: v1.27.16
-[upgrade/versions] Latest version in the v1.27 series: v1.27.16
+[upgrade/versions] Latest version <span class="pl-k">in</span> the v1.27 series: v1.27.16
 
-Components that must be upgraded manually after you have upgraded the control plane with 'kubeadm upgrade apply':
+Components that must be upgraded manually after you have upgraded the control plane with <span class="pl-s"><span class="pl-pds">'</span>kubeadm upgrade apply<span class="pl-pds">'</span></span>:
 COMPONENT   CURRENT       TARGET
 kubelet     2 x v1.27.4   v1.27.16
 
-Upgrade to the latest version in the v1.27 series:
+Upgrade to the latest version <span class="pl-k">in</span> the v1.27 series:
 
 COMPONENT                 CURRENT   TARGET
 kube-apiserver            v1.27.7   v1.27.16
@@ -655,9 +663,9 @@ _____________________________________________________________________
 
 
 The table below shows the current state of component configs as understood by this version of kubeadm.
-Configs that have a "yes" mark in the "MANUAL UPGRADE REQUIRED" column require manual config upgrade or
+Configs that have a <span class="pl-s"><span class="pl-pds">"</span>yes<span class="pl-pds">"</span></span> mark <span class="pl-k">in</span> the <span class="pl-s"><span class="pl-pds">"</span>MANUAL UPGRADE REQUIRED<span class="pl-pds">"</span></span> column require manual config upgrade or
 resetting to kubeadm defaults before a successful upgrade can be performed. The version to manually
-upgrade to is denoted in the "PREFERRED VERSION" column.
+upgrade to is denoted <span class="pl-k">in</span> the <span class="pl-s"><span class="pl-pds">"</span>PREFERRED VERSION<span class="pl-pds">"</span></span> column.
 
 API GROUP                 CURRENT VERSION   PREFERRED VERSION   MANUAL UPGRADE REQUIRED
 kubeproxy.config.k8s.io   v1alpha1          v1alpha1            no
@@ -665,82 +673,81 @@ kubelet.config.k8s.io     v1beta1           v1beta1             no
 _____________________________________________________________________
 
 
-# 执行对应的升级命令
+<span class="pl-c"><span class="pl-c">#</span> 执行对应的升级命令</span>
 kubeadm upgrade apply v1.27.16
-	# 以下为输出内容
+	<span class="pl-c"><span class="pl-c">#</span> 以下为输出内容</span>
 [upgrade/config] Making sure the configuration is correct:
 [upgrade/config] Reading configuration from the cluster...
-[upgrade/config] FYI: You can look at this config file with 'kubectl -n kube-system get cm kubeadm-config -o yaml'
+[upgrade/config] FYI: You can look at this config file with <span class="pl-s"><span class="pl-pds">'</span>kubectl -n kube-system get cm kubeadm-config -o yaml<span class="pl-pds">'</span></span>
 [preflight] Running pre-flight checks.
 [upgrade] Running cluster health checks
-[upgrade/version] You have chosen to change the cluster version to "v1.27.16"
+[upgrade/version] You have chosen to change the cluster version to <span class="pl-s"><span class="pl-pds">"</span>v1.27.16<span class="pl-pds">"</span></span>
 [upgrade/versions] Cluster version: v1.27.7
 [upgrade/versions] kubeadm version: v1.27.16
-[upgrade] Are you sure you want to proceed? [y/N]: y
-[upgrade/prepull] Pulling images required for setting up a Kubernetes cluster
+[upgrade] Are you sure you want to proceed<span class="pl-k">?</span> [y/N]: y
+[upgrade/prepull] Pulling images required <span class="pl-k">for</span> setting up a Kubernetes cluster
 [upgrade/prepull] This might take a minute or two, depending on the speed of your internet connection
-[upgrade/prepull] You can also perform this action in beforehand using 'kubeadm config images pull'
-W0728 14:54:24.900816 1226355 checks.go:835] detected that the sandbox image "registry.aliyuncs.com/google_containers/pause:3.6" of the container runtime is inconsistent with that used by kubeadm. It is recommended that using "registry.aliyuncs.com/google_containers/pause:3.9" as the CRI sandbox image.
-[upgrade/apply] Upgrading your Static Pod-hosted control plane to version "v1.27.16" (timeout: 5m0s)...
-[upgrade/etcd] Upgrading to TLS for etcd
-[upgrade/staticpods] Preparing for "etcd" upgrade
+[upgrade/prepull] You can also perform this action <span class="pl-k">in</span> beforehand using <span class="pl-s"><span class="pl-pds">'</span>kubeadm config images pull<span class="pl-pds">'</span></span>
+W0728 14:54:24.900816 1226355 checks.go:835] detected that the sandbox image <span class="pl-s"><span class="pl-pds">"</span>registry.aliyuncs.com/google_containers/pause:3.6<span class="pl-pds">"</span></span> of the container runtime is inconsistent with that used by kubeadm. It is recommended that using <span class="pl-s"><span class="pl-pds">"</span>registry.aliyuncs.com/google_containers/pause:3.9<span class="pl-pds">"</span></span> as the CRI sandbox image.
+[upgrade/apply] Upgrading your Static Pod-hosted control plane to version <span class="pl-s"><span class="pl-pds">"</span>v1.27.16<span class="pl-pds">"</span></span> (timeout: 5m0s)...
+[upgrade/etcd] Upgrading to TLS <span class="pl-k">for</span> etcd
+[upgrade/staticpods] Preparing <span class="pl-k">for</span> <span class="pl-s"><span class="pl-pds">"</span>etcd<span class="pl-pds">"</span></span> upgrade
 [upgrade/staticpods] Renewing etcd-server certificate
 [upgrade/staticpods] Renewing etcd-peer certificate
 [upgrade/staticpods] Renewing etcd-healthcheck-client certificate
-[upgrade/staticpods] Moved new manifest to "/etc/kubernetes/manifests/etcd.yaml" and backed up old manifest to "/etc/kubernetes/tmp/kubeadm-backup-manifests-2024-07-28-14-54-44/etcd.yaml"
-[upgrade/staticpods] Waiting for the kubelet to restart the component
+[upgrade/staticpods] Moved new manifest to <span class="pl-s"><span class="pl-pds">"</span>/etc/kubernetes/manifests/etcd.yaml<span class="pl-pds">"</span></span> and backed up old manifest to <span class="pl-s"><span class="pl-pds">"</span>/etc/kubernetes/tmp/kubeadm-backup-manifests-2024-07-28-14-54-44/etcd.yaml<span class="pl-pds">"</span></span>
+[upgrade/staticpods] Waiting <span class="pl-k">for</span> the kubelet to restart the component
 [upgrade/staticpods] This might take a minute or longer depending on the component/version gap (timeout 5m0s)
-[apiclient] Found 1 Pods for label selector component=etcd
-[upgrade/staticpods] Component "etcd" upgraded successfully!
-[upgrade/etcd] Waiting for etcd to become available
-[upgrade/staticpods] Writing new Static Pod manifests to "/etc/kubernetes/tmp/kubeadm-upgraded-manifests97929804"
-[upgrade/staticpods] Preparing for "kube-apiserver" upgrade
+[apiclient] Found 1 Pods <span class="pl-k">for</span> label selector component=etcd
+[upgrade/staticpods] Component <span class="pl-s"><span class="pl-pds">"</span>etcd<span class="pl-pds">"</span></span> upgraded successfully<span class="pl-k">!</span>
+[upgrade/etcd] Waiting <span class="pl-k">for</span> etcd to become available
+[upgrade/staticpods] Writing new Static Pod manifests to <span class="pl-s"><span class="pl-pds">"</span>/etc/kubernetes/tmp/kubeadm-upgraded-manifests97929804<span class="pl-pds">"</span></span>
+[upgrade/staticpods] Preparing <span class="pl-k">for</span> <span class="pl-s"><span class="pl-pds">"</span>kube-apiserver<span class="pl-pds">"</span></span> upgrade
 [upgrade/staticpods] Renewing apiserver certificate
 [upgrade/staticpods] Renewing apiserver-kubelet-client certificate
 [upgrade/staticpods] Renewing front-proxy-client certificate
 [upgrade/staticpods] Renewing apiserver-etcd-client certificate
-[upgrade/staticpods] Moved new manifest to "/etc/kubernetes/manifests/kube-apiserver.yaml" and backed up old manifest to "/etc/kubernetes/tmp/kubeadm-backup-manifests-2024-07-28-14-54-44/kube-apiserver.yaml"
-[upgrade/staticpods] Waiting for the kubelet to restart the component
+[upgrade/staticpods] Moved new manifest to <span class="pl-s"><span class="pl-pds">"</span>/etc/kubernetes/manifests/kube-apiserver.yaml<span class="pl-pds">"</span></span> and backed up old manifest to <span class="pl-s"><span class="pl-pds">"</span>/etc/kubernetes/tmp/kubeadm-backup-manifests-2024-07-28-14-54-44/kube-apiserver.yaml<span class="pl-pds">"</span></span>
+[upgrade/staticpods] Waiting <span class="pl-k">for</span> the kubelet to restart the component
 [upgrade/staticpods] This might take a minute or longer depending on the component/version gap (timeout 5m0s)
-[apiclient] Found 1 Pods for label selector component=kube-apiserver
-[upgrade/staticpods] Component "kube-apiserver" upgraded successfully!
-[upgrade/staticpods] Preparing for "kube-controller-manager" upgrade
+[apiclient] Found 1 Pods <span class="pl-k">for</span> label selector component=kube-apiserver
+[upgrade/staticpods] Component <span class="pl-s"><span class="pl-pds">"</span>kube-apiserver<span class="pl-pds">"</span></span> upgraded successfully<span class="pl-k">!</span>
+[upgrade/staticpods] Preparing <span class="pl-k">for</span> <span class="pl-s"><span class="pl-pds">"</span>kube-controller-manager<span class="pl-pds">"</span></span> upgrade
 [upgrade/staticpods] Renewing controller-manager.conf certificate
-[upgrade/staticpods] Moved new manifest to "/etc/kubernetes/manifests/kube-controller-manager.yaml" and backed up old manifest to "/etc/kubernetes/tmp/kubeadm-backup-manifests-2024-07-28-14-54-44/kube-controller-manager.yaml"
-[upgrade/staticpods] Waiting for the kubelet to restart the component
+[upgrade/staticpods] Moved new manifest to <span class="pl-s"><span class="pl-pds">"</span>/etc/kubernetes/manifests/kube-controller-manager.yaml<span class="pl-pds">"</span></span> and backed up old manifest to <span class="pl-s"><span class="pl-pds">"</span>/etc/kubernetes/tmp/kubeadm-backup-manifests-2024-07-28-14-54-44/kube-controller-manager.yaml<span class="pl-pds">"</span></span>
+[upgrade/staticpods] Waiting <span class="pl-k">for</span> the kubelet to restart the component
 [upgrade/staticpods] This might take a minute or longer depending on the component/version gap (timeout 5m0s)
-[apiclient] Found 1 Pods for label selector component=kube-controller-manager
-[upgrade/staticpods] Component "kube-controller-manager" upgraded successfully!
-[upgrade/staticpods] Preparing for "kube-scheduler" upgrade
+[apiclient] Found 1 Pods <span class="pl-k">for</span> label selector component=kube-controller-manager
+[upgrade/staticpods] Component <span class="pl-s"><span class="pl-pds">"</span>kube-controller-manager<span class="pl-pds">"</span></span> upgraded successfully<span class="pl-k">!</span>
+[upgrade/staticpods] Preparing <span class="pl-k">for</span> <span class="pl-s"><span class="pl-pds">"</span>kube-scheduler<span class="pl-pds">"</span></span> upgrade
 [upgrade/staticpods] Renewing scheduler.conf certificate
-[upgrade/staticpods] Moved new manifest to "/etc/kubernetes/manifests/kube-scheduler.yaml" and backed up old manifest to "/etc/kubernetes/tmp/kubeadm-backup-manifests-2024-07-28-14-54-44/kube-scheduler.yaml"
-[upgrade/staticpods] Waiting for the kubelet to restart the component
+[upgrade/staticpods] Moved new manifest to <span class="pl-s"><span class="pl-pds">"</span>/etc/kubernetes/manifests/kube-scheduler.yaml<span class="pl-pds">"</span></span> and backed up old manifest to <span class="pl-s"><span class="pl-pds">"</span>/etc/kubernetes/tmp/kubeadm-backup-manifests-2024-07-28-14-54-44/kube-scheduler.yaml<span class="pl-pds">"</span></span>
+[upgrade/staticpods] Waiting <span class="pl-k">for</span> the kubelet to restart the component
 [upgrade/staticpods] This might take a minute or longer depending on the component/version gap (timeout 5m0s)
-[apiclient] Found 1 Pods for label selector component=kube-scheduler
-[upgrade/staticpods] Component "kube-scheduler" upgraded successfully!
-[upload-config] Storing the configuration used in ConfigMap "kubeadm-config" in the "kube-system" Namespace
-[kubelet] Creating a ConfigMap "kubelet-config" in namespace kube-system with the configuration for the kubelets in the cluster
+[apiclient] Found 1 Pods <span class="pl-k">for</span> label selector component=kube-scheduler
+[upgrade/staticpods] Component <span class="pl-s"><span class="pl-pds">"</span>kube-scheduler<span class="pl-pds">"</span></span> upgraded successfully<span class="pl-k">!</span>
+[upload-config] Storing the configuration used <span class="pl-k">in</span> ConfigMap <span class="pl-s"><span class="pl-pds">"</span>kubeadm-config<span class="pl-pds">"</span></span> <span class="pl-k">in</span> the <span class="pl-s"><span class="pl-pds">"</span>kube-system<span class="pl-pds">"</span></span> Namespace
+[kubelet] Creating a ConfigMap <span class="pl-s"><span class="pl-pds">"</span>kubelet-config<span class="pl-pds">"</span></span> <span class="pl-k">in</span> namespace kube-system with the configuration <span class="pl-k">for</span> <span class="pl-smi">the kubelets</span> <span class="pl-k">in</span> the cluster
 [upgrade] Backing up kubelet config file to /etc/kubernetes/tmp/kubeadm-kubelet-config2956970837/config.yaml
-[kubelet-start] Writing kubelet configuration to file "/var/lib/kubelet/config.yaml"
+[kubelet-start] Writing kubelet configuration to file <span class="pl-s"><span class="pl-pds">"</span>/var/lib/kubelet/config.yaml<span class="pl-pds">"</span></span>
 [bootstrap-token] Configured RBAC rules to allow Node Bootstrap tokens to get nodes
-[bootstrap-token] Configured RBAC rules to allow Node Bootstrap tokens to post CSRs in order for nodes to get long term certificate credentials
+[bootstrap-token] Configured RBAC rules to allow Node Bootstrap tokens to post CSRs <span class="pl-k">in</span> order <span class="pl-k">for</span> nodes to get long term certificate credentials
 [bootstrap-token] Configured RBAC rules to allow the csrapprover controller automatically approve CSRs from a Node Bootstrap Token
-[bootstrap-token] Configured RBAC rules to allow certificate rotation for all node client certificates in the cluster
+[bootstrap-token] Configured RBAC rules to allow certificate rotation <span class="pl-k">for</span> <span class="pl-smi">all node client certificates</span> <span class="pl-k">in</span> the cluster
 [addons] Applied essential addon: CoreDNS
 [addons] Applied essential addon: kube-proxy
 
-[upgrade/successful] SUCCESS! Your cluster was upgraded to "v1.27.16". Enjoy!
+[upgrade/successful] SUCCESS<span class="pl-k">!</span> Your cluster was upgraded to <span class="pl-s"><span class="pl-pds">"</span>v1.27.16<span class="pl-pds">"</span></span>. Enjoy<span class="pl-k">!</span>
 
-[upgrade/kubelet] Now that your control plane is upgraded, please proceed with upgrading your kubelets if you haven't already done so.
-
-# 升级CNI驱动插件，此时使用的是flannel，无需升级即可兼容；并且CNI驱动作为DS运行，无需在其他控制平面节点上执行此步骤
-# 如果有其他控制平面节点，需要执行
-sudo kubeadm upgrade node
-</code></pre>
+[upgrade/kubelet] Now that your control plane is upgraded, please proceed with upgrading your kubelets <span class="pl-k">if</span> you haven<span class="pl-s"><span class="pl-pds">'</span>t already done so.</span>
+<span class="pl-s"></span>
+<span class="pl-s"># 升级CNI驱动插件，此时使用的是flannel，无需升级即可兼容；并且CNI驱动作为DS运行，无需在其他控制平面节点上执行此步骤</span>
+<span class="pl-s"># 如果有其他控制平面节点，需要执行</span>
+<span class="pl-s">sudo kubeadm upgrade node</span></pre></div>
 <h4>4.升级control-plane节点（kubelet &amp; kubectl）</h4>
-<pre lang="shell" class="notranslate"><code class="notranslate"># 腾空该节点 xxx 为控制平面的节点名称
+<div class="highlight highlight-source-shell"><pre class="notranslate"><span class="pl-c"><span class="pl-c">#</span> 腾空该节点 xxx 为控制平面的节点名称</span>
 kubectl drain xxx --ignore-daemonsets
-	# 下面为输出内容 省略了不关键的输出内容
+	<span class="pl-c"><span class="pl-c">#</span> 下面为输出内容 省略了不关键的输出内容</span>
 node/xxx already cordoned
 Warning: ignoring DaemonSet-managed Pods: kube-flannel/kube-flannel-ds-mkn4j, kube-system/kube-proxy-8mf4k, loggie/loggie-tzxtz
 evicting pod xxx
@@ -750,68 +757,62 @@ evicting pod xxx
 pod/xxx evicted
 node/xxx drained
 
-# 升级kubectl和kubelet
-# 用最新的补丁版本替换 1.30.x-* 中的 x
-sudo apt-mark unhold kubelet kubectl &amp;&amp; \
-sudo apt-get update &amp;&amp; sudo apt-get install -y kubelet='1.30.x-*' kubectl='1.30.x-*' &amp;&amp; \
+<span class="pl-c"><span class="pl-c">#</span> 升级kubectl和kubelet</span>
+<span class="pl-c"><span class="pl-c">#</span> 用最新的补丁版本替换 1.30.x-* 中的 x</span>
+sudo apt-mark unhold kubelet kubectl <span class="pl-k">&amp;&amp;</span> \
+sudo apt-get update <span class="pl-k">&amp;&amp;</span> sudo apt-get install -y kubelet=<span class="pl-s"><span class="pl-pds">'</span>1.30.x-*<span class="pl-pds">'</span></span> kubectl=<span class="pl-s"><span class="pl-pds">'</span>1.30.x-*<span class="pl-pds">'</span></span> <span class="pl-k">&amp;&amp;</span> \
 sudo apt-mark hold kubelet kubectl
-# 重启
+<span class="pl-c"><span class="pl-c">#</span> 重启</span>
 sudo systemctl daemon-reload
 sudo systemctl restart kubelet
-# 解除节点保护
-# 将 &lt;node-to-uncordon&gt; 替换为你的节点名称
-kubectl uncordon &lt;node-to-uncordon&gt;
-</code></pre>
+<span class="pl-c"><span class="pl-c">#</span> 解除节点保护</span>
+<span class="pl-c"><span class="pl-c">#</span> 将 &lt;node-to-uncordon&gt; 替换为你的节点名称</span>
+kubectl uncordon <span class="pl-k">&lt;</span>node-to-uncordon<span class="pl-k">&gt;</span></pre></div>
 <h4>5.升级工作节点</h4>
-<pre lang="shell" class="notranslate"><code class="notranslate"># 将 1.30.x-* 中的 x 替换为最新的补丁版本
-sudo apt-mark unhold kubeadm &amp;&amp; \
-sudo apt-get update &amp;&amp; sudo apt-get install -y kubeadm='1.30.x-*' &amp;&amp; \
+<div class="highlight highlight-source-shell"><pre class="notranslate"><span class="pl-c"><span class="pl-c">#</span> 将 1.30.x-* 中的 x 替换为最新的补丁版本</span>
+sudo apt-mark unhold kubeadm <span class="pl-k">&amp;&amp;</span> \
+sudo apt-get update <span class="pl-k">&amp;&amp;</span> sudo apt-get install -y kubeadm=<span class="pl-s"><span class="pl-pds">'</span>1.30.x-*<span class="pl-pds">'</span></span> <span class="pl-k">&amp;&amp;</span> \
 sudo apt-mark hold kubeadm
 sudo kubeadm upgrade node
-# 腾空节点
+<span class="pl-c"><span class="pl-c">#</span> 腾空节点</span>
 kubectl drain xxx --ignore-daemonsets
-# 重启
+<span class="pl-c"><span class="pl-c">#</span> 重启</span>
 sudo systemctl daemon-reload
 sudo systemctl restart kubelet
-# 在控制平面节点上执行此命令
-# 将 &lt;node-to-uncordon&gt; 替换为你的节点名称
-kubectl uncordon &lt;node-to-uncordon&gt;
-</code></pre>
+<span class="pl-c"><span class="pl-c">#</span> 在控制平面节点上执行此命令</span>
+<span class="pl-c"><span class="pl-c">#</span> 将 &lt;node-to-uncordon&gt; 替换为你的节点名称</span>
+kubectl uncordon <span class="pl-k">&lt;</span>node-to-uncordon<span class="pl-k">&gt;</span></pre></div>
 <h3>证书手动更新</h3>
 <blockquote>
 <p><strong><a href="https://kubernetes.io/docs/tasks/administer-cluster/kubeadm/kubeadm-certs/#manual-preparation-of-component-credentials" rel="nofollow">官网升级步骤</a>，需要查看文档中的警告和笔记</strong>，当集群升级后，证书会自行更新</p>
 </blockquote>
 <h4>1.检查证书是否过期</h4>
-<pre lang="shell" class="notranslate"><code class="notranslate">kubeadm certs check-expiration
-</code></pre>
+<div class="highlight highlight-source-shell"><pre class="notranslate">kubeadm certs check-expiration</pre></div>
 <h4>2.续订证书</h4>
-<pre lang="shell" class="notranslate"><code class="notranslate">kubeadm certs renew all
-sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
-sudo chown $(id -u):$(id -g) $HOME/.kube/config
-</code></pre>
+<div class="highlight highlight-source-shell"><pre class="notranslate">kubeadm certs renew all
+sudo cp -i /etc/kubernetes/admin.conf <span class="pl-smi">$HOME</span>/.kube/config
+sudo chown <span class="pl-s"><span class="pl-pds">$(</span>id -u<span class="pl-pds">)</span></span>:<span class="pl-s"><span class="pl-pds">$(</span>id -g<span class="pl-pds">)</span></span> <span class="pl-smi">$HOME</span>/.kube/config</pre></div>
 <h4>3.当kubelet客户端证书轮换失败</h4>
 <blockquote>
 <p>kube-apiserver报错 <code class="notranslate">x509: certificate has expired or is not yet valid</code></p>
 </blockquote>
-<pre lang="shell" class="notranslate"><code class="notranslate"># 从故障节点备份和删除 /etc/kubernetes/kubelet.conf 和 /var/lib/kubelet/pki/kubelet-client*
-# 在集群中具有 /etc/kubernetes/pki/ca.key 的正常工作的控制平面节点上执行($NODE为故障节点的名称)
-kubeadm kubeconfig user --org system:nodes --client-name system:node:$NODE &gt; kubelet.conf
-# 复制生成的kubelet.conf到/etc/kubernetes/kubelet.conf
-# 在故障节点上执行后，/var/lib/kubelet/pki/kubelet-client-current.pem会重新创建
+<div class="highlight highlight-source-shell"><pre class="notranslate"><span class="pl-c"><span class="pl-c">#</span> 从故障节点备份和删除 /etc/kubernetes/kubelet.conf 和 /var/lib/kubelet/pki/kubelet-client*</span>
+<span class="pl-c"><span class="pl-c">#</span> 在集群中具有 /etc/kubernetes/pki/ca.key 的正常工作的控制平面节点上执行($NODE为故障节点的名称)</span>
+kubeadm kubeconfig user --org system:nodes --client-name system:node:<span class="pl-smi">$NODE</span> <span class="pl-k">&gt;</span> kubelet.conf
+<span class="pl-c"><span class="pl-c">#</span> 复制生成的kubelet.conf到/etc/kubernetes/kubelet.conf</span>
+<span class="pl-c"><span class="pl-c">#</span> 在故障节点上执行后，/var/lib/kubelet/pki/kubelet-client-current.pem会重新创建</span>
 systemctl restart kubelet
-# 手动编辑/etc/kubernetes/kubelet.conf 将生成的 client-certificate-data 和 client-key-data 替换为：
+<span class="pl-c"><span class="pl-c">#</span> 手动编辑/etc/kubernetes/kubelet.conf 将生成的 client-certificate-data 和 client-key-data 替换为：</span>
 client-certificate: /var/lib/kubelet/pki/kubelet-client-current.pem
 client-key: /var/lib/kubelet/pki/kubelet-client-current.pem
-# 重新启动kubelet
-systemctl restart kubelet
-</code></pre>
+<span class="pl-c"><span class="pl-c">#</span> 重新启动kubelet</span>
+systemctl restart kubelet</pre></div>
 <h4>4.更新后处理</h4>
-<pre lang="shell" class="notranslate"><code class="notranslate"># 重建 apiserver etcd controller-manager scheduler
+<div class="highlight highlight-source-shell"><pre class="notranslate"><span class="pl-c"><span class="pl-c">#</span> 重建 apiserver etcd controller-manager scheduler</span>
 kubectl -n kube-system delete po etcd-xxx kube-apiserver-xxx kube-controller-manager-xxx kube-scheduler-xxx
-# 查看对应pod日志，如果仍然报错：x509: certificate has expired or is not yet valid，则：
-# 临时将清单文件从 /etc/kubernetes/manifests/ 移除并等待 20 秒，并再次重建pod
-# 之后你可以将文件移回去，kubelet 可以完成 Pod 的重建，而组件的证书更新操作也得以完成
-</code></pre></div>
+<span class="pl-c"><span class="pl-c">#</span> 查看对应pod日志，如果仍然报错：x509: certificate has expired or is not yet valid，则：</span>
+<span class="pl-c"><span class="pl-c">#</span> 临时将清单文件从 /etc/kubernetes/manifests/ 移除并等待 20 秒，并再次重建pod</span>
+<span class="pl-c"><span class="pl-c">#</span> 之后你可以将文件移回去，kubelet 可以完成 Pod 的重建，而组件的证书更新操作也得以完成</span></pre></div></div>
 <div style="font-size:small;margin-top:8px;float:right;">🍺转载文章请注明出处，谢谢！🍺</div>
 
 <button class="btn btn-block" type="button" onclick="openComments()" id="cmButton">评论</button>
@@ -836,7 +837,7 @@ if("06/20/2024"!=""){
 </script></div>
 </body>
 <script>
-var IconList={'sun': 'M8 10.5a2.5 2.5 0 100-5 2.5 2.5 0 000 5zM8 12a4 4 0 100-8 4 4 0 000 8zM8 0a.75.75 0 01.75.75v1.5a.75.75 0 01-1.5 0V.75A.75.75 0 018 0zm0 13a.75.75 0 01.75.75v1.5a.75.75 0 01-1.5 0v-1.5A.75.75 0 018 13zM2.343 2.343a.75.75 0 011.061 0l1.06 1.061a.75.75 0 01-1.06 1.06l-1.06-1.06a.75.75 0 010-1.06zm9.193 9.193a.75.75 0 011.06 0l1.061 1.06a.75.75 0 01-1.06 1.061l-1.061-1.06a.75.75 0 010-1.061zM16 8a.75.75 0 01-.75.75h-1.5a.75.75 0 010-1.5h1.5A.75.75 0 0116 8zM3 8a.75.75 0 01-.75.75H.75a.75.75 0 010-1.5h1.5A.75.75 0 013 8zm10.657-5.657a.75.75 0 010 1.061l-1.061 1.06a.75.75 0 11-1.06-1.06l1.06-1.06a.75.75 0 011.06 0zm-9.193 9.193a.75.75 0 010 1.06l-1.06 1.061a.75.75 0 11-1.061-1.06l1.06-1.061a.75.75 0 011.061 0z', 'moon': 'M9.598 1.591a.75.75 0 01.785-.175 7 7 0 11-8.967 8.967.75.75 0 01.961-.96 5.5 5.5 0 007.046-7.046.75.75 0 01.175-.786zm1.616 1.945a7 7 0 01-7.678 7.678 5.5 5.5 0 107.678-7.678z', 'sync': 'M1.705 8.005a.75.75 0 0 1 .834.656 5.5 5.5 0 0 0 9.592 2.97l-1.204-1.204a.25.25 0 0 1 .177-.427h3.646a.25.25 0 0 1 .25.25v3.646a.25.25 0 0 1-.427.177l-1.38-1.38A7.002 7.002 0 0 1 1.05 8.84a.75.75 0 0 1 .656-.834ZM8 2.5a5.487 5.487 0 0 0-4.131 1.869l1.204 1.204A.25.25 0 0 1 4.896 6H1.25A.25.25 0 0 1 1 5.75V2.104a.25.25 0 0 1 .427-.177l1.38 1.38A7.002 7.002 0 0 1 14.95 7.16a.75.75 0 0 1-1.49.178A5.5 5.5 0 0 0 8 2.5Z', 'home': 'M6.906.664a1.749 1.749 0 0 1 2.187 0l5.25 4.2c.415.332.657.835.657 1.367v7.019A1.75 1.75 0 0 1 13.25 15h-3.5a.75.75 0 0 1-.75-.75V9H7v5.25a.75.75 0 0 1-.75.75h-3.5A1.75 1.75 0 0 1 1 13.25V6.23c0-.531.242-1.034.657-1.366l5.25-4.2Zm1.25 1.171a.25.25 0 0 0-.312 0l-5.25 4.2a.25.25 0 0 0-.094.196v7.019c0 .138.112.25.25.25H5.5V8.25a.75.75 0 0 1 .75-.75h3.5a.75.75 0 0 1 .75.75v5.25h2.75a.25.25 0 0 0 .25-.25V6.23a.25.25 0 0 0-.094-.195Z', 'github': 'M8 0c4.42 0 8 3.58 8 8a8.013 8.013 0 0 1-5.45 7.59c-.4.08-.55-.17-.55-.38 0-.27.01-1.13.01-2.2 0-.75-.25-1.23-.54-1.48 1.78-.2 3.65-.88 3.65-3.95 0-.88-.31-1.59-.82-2.15.08-.2.36-1.02-.08-2.12 0 0-.67-.22-2.2.82-.64-.18-1.32-.27-2-.27-.68 0-1.36.09-2 .27-1.53-1.03-2.2-.82-2.2-.82-.44 1.1-.16 1.92-.08 2.12-.51.56-.82 1.28-.82 2.15 0 3.06 1.86 3.75 3.64 3.95-.23.2-.44.55-.51 1.07-.46.21-1.61.55-2.33-.66-.15-.24-.6-.83-1.23-.82-.67.01-.27.38.01.53.34.19.73.9.82 1.13.16.45.68 1.31 2.69.94 0 .67.01 1.3.01 1.49 0 .21-.15.45-.55.38A7.995 7.995 0 0 1 0 8c0-4.42 3.58-8 8-8Z'};
+var IconList={'sun': 'M8 10.5a2.5 2.5 0 100-5 2.5 2.5 0 000 5zM8 12a4 4 0 100-8 4 4 0 000 8zM8 0a.75.75 0 01.75.75v1.5a.75.75 0 01-1.5 0V.75A.75.75 0 018 0zm0 13a.75.75 0 01.75.75v1.5a.75.75 0 01-1.5 0v-1.5A.75.75 0 018 13zM2.343 2.343a.75.75 0 011.061 0l1.06 1.061a.75.75 0 01-1.06 1.06l-1.06-1.06a.75.75 0 010-1.06zm9.193 9.193a.75.75 0 011.06 0l1.061 1.06a.75.75 0 01-1.06 1.061l-1.061-1.06a.75.75 0 010-1.061zM16 8a.75.75 0 01-.75.75h-1.5a.75.75 0 010-1.5h1.5A.75.75 0 0116 8zM3 8a.75.75 0 01-.75.75H.75a.75.75 0 010-1.5h1.5A.75.75 0 013 8zm10.657-5.657a.75.75 0 010 1.061l-1.061 1.06a.75.75 0 11-1.06-1.06l1.06-1.06a.75.75 0 011.06 0zm-9.193 9.193a.75.75 0 010 1.06l-1.06 1.061a.75.75 0 11-1.061-1.06l1.06-1.061a.75.75 0 011.061 0z', 'moon': 'M9.598 1.591a.75.75 0 01.785-.175 7 7 0 11-8.967 8.967.75.75 0 01.961-.96 5.5 5.5 0 007.046-7.046.75.75 0 01.175-.786zm1.616 1.945a7 7 0 01-7.678 7.678 5.5 5.5 0 107.678-7.678z', 'sync': 'M1.705 8.005a.75.75 0 0 1 .834.656 5.5 5.5 0 0 0 9.592 2.97l-1.204-1.204a.25.25 0 0 1 .177-.427h3.646a.25.25 0 0 1 .25.25v3.646a.25.25 0 0 1-.427.177l-1.38-1.38A7.002 7.002 0 0 1 1.05 8.84a.75.75 0 0 1 .656-.834ZM8 2.5a5.487 5.487 0 0 0-4.131 1.869l1.204 1.204A.25.25 0 0 1 4.896 6H1.25A.25.25 0 0 1 1 5.75V2.104a.25.25 0 0 1 .427-.177l1.38 1.38A7.002 7.002 0 0 1 14.95 7.16a.75.75 0 0 1-1.49.178A5.5 5.5 0 0 0 8 2.5Z', 'home': 'M6.906.664a1.749 1.749 0 0 1 2.187 0l5.25 4.2c.415.332.657.835.657 1.367v7.019A1.75 1.75 0 0 1 13.25 15h-3.5a.75.75 0 0 1-.75-.75V9H7v5.25a.75.75 0 0 1-.75.75h-3.5A1.75 1.75 0 0 1 1 13.25V6.23c0-.531.242-1.034.657-1.366l5.25-4.2Zm1.25 1.171a.25.25 0 0 0-.312 0l-5.25 4.2a.25.25 0 0 0-.094.196v7.019c0 .138.112.25.25.25H5.5V8.25a.75.75 0 0 1 .75-.75h3.5a.75.75 0 0 1 .75.75v5.25h2.75a.25.25 0 0 0 .25-.25V6.23a.25.25 0 0 0-.094-.195Z', 'github': 'M8 0c4.42 0 8 3.58 8 8a8.013 8.013 0 0 1-5.45 7.59c-.4.08-.55-.17-.55-.38 0-.27.01-1.13.01-2.2 0-.75-.25-1.23-.54-1.48 1.78-.2 3.65-.88 3.65-3.95 0-.88-.31-1.59-.82-2.15.08-.2.36-1.02-.08-2.12 0 0-.67-.22-2.2.82-.64-.18-1.32-.27-2-.27-.68 0-1.36.09-2 .27-1.53-1.03-2.2-.82-2.2-.82-.44 1.1-.16 1.92-.08 2.12-.51.56-.82 1.28-.82 2.15 0 3.06 1.86 3.75 3.64 3.95-.23.2-.44.55-.51 1.07-.46.21-1.61.55-2.33-.66-.15-.24-.6-.83-1.23-.82-.67.01-.27.38.01.53.34.19.73.9.82 1.13.16.45.68 1.31 2.69.94 0 .67.01 1.3.01 1.49 0 .21-.15.45-.55.38A7.995 7.995 0 0 1 0 8c0-4.42 3.58-8 8-8Z', 'copy': 'M0 6.75C0 5.784.784 5 1.75 5h1.5a.75.75 0 0 1 0 1.5h-1.5a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 0 0 .25-.25v-1.5a.75.75 0 0 1 1.5 0v1.5A1.75 1.75 0 0 1 9.25 16h-7.5A1.75 1.75 0 0 1 0 14.25Z M5 1.75C5 .784 5.784 0 6.75 0h7.5C15.216 0 16 .784 16 1.75v7.5A1.75 1.75 0 0 1 14.25 11h-7.5A1.75 1.75 0 0 1 5 9.25Zm1.75-.25a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 0 0 .25-.25v-7.5a.25.25 0 0 0-.25-.25Z', 'check': 'M13.78 4.22a.75.75 0 0 1 0 1.06l-7.25 7.25a.75.75 0 0 1-1.06 0L2.22 9.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018L6 10.94l6.72-6.72a.75.75 0 0 1 1.06 0Z'};
 var utterancesLoad=0;
 
 let themeSettings={
@@ -909,7 +910,70 @@ function iFrameLoading(){
     }
 }
 
+document.addEventListener('DOMContentLoaded', () => {
+    const createClipboardHTML = (codeContent, additionalClasses = '') => `
+        <pre class="notranslate"><code class="notranslate">${codeContent}</code></pre>
+        <div class="clipboard-container position-absolute right-0 top-0 ${additionalClasses}">
+            <clipboard-copy class="ClipboardButton btn m-2 p-0" role="button" style="display: inherit;">
+                <svg height="16" width="16" class="octicon octicon-copy m-2"><path d="${IconList["copy"]}"></path></svg>
+                <svg height="16" width="16" class="octicon octicon-check color-fg-success m-2 d-none"><path d="${IconList["check"]}"></path></svg>
+            </clipboard-copy>
+            <div class="copy-feedback">Copied!</div>
+        </div>
+    `;
 
+    const handleCodeElements = (selector = '') => {
+        document.querySelectorAll(selector).forEach(codeElement => {
+            const codeContent = codeElement.innerHTML;
+            const newStructure = document.createElement('div');
+            newStructure.className = 'snippet-clipboard-content position-relative overflow-auto';
+            newStructure.innerHTML = createClipboardHTML(codeContent);
+
+            const parentElement = codeElement.parentElement;
+            if (selector.includes('highlight')) {
+                parentElement.insertBefore(newStructure, codeElement.nextSibling);
+                parentElement.removeChild(codeElement);
+            } else {
+                parentElement.parentElement.replaceChild(newStructure, parentElement);
+            }
+        });
+    };
+
+    handleCodeElements('pre.notranslate > code.notranslate');
+    handleCodeElements('div.highlight > pre.notranslate');
+
+    let currentFeedback = null;
+    document.querySelectorAll('clipboard-copy').forEach(copyButton => {
+        copyButton.addEventListener('click', () => {
+            const codeContent = copyButton.closest('.snippet-clipboard-content').innerText;
+            const tempTextArea = document.createElement('textarea');
+            tempTextArea.value = codeContent;
+            document.body.appendChild(tempTextArea);
+            tempTextArea.select();
+            document.execCommand('copy');
+            document.body.removeChild(tempTextArea);
+
+            const copyIcon = copyButton.querySelector('.octicon-copy');
+            const checkIcon = copyButton.querySelector('.octicon-check');
+            const copyFeedback = copyButton.nextElementSibling;
+
+            if (currentFeedback && currentFeedback !== copyFeedback) {currentFeedback.style.display = 'none';}
+            currentFeedback = copyFeedback;
+
+            copyIcon.classList.add('d-none');
+            checkIcon.classList.remove('d-none');
+            copyFeedback.style.display = 'block';
+            copyButton.style.borderColor = 'var(--color-success-fg)';
+
+            setTimeout(() => {
+                copyIcon.classList.remove('d-none');
+                checkIcon.classList.add('d-none');
+                copyFeedback.style.display = 'none';
+                copyButton.style.borderColor = '';
+            }, 2000);
+        });
+    });
+});
 
 </script>
 <script defer src="http://ssh.witter.top:10012/script.js" data-website-id="b891c729-62b4-46cb-bdca-d622dc706106"></script>
