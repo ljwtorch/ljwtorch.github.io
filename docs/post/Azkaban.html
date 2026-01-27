@@ -25,7 +25,7 @@
 <meta property="og:url" content="https://blog.witter.top/post/Azkaban.html">
 <meta property="og:image" content="https://img.witter.top/file/b037878209903b7d5bb17.jpg">
 <title>Azkaban</title>
-<link href="//unpkg.com/@wooorm/starry-night@2.1.1/style/both.css" rel="stylesheet" />
+
 
 
 </head>
@@ -49,17 +49,7 @@ body{box-sizing: border-box;min-width: 200px;max-width: 900px;margin: 20px auto;
     body {padding: 8px;}
     .postTitle{font-size:24px;}
 }
-.copy-feedback {
-    display: none;
-    position: absolute;
-    top: 10px;
-    right: 50px;
-    color: var(--color-fg-on-emphasis);
-    background-color: var(--color-fg-muted);
-    border-radius: 3px;
-    padding: 5px 8px;
-    font-size: 12px;
-}
+
 </style>
 
 
@@ -113,40 +103,42 @@ body{box-sizing: border-box;min-width: 200px;max-width: 900px;margin: 20px auto;
 </li>
 <li>
 <p>配置编译镜像源：</p>
-<div class="highlight highlight-source-shell"><pre class="notranslate">vim build.gradle
+<pre lang="shell" class="notranslate"><code class="notranslate">vim build.gradle
   repositories {
         maven {
-            url <span class="pl-s"><span class="pl-pds">'</span>https://maven.aliyun.com/repository/public/<span class="pl-pds">'</span></span>
+            url 'https://maven.aliyun.com/repository/public/'
         }
-        <span class="pl-en">mavenCentral</span>()
+        mavenCentral()
         maven {
-            url <span class="pl-s"><span class="pl-pds">'</span>https://maven.aliyun.com/repository/gradle-plugin/<span class="pl-pds">'</span></span>
+            url 'https://maven.aliyun.com/repository/gradle-plugin/'
         }
-  }</pre></div>
+  }
+</code></pre>
 </li>
 <li>
 <p>安装node，npm不使用默认的Download：</p>
-<div class="highlight highlight-source-shell"><pre class="notranslate"><span class="pl-c"><span class="pl-c">#</span> true改为false</span>
+<pre lang="shell" class="notranslate"><code class="notranslate"># true改为false
 node {
     // Version of node to use.
-    version = <span class="pl-s"><span class="pl-pds">'</span>8.10.0<span class="pl-pds">'</span></span>
+    version = '8.10.0'
 
     // Version of npm to use.
-    npmVersion = <span class="pl-s"><span class="pl-pds">'</span>5.6.0<span class="pl-pds">'</span></span>
+    npmVersion = '5.6.0'
 
-    // Base URL <span class="pl-k">for</span> fetching node distributions (change <span class="pl-k">if</span> you have a mirror).
-    distBaseUrl = <span class="pl-s"><span class="pl-pds">'</span>https://nodejs.org/dist<span class="pl-pds">'</span></span>
+    // Base URL for fetching node distributions (change if you have a mirror).
+    distBaseUrl = 'https://nodejs.org/dist'
 
     // If true, it will download node using above parameters.
     // If false, it will try to use globally installed node.
-    download = <span class="pl-c1">false</span>
+    download = false
 
-    // Set the work directory <span class="pl-k">for</span> unpacking node
-    workDir = file(<span class="pl-s"><span class="pl-pds">"</span><span class="pl-smi">${project.buildDir}</span>/nodejs<span class="pl-pds">"</span></span>)
+    // Set the work directory for unpacking node
+    workDir = file("${project.buildDir}/nodejs")
 
     // Set the work directory where node_modules should be located
-    nodeModulesDir = file(<span class="pl-s"><span class="pl-pds">"</span><span class="pl-smi">${project.projectDir}</span><span class="pl-pds">"</span></span>)
-}</pre></div>
+    nodeModulesDir = file("${project.projectDir}")
+}
+</code></pre>
 </li>
 <li>
 <p>编译完成后拷贝出各个模块build/distributions下的压缩包即可；</p>
@@ -156,7 +148,7 @@ node {
 <ol>
 <li>
 <p>安装MySQL；</p>
-<div class="highlight highlight-source-shell"><pre class="notranslate">docker run -d -p 3306:3306 --name mysql \
+<pre lang="shell" class="notranslate"><code class="notranslate">docker run -d -p 3306:3306 --name mysql \
 -v ./logs:/var/log/mysql \
 -v ./data:/var/lib/mysql \
 -v ./conf:/etc/mysql \
@@ -164,40 +156,45 @@ node {
 -e MYSQL_ROOT_PASSWORD=root \
 -d mysql:5.7.31
 
-<span class="pl-c"><span class="pl-c">#</span>skip-grant-tables</span></pre></div>
+#skip-grant-tables
+</code></pre>
 </li>
 <li>
 <p>设置数据库：</p>
-<div class="highlight highlight-source-shell"><pre class="notranslate"><span class="pl-c"><span class="pl-c">#</span> 为Azkaban创建一个数据库。例如：</span>
-mysql<span class="pl-k">&gt;</span> CREATE DATABASE azkaban<span class="pl-k">;</span>
-<span class="pl-c"><span class="pl-c">#</span> 为Azkaban创建一个数据库用户。例如：</span>
-mysql<span class="pl-k">&gt;</span> CREATE USER <span class="pl-s"><span class="pl-pds">'</span>username<span class="pl-pds">'</span></span>@<span class="pl-s"><span class="pl-pds">'</span>%<span class="pl-pds">'</span></span> IDENTIFIED BY <span class="pl-s"><span class="pl-pds">'</span>password<span class="pl-pds">'</span></span><span class="pl-k">;</span>
-<span class="pl-c"><span class="pl-c">#</span> 设置数据库的用户权限。 为Azkaban创建一个用户（如果尚未创建），并为Azkaban数据库中的所有表赋予用户INSERT，SELECT，UPDATE，DELETE权限。</span>
-mysql<span class="pl-k">&gt;</span> CREATE USER <span class="pl-s"><span class="pl-pds">'</span>username<span class="pl-pds">'</span></span>@<span class="pl-s"><span class="pl-pds">'</span>%<span class="pl-pds">'</span></span> IDENTIFIED BY <span class="pl-s"><span class="pl-pds">'</span>password<span class="pl-pds">'</span></span><span class="pl-k">;</span>
-<span class="pl-c"><span class="pl-c">#</span> 配置数据包大小可能需要配置。默认情况下，MySQL可能有一个可接受的低数据包大小。为了增加它，你需要将属性max_allowed_packet设置为更高的值，比如1024M。</span></pre></div>
+<pre lang="shell" class="notranslate"><code class="notranslate"># 为Azkaban创建一个数据库。例如：
+mysql&gt; CREATE DATABASE azkaban;
+# 为Azkaban创建一个数据库用户。例如：
+mysql&gt; CREATE USER 'username'@'%' IDENTIFIED BY 'password';
+# 设置数据库的用户权限。 为Azkaban创建一个用户（如果尚未创建），并为Azkaban数据库中的所有表赋予用户INSERT，SELECT，UPDATE，DELETE权限。
+mysql&gt; CREATE USER 'username'@'%' IDENTIFIED BY 'password';
+# 配置数据包大小可能需要配置。默认情况下，MySQL可能有一个可接受的低数据包大小。为了增加它，你需要将属性max_allowed_packet设置为更高的值，比如1024M。
+</code></pre>
 </li>
 <li>
 <p>创建Azkaban表：</p>
-<div class="highlight highlight-source-shell"><pre class="notranslate">CREATE DATABASE azkaban<span class="pl-k">;</span>
-CREATE USER <span class="pl-s"><span class="pl-pds">'</span>azkaban<span class="pl-pds">'</span></span>@<span class="pl-s"><span class="pl-pds">'</span>%<span class="pl-pds">'</span></span> IDENTIFIED BY <span class="pl-s"><span class="pl-pds">'</span>azkaban<span class="pl-pds">'</span></span><span class="pl-k">;</span>
-GRANT SELECT,INSERT,UPDATE,DELETE ON azkaban.<span class="pl-k">*</span> to <span class="pl-s"><span class="pl-pds">'</span>azkaban<span class="pl-pds">'</span></span>@<span class="pl-s"><span class="pl-pds">'</span>%<span class="pl-pds">'</span></span> WITH GRANT OPTION<span class="pl-k">;</span>
-<span class="pl-c"><span class="pl-c">#</span> 加载mysql表</span>
-mysql<span class="pl-k">&gt;</span> <span class="pl-c1">source</span> /opt/model/azkaban/azkaban-db-3.84.4/create-all-sql-3.84.4.sql</pre></div>
+<pre lang="shell" class="notranslate"><code class="notranslate">CREATE DATABASE azkaban;
+CREATE USER 'azkaban'@'%' IDENTIFIED BY 'azkaban';
+GRANT SELECT,INSERT,UPDATE,DELETE ON azkaban.* to 'azkaban'@'%' WITH GRANT OPTION;
+# 加载mysql表
+mysql&gt; source /opt/model/azkaban/azkaban-db-3.84.4/create-all-sql-3.84.4.sql
+</code></pre>
 </li>
 <li>
 <p>启动azkaban-exec</p>
-<div class="highlight highlight-source-shell"><pre class="notranslate"><span class="pl-c"><span class="pl-c">#</span> 要进入到exec的根目录中执行bash脚本，否则会因为配置文件中的相对路径而报错</span>
+<pre lang="shell" class="notranslate"><code class="notranslate"># 要进入到exec的根目录中执行bash脚本，否则会因为配置文件中的相对路径而报错
 bash bin/start-exec.sh
-curl -G <span class="pl-s"><span class="pl-pds">"</span>node0:12321/executor?action=activate<span class="pl-pds">"</span></span> <span class="pl-k">&amp;&amp;</span> <span class="pl-c1">echo</span>
-<span class="pl-c"><span class="pl-c">#</span> 运行的每台机器都要执行，每次服务关闭重新打开后都需要激活，注意数据库中的execute表中激活值为1，未激活为0</span></pre></div>
+curl -G "node0:12321/executor?action=activate" &amp;&amp; echo
+# 运行的每台机器都要执行，每次服务关闭重新打开后都需要激活，注意数据库中的execute表中激活值为1，未激活为0
+</code></pre>
 </li>
 <li>
 <p>启动azkaban-web</p>
-<div class="highlight highlight-source-shell"><pre class="notranslate"><span class="pl-c"><span class="pl-c">#</span> 用户配置文件</span>
+<pre lang="shell" class="notranslate"><code class="notranslate"># 用户配置文件
 vim azkaban-users.xml
-<span class="pl-c"><span class="pl-c">#</span> 添加一行用户配置</span>
-<span class="pl-k">&lt;</span>user password=<span class="pl-s"><span class="pl-pds">"</span>root<span class="pl-pds">"</span></span> roles=<span class="pl-s"><span class="pl-pds">"</span>admin<span class="pl-pds">"</span></span> username=<span class="pl-s"><span class="pl-pds">"</span>root<span class="pl-pds">"</span></span>/<span class="pl-k">&gt;</span>
-</pre></div>
+# 添加一行用户配置
+&lt;user password="root" roles="admin" username="root"/&gt;
+
+</code></pre>
 </li>
 </ol>
 <h1>进入到web的根目录执行</h1>
@@ -205,16 +202,18 @@ vim azkaban-users.xml
 <ol>
 <li>
 <p>同一文件夹下创建azkaban.project</p>
-<div class="highlight highlight-source-yaml"><pre class="notranslate"><span class="pl-ent">azkaban-flow-version</span>: <span class="pl-c1">2.0</span>
-<span class="pl-c"><span class="pl-c">#</span> 该文件作用是采用新的flow-api的方式解析flow文件</span></pre></div>
+<pre lang="yaml" class="notranslate"><code class="notranslate">azkaban-flow-version: 2.0
+# 该文件作用是采用新的flow-api的方式解析flow文件
+</code></pre>
 </li>
 <li>
 <p>新建basic.flow文件</p>
-<div class="highlight highlight-source-yaml"><pre class="notranslate"><span class="pl-ent">nodes</span>:
-  - <span class="pl-ent">name</span>: <span class="pl-s">jobA	</span><span class="pl-c"><span class="pl-c">#</span> Job名称</span>
-    <span class="pl-ent">type</span>: <span class="pl-s">command 	</span><span class="pl-c"><span class="pl-c">#</span> Job类型</span>
-    <span class="pl-ent">config</span>:	<span class="pl-c"><span class="pl-c">#</span> Job配置</span>
-      <span class="pl-ent">command</span>: <span class="pl-s">echo "Hello World"</span></pre></div>
+<pre lang="yaml" class="notranslate"><code class="notranslate">nodes:
+  - name: jobA	# Job名称
+    type: command 	# Job类型
+    config:	# Job配置
+      command: echo "Hello World"
+</code></pre>
 </li>
 <li>
 <p>将存放上述两个文件的文件夹压缩到一个zip文件中，文件必须为英文，在web端创建任务并上传；</p>
@@ -227,25 +226,26 @@ vim azkaban-users.xml
 <ol>
 <li>
 <p>basic.flow</p>
-<div class="highlight highlight-source-yaml"><pre class="notranslate"><span class="pl-ent">nodes</span>:
-  - <span class="pl-ent">name</span>: <span class="pl-s">jobC</span>
-    <span class="pl-ent">type</span>: <span class="pl-s">command</span>
-    <span class="pl-c"><span class="pl-c">#</span> jobC 依赖 JobA和JobB</span>
-    <span class="pl-ent">dependsOn</span>:
-      - <span class="pl-s">jobA</span>
-      - <span class="pl-s">jobB</span>
-    <span class="pl-ent">config</span>:
-      <span class="pl-ent">command</span>: <span class="pl-s">echo "I’m JobC"</span>
+<pre lang="yaml" class="notranslate"><code class="notranslate">nodes:
+  - name: jobC
+    type: command
+    # jobC 依赖 JobA和JobB
+    dependsOn:
+      - jobA
+      - jobB
+    config:
+      command: echo "I’m JobC"
 
-  - <span class="pl-ent">name</span>: <span class="pl-s">jobA</span>
-    <span class="pl-ent">type</span>: <span class="pl-s">command</span>
-    <span class="pl-ent">config</span>:
-      <span class="pl-ent">command</span>: <span class="pl-s">echo "I’m JobA"</span>
+  - name: jobA
+    type: command
+    config:
+      command: echo "I’m JobA"
 
-  - <span class="pl-ent">name</span>: <span class="pl-s">jobB</span>
-    <span class="pl-ent">type</span>: <span class="pl-s">command</span>
-    <span class="pl-ent">config</span>:
-      <span class="pl-ent">command</span>: <span class="pl-s">echo "I’m JobB"</span></pre></div>
+  - name: jobB
+    type: command
+    config:
+      command: echo "I’m JobB"
+</code></pre>
 </li>
 <li>
 <p>压缩、运行任务步骤同上</p>
@@ -255,22 +255,24 @@ vim azkaban-users.xml
 <ol>
 <li>
 <p>basic.flow</p>
-<div class="highlight highlight-source-yaml"><pre class="notranslate"><span class="pl-ent">nodes</span>:
-  - <span class="pl-ent">name</span>: <span class="pl-s">JobA</span>
-    <span class="pl-ent">type</span>: <span class="pl-s">command</span>
-    <span class="pl-ent">config</span>:
-      <span class="pl-ent">command</span>: <span class="pl-s">sh /not_exists.sh</span>
-      <span class="pl-ent">retries</span>: <span class="pl-c1">3</span>	<span class="pl-c"><span class="pl-c">#</span> 重试次数</span>
-      <span class="pl-ent">retry.backoff</span>: <span class="pl-c1">10000</span>	<span class="pl-c"><span class="pl-c">#</span> 重试时间间隔</span></pre></div>
+<pre lang="yaml" class="notranslate"><code class="notranslate">nodes:
+  - name: JobA
+    type: command
+    config:
+      command: sh /not_exists.sh
+      retries: 3	# 重试次数
+      retry.backoff: 10000	# 重试时间间隔
+</code></pre>
 <p>也可以在Flow全局配置中添加任务失败重试配置，此位置会应用到所有Job：</p>
-<div class="highlight highlight-source-yaml"><pre class="notranslate"><span class="pl-ent">config</span>:
-  <span class="pl-ent">retries</span>: <span class="pl-c1">3</span>
-  <span class="pl-ent">retry.backoff</span>: <span class="pl-c1">10000</span>
-<span class="pl-ent">nodes</span>:
-  - <span class="pl-ent">name</span>: <span class="pl-s">JobA</span>
-    <span class="pl-ent">type</span>: <span class="pl-s">command</span>
-    <span class="pl-ent">config</span>:
-      <span class="pl-ent">command</span>: <span class="pl-s">sh /not_exists.sh</span></pre></div>
+<pre lang="yaml" class="notranslate"><code class="notranslate">config:
+  retries: 3
+  retry.backoff: 10000
+nodes:
+  - name: JobA
+    type: command
+    config:
+      command: sh /not_exists.sh
+</code></pre>
 </li>
 <li>
 <p>压缩、运行任务步骤同上；</p>
@@ -280,46 +282,47 @@ vim azkaban-users.xml
 <ol>
 <li>
 <p>basic.flow</p>
-<div class="highlight highlight-source-yaml"><pre class="notranslate"><span class="pl-ent">nodes</span>:
-  - <span class="pl-ent">name</span>: <span class="pl-s">JobA</span>
-    <span class="pl-ent">type</span>: <span class="pl-s">command</span>
-    <span class="pl-ent">config</span>:
-      <span class="pl-ent">command</span>: <span class="pl-s">echo "This is JobA."</span>
+<pre lang="yaml" class="notranslate"><code class="notranslate">nodes:
+  - name: JobA
+    type: command
+    config:
+      command: echo "This is JobA."
 
-  - <span class="pl-ent">name</span>: <span class="pl-s">JobB</span>
-    <span class="pl-ent">type</span>: <span class="pl-s">command</span>
-    <span class="pl-ent">dependsOn</span>:
-      - <span class="pl-s">JobA</span>
-    <span class="pl-ent">config</span>:
-      <span class="pl-ent">command</span>: <span class="pl-s">echo "This is JobB."</span>
+  - name: JobB
+    type: command
+    dependsOn:
+      - JobA
+    config:
+      command: echo "This is JobB."
 
-  - <span class="pl-ent">name</span>: <span class="pl-s">JobC</span>
-    <span class="pl-ent">type</span>: <span class="pl-s">command</span>
-    <span class="pl-ent">dependsOn</span>:
-      - <span class="pl-s">JobB</span>
-    <span class="pl-ent">config</span>:
-      <span class="pl-ent">command</span>: <span class="pl-s">echo "This is JobC."</span>
+  - name: JobC
+    type: command
+    dependsOn:
+      - JobB
+    config:
+      command: echo "This is JobC."
 
-  - <span class="pl-ent">name</span>: <span class="pl-s">JobD</span>
-    <span class="pl-ent">type</span>: <span class="pl-s">command</span>
-    <span class="pl-ent">dependsOn</span>:
-      - <span class="pl-s">JobC</span>
-    <span class="pl-ent">config</span>:
-      <span class="pl-ent">command</span>: <span class="pl-s">echo "This is JobD."</span>
+  - name: JobD
+    type: command
+    dependsOn:
+      - JobC
+    config:
+      command: echo "This is JobD."
 
-  - <span class="pl-ent">name</span>: <span class="pl-s">JobE</span>
-    <span class="pl-ent">type</span>: <span class="pl-s">command</span>
-    <span class="pl-ent">dependsOn</span>:
-      - <span class="pl-s">JobD</span>
-    <span class="pl-ent">config</span>:
-      <span class="pl-ent">command</span>: <span class="pl-s">echo "This is JobE."</span>
+  - name: JobE
+    type: command
+    dependsOn:
+      - JobD
+    config:
+      command: echo "This is JobE."
 
-  - <span class="pl-ent">name</span>: <span class="pl-s">JobF</span>
-    <span class="pl-ent">type</span>: <span class="pl-s">command</span>
-    <span class="pl-ent">dependsOn</span>:
-      - <span class="pl-s">JobE</span>
-    <span class="pl-ent">config</span>:
-      <span class="pl-ent">command</span>: <span class="pl-s">echo "This is JobF."</span></pre></div>
+  - name: JobF
+    type: command
+    dependsOn:
+      - JobE
+    config:
+      command: echo "This is JobF."
+</code></pre>
 </li>
 <li>
 <p>压缩、运行任务步骤同上；</p>
@@ -359,7 +362,7 @@ if("06/20/2024"!=""){
 </script></div>
 </body>
 <script>
-var IconList={'sun': 'M8 10.5a2.5 2.5 0 100-5 2.5 2.5 0 000 5zM8 12a4 4 0 100-8 4 4 0 000 8zM8 0a.75.75 0 01.75.75v1.5a.75.75 0 01-1.5 0V.75A.75.75 0 018 0zm0 13a.75.75 0 01.75.75v1.5a.75.75 0 01-1.5 0v-1.5A.75.75 0 018 13zM2.343 2.343a.75.75 0 011.061 0l1.06 1.061a.75.75 0 01-1.06 1.06l-1.06-1.06a.75.75 0 010-1.06zm9.193 9.193a.75.75 0 011.06 0l1.061 1.06a.75.75 0 01-1.06 1.061l-1.061-1.06a.75.75 0 010-1.061zM16 8a.75.75 0 01-.75.75h-1.5a.75.75 0 010-1.5h1.5A.75.75 0 0116 8zM3 8a.75.75 0 01-.75.75H.75a.75.75 0 010-1.5h1.5A.75.75 0 013 8zm10.657-5.657a.75.75 0 010 1.061l-1.061 1.06a.75.75 0 11-1.06-1.06l1.06-1.06a.75.75 0 011.06 0zm-9.193 9.193a.75.75 0 010 1.06l-1.06 1.061a.75.75 0 11-1.061-1.06l1.06-1.061a.75.75 0 011.061 0z', 'moon': 'M9.598 1.591a.75.75 0 01.785-.175 7 7 0 11-8.967 8.967.75.75 0 01.961-.96 5.5 5.5 0 007.046-7.046.75.75 0 01.175-.786zm1.616 1.945a7 7 0 01-7.678 7.678 5.5 5.5 0 107.678-7.678z', 'sync': 'M1.705 8.005a.75.75 0 0 1 .834.656 5.5 5.5 0 0 0 9.592 2.97l-1.204-1.204a.25.25 0 0 1 .177-.427h3.646a.25.25 0 0 1 .25.25v3.646a.25.25 0 0 1-.427.177l-1.38-1.38A7.002 7.002 0 0 1 1.05 8.84a.75.75 0 0 1 .656-.834ZM8 2.5a5.487 5.487 0 0 0-4.131 1.869l1.204 1.204A.25.25 0 0 1 4.896 6H1.25A.25.25 0 0 1 1 5.75V2.104a.25.25 0 0 1 .427-.177l1.38 1.38A7.002 7.002 0 0 1 14.95 7.16a.75.75 0 0 1-1.49.178A5.5 5.5 0 0 0 8 2.5Z', 'home': 'M6.906.664a1.749 1.749 0 0 1 2.187 0l5.25 4.2c.415.332.657.835.657 1.367v7.019A1.75 1.75 0 0 1 13.25 15h-3.5a.75.75 0 0 1-.75-.75V9H7v5.25a.75.75 0 0 1-.75.75h-3.5A1.75 1.75 0 0 1 1 13.25V6.23c0-.531.242-1.034.657-1.366l5.25-4.2Zm1.25 1.171a.25.25 0 0 0-.312 0l-5.25 4.2a.25.25 0 0 0-.094.196v7.019c0 .138.112.25.25.25H5.5V8.25a.75.75 0 0 1 .75-.75h3.5a.75.75 0 0 1 .75.75v5.25h2.75a.25.25 0 0 0 .25-.25V6.23a.25.25 0 0 0-.094-.195Z', 'github': 'M8 0c4.42 0 8 3.58 8 8a8.013 8.013 0 0 1-5.45 7.59c-.4.08-.55-.17-.55-.38 0-.27.01-1.13.01-2.2 0-.75-.25-1.23-.54-1.48 1.78-.2 3.65-.88 3.65-3.95 0-.88-.31-1.59-.82-2.15.08-.2.36-1.02-.08-2.12 0 0-.67-.22-2.2.82-.64-.18-1.32-.27-2-.27-.68 0-1.36.09-2 .27-1.53-1.03-2.2-.82-2.2-.82-.44 1.1-.16 1.92-.08 2.12-.51.56-.82 1.28-.82 2.15 0 3.06 1.86 3.75 3.64 3.95-.23.2-.44.55-.51 1.07-.46.21-1.61.55-2.33-.66-.15-.24-.6-.83-1.23-.82-.67.01-.27.38.01.53.34.19.73.9.82 1.13.16.45.68 1.31 2.69.94 0 .67.01 1.3.01 1.49 0 .21-.15.45-.55.38A7.995 7.995 0 0 1 0 8c0-4.42 3.58-8 8-8Z', 'copy': 'M0 6.75C0 5.784.784 5 1.75 5h1.5a.75.75 0 0 1 0 1.5h-1.5a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 0 0 .25-.25v-1.5a.75.75 0 0 1 1.5 0v1.5A1.75 1.75 0 0 1 9.25 16h-7.5A1.75 1.75 0 0 1 0 14.25Z M5 1.75C5 .784 5.784 0 6.75 0h7.5C15.216 0 16 .784 16 1.75v7.5A1.75 1.75 0 0 1 14.25 11h-7.5A1.75 1.75 0 0 1 5 9.25Zm1.75-.25a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 0 0 .25-.25v-7.5a.25.25 0 0 0-.25-.25Z', 'check': 'M13.78 4.22a.75.75 0 0 1 0 1.06l-7.25 7.25a.75.75 0 0 1-1.06 0L2.22 9.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018L6 10.94l6.72-6.72a.75.75 0 0 1 1.06 0Z'};
+var IconList={'sun': 'M8 10.5a2.5 2.5 0 100-5 2.5 2.5 0 000 5zM8 12a4 4 0 100-8 4 4 0 000 8zM8 0a.75.75 0 01.75.75v1.5a.75.75 0 01-1.5 0V.75A.75.75 0 018 0zm0 13a.75.75 0 01.75.75v1.5a.75.75 0 01-1.5 0v-1.5A.75.75 0 018 13zM2.343 2.343a.75.75 0 011.061 0l1.06 1.061a.75.75 0 01-1.06 1.06l-1.06-1.06a.75.75 0 010-1.06zm9.193 9.193a.75.75 0 011.06 0l1.061 1.06a.75.75 0 01-1.06 1.061l-1.061-1.06a.75.75 0 010-1.061zM16 8a.75.75 0 01-.75.75h-1.5a.75.75 0 010-1.5h1.5A.75.75 0 0116 8zM3 8a.75.75 0 01-.75.75H.75a.75.75 0 010-1.5h1.5A.75.75 0 013 8zm10.657-5.657a.75.75 0 010 1.061l-1.061 1.06a.75.75 0 11-1.06-1.06l1.06-1.06a.75.75 0 011.06 0zm-9.193 9.193a.75.75 0 010 1.06l-1.06 1.061a.75.75 0 11-1.061-1.06l1.06-1.061a.75.75 0 011.061 0z', 'moon': 'M9.598 1.591a.75.75 0 01.785-.175 7 7 0 11-8.967 8.967.75.75 0 01.961-.96 5.5 5.5 0 007.046-7.046.75.75 0 01.175-.786zm1.616 1.945a7 7 0 01-7.678 7.678 5.5 5.5 0 107.678-7.678z', 'sync': 'M1.705 8.005a.75.75 0 0 1 .834.656 5.5 5.5 0 0 0 9.592 2.97l-1.204-1.204a.25.25 0 0 1 .177-.427h3.646a.25.25 0 0 1 .25.25v3.646a.25.25 0 0 1-.427.177l-1.38-1.38A7.002 7.002 0 0 1 1.05 8.84a.75.75 0 0 1 .656-.834ZM8 2.5a5.487 5.487 0 0 0-4.131 1.869l1.204 1.204A.25.25 0 0 1 4.896 6H1.25A.25.25 0 0 1 1 5.75V2.104a.25.25 0 0 1 .427-.177l1.38 1.38A7.002 7.002 0 0 1 14.95 7.16a.75.75 0 0 1-1.49.178A5.5 5.5 0 0 0 8 2.5Z', 'home': 'M6.906.664a1.749 1.749 0 0 1 2.187 0l5.25 4.2c.415.332.657.835.657 1.367v7.019A1.75 1.75 0 0 1 13.25 15h-3.5a.75.75 0 0 1-.75-.75V9H7v5.25a.75.75 0 0 1-.75.75h-3.5A1.75 1.75 0 0 1 1 13.25V6.23c0-.531.242-1.034.657-1.366l5.25-4.2Zm1.25 1.171a.25.25 0 0 0-.312 0l-5.25 4.2a.25.25 0 0 0-.094.196v7.019c0 .138.112.25.25.25H5.5V8.25a.75.75 0 0 1 .75-.75h3.5a.75.75 0 0 1 .75.75v5.25h2.75a.25.25 0 0 0 .25-.25V6.23a.25.25 0 0 0-.094-.195Z', 'github': 'M8 0c4.42 0 8 3.58 8 8a8.013 8.013 0 0 1-5.45 7.59c-.4.08-.55-.17-.55-.38 0-.27.01-1.13.01-2.2 0-.75-.25-1.23-.54-1.48 1.78-.2 3.65-.88 3.65-3.95 0-.88-.31-1.59-.82-2.15.08-.2.36-1.02-.08-2.12 0 0-.67-.22-2.2.82-.64-.18-1.32-.27-2-.27-.68 0-1.36.09-2 .27-1.53-1.03-2.2-.82-2.2-.82-.44 1.1-.16 1.92-.08 2.12-.51.56-.82 1.28-.82 2.15 0 3.06 1.86 3.75 3.64 3.95-.23.2-.44.55-.51 1.07-.46.21-1.61.55-2.33-.66-.15-.24-.6-.83-1.23-.82-.67.01-.27.38.01.53.34.19.73.9.82 1.13.16.45.68 1.31 2.69.94 0 .67.01 1.3.01 1.49 0 .21-.15.45-.55.38A7.995 7.995 0 0 1 0 8c0-4.42 3.58-8 8-8Z'};
 var utterancesLoad=0;
 
 let themeSettings={
@@ -432,70 +435,7 @@ function iFrameLoading(){
     }
 }
 
-document.addEventListener('DOMContentLoaded', () => {
-    const createClipboardHTML = (codeContent, additionalClasses = '') => `
-        <pre class="notranslate"><code class="notranslate">${codeContent}</code></pre>
-        <div class="clipboard-container position-absolute right-0 top-0 ${additionalClasses}">
-            <clipboard-copy class="ClipboardButton btn m-2 p-0" role="button" style="display: inherit;">
-                <svg height="16" width="16" class="octicon octicon-copy m-2"><path d="${IconList["copy"]}"></path></svg>
-                <svg height="16" width="16" class="octicon octicon-check color-fg-success m-2 d-none"><path d="${IconList["check"]}"></path></svg>
-            </clipboard-copy>
-            <div class="copy-feedback">Copied!</div>
-        </div>
-    `;
 
-    const handleCodeElements = (selector = '') => {
-        document.querySelectorAll(selector).forEach(codeElement => {
-            const codeContent = codeElement.innerHTML;
-            const newStructure = document.createElement('div');
-            newStructure.className = 'snippet-clipboard-content position-relative overflow-auto';
-            newStructure.innerHTML = createClipboardHTML(codeContent);
-
-            const parentElement = codeElement.parentElement;
-            if (selector.includes('highlight')) {
-                parentElement.insertBefore(newStructure, codeElement.nextSibling);
-                parentElement.removeChild(codeElement);
-            } else {
-                parentElement.parentElement.replaceChild(newStructure, parentElement);
-            }
-        });
-    };
-
-    handleCodeElements('pre.notranslate > code.notranslate');
-    handleCodeElements('div.highlight > pre.notranslate');
-
-    let currentFeedback = null;
-    document.querySelectorAll('clipboard-copy').forEach(copyButton => {
-        copyButton.addEventListener('click', () => {
-            const codeContent = copyButton.closest('.snippet-clipboard-content').innerText;
-            const tempTextArea = document.createElement('textarea');
-            tempTextArea.value = codeContent;
-            document.body.appendChild(tempTextArea);
-            tempTextArea.select();
-            document.execCommand('copy');
-            document.body.removeChild(tempTextArea);
-
-            const copyIcon = copyButton.querySelector('.octicon-copy');
-            const checkIcon = copyButton.querySelector('.octicon-check');
-            const copyFeedback = copyButton.nextElementSibling;
-
-            if (currentFeedback && currentFeedback !== copyFeedback) {currentFeedback.style.display = 'none';}
-            currentFeedback = copyFeedback;
-
-            copyIcon.classList.add('d-none');
-            checkIcon.classList.remove('d-none');
-            copyFeedback.style.display = 'block';
-            copyButton.style.borderColor = 'var(--color-success-fg)';
-
-            setTimeout(() => {
-                copyIcon.classList.remove('d-none');
-                checkIcon.classList.add('d-none');
-                copyFeedback.style.display = 'none';
-                copyButton.style.borderColor = '';
-            }, 2000);
-        });
-    });
-});
 
 </script>
 <script defer src="http://ssh.witter.top:10012/script.js" data-website-id="b891c729-62b4-46cb-bdca-d622dc706106"></script>
