@@ -65,7 +65,7 @@ https://certbot.eff.org/
 <meta property="og:url" content="https://blog.witter.top/post/Certbot%20-shen-qing-SSL-zheng-shu.html">
 <meta property="og:image" content="https://img.witter.top/file/b037878209903b7d5bb17.jpg">
 <title>Certbot 申请SSL证书</title>
-
+<link href="//unpkg.com/@wooorm/starry-night@2.1.1/style/both.css" rel="stylesheet" />
 
 
 </head>
@@ -142,42 +142,40 @@ body{box-sizing: border-box;min-width: 200px;max-width: 900px;margin: 20px auto;
 <ol>
 <li>
 <p>为单域名申请SSL证书</p>
-<pre lang="shell" class="notranslate"><code class="notranslate"># 安装 certbot 以及 certbot nginx 插件
+<div class="highlight highlight-source-shell"><pre class="notranslate"><span class="pl-c"><span class="pl-c">#</span> 安装 certbot 以及 certbot nginx 插件</span>
 sudo yum install certbot python2-certbot-nginx -y
 
-# 执行配置，中途会询问你的邮箱，如实填写即可
+<span class="pl-c"><span class="pl-c">#</span> 执行配置，中途会询问你的邮箱，如实填写即可</span>
 sudo certbot --nginx
 
-# 自动续约
+<span class="pl-c"><span class="pl-c">#</span> 自动续约</span>
 sudo certbot renew --dry-run
 
-# 获得并安装一个证书。
+<span class="pl-c"><span class="pl-c">#</span> 获得并安装一个证书。</span>
 certbot
 
-# 获得一个证书，但不要安装它。
+<span class="pl-c"><span class="pl-c">#</span> 获得一个证书，但不要安装它。</span>
 certbot certonly
 
-# 你可以用-d指定多个域，通过多次运行Certbot获得并安装不同的证书。
+<span class="pl-c"><span class="pl-c">#</span> 你可以用-d指定多个域，通过多次运行Certbot获得并安装不同的证书。</span>
 certbot certonly -d example.com -d www.example.com
-certbot certonly -d app.example.com -d api.example.com
-</code></pre>
+certbot certonly -d app.example.com -d api.example.com</pre></div>
 <blockquote>
 <p>证书文件会存放在/etc/letsencrypt/archive/<a href="http://example.com/%E7%9B%AE%E5%BD%95%E4%B8%8B%EF%BC%8C%E7%94%B1%E4%BA%8E%E9%87%87%E7%94%A8%E8%87%AA%E5%8A%A8%E6%93%8D%E4%BD%9C%EF%BC%8C%E6%89%80%E4%BB%A5Nginx%E9%85%8D%E7%BD%AEcertbot%E4%BC%9A%E5%B8%AE%E6%88%91%E4%BB%AC%E9%85%8D%E7%BD%AE%E5%A5%BD%E3%80%82" rel="nofollow">http://example.com/目录下，由于采用自动操作，所以Nginx配置certbot会帮我们配置好。</a></p>
 </blockquote>
 </li>
 <li>
 <p>续约</p>
-<pre lang="shell" class="notranslate"><code class="notranslate">sudo certbot renew
+<div class="highlight highlight-source-shell"><pre class="notranslate">sudo certbot renew
 
-# 编辑文件
+<span class="pl-c"><span class="pl-c">#</span> 编辑文件</span>
 vim /etc/crontab
 或配置了crontab编辑器的情况下
 crontab -e
 
-# 填入以下内容
-1 1 23 */2 * sudo certbot renew --deploy-hook  "service nginx restart"
-# 注意只有成功renew证书，才会重新启动nginx
-</code></pre>
+<span class="pl-c"><span class="pl-c">#</span> 填入以下内容</span>
+1 1 23 <span class="pl-k">*</span>/2 <span class="pl-k">*</span> sudo certbot renew --deploy-hook  <span class="pl-s"><span class="pl-pds">"</span>service nginx restart<span class="pl-pds">"</span></span>
+<span class="pl-c"><span class="pl-c">#</span> 注意只有成功renew证书，才会重新启动nginx</span></pre></div>
 </li>
 </ol>
 <h2>重新创建和更新现有证书</h2>
@@ -196,10 +194,9 @@ crontab -e
 <p>考虑使用<code class="notranslate">--cert-name</code>而不是<code class="notranslate">--expand</code>，因为它可以更好地控制修改哪个证书，并且允许您删除和添加域。</p>
 <p><code class="notranslate">--allow-subset-of-names</code>告诉 Certbot 如果只能获得一些指定的域授权，则继续生成证书。如果证书中指定的某些域不再指向此系统，这可能很有用。</p>
 <h1>内网申请证书</h1>
-<pre lang="shell" class="notranslate"><code class="notranslate">sudo certbot certonly --manual --preferred-challenges dns -d xxx
-# 然后在对应服务商添加TXT记录
-# 手动配置nginx
-</code></pre></div>
+<div class="highlight highlight-source-shell"><pre class="notranslate">sudo certbot certonly --manual --preferred-challenges dns -d xxx
+<span class="pl-c"><span class="pl-c">#</span> 然后在对应服务商添加TXT记录</span>
+<span class="pl-c"><span class="pl-c">#</span> 手动配置nginx</span></pre></div></div>
 <div style="font-size:small;margin-top:8px;float:right;">🍺转载文章请注明出处，谢谢！🍺</div>
 
 <button class="btn btn-block" type="button" onclick="openComments()" id="cmButton">评论</button>
