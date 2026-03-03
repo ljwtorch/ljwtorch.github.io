@@ -59,7 +59,7 @@ filebeat.inputs:
 <meta property="og:url" content="https://blog.witter.top/post/EFK-ri-zhi-xi-tong.html">
 <meta property="og:image" content="https://img.witter.top/file/b037878209903b7d5bb17.jpg">
 <title>EFK日志系统</title>
-<link href="//unpkg.com/@wooorm/starry-night@2.1.1/style/both.css" rel="stylesheet" />
+
 
 
 </head>
@@ -136,534 +136,553 @@ body{box-sizing: border-box;min-width: 200px;max-width: 900px;margin: 20px auto;
 <blockquote>
 <p>此filebeat实例为日志采集端，即kafka生产者，可以有多个实例进行采集</p>
 </blockquote>
-<div class="highlight highlight-source-yaml"><pre class="notranslate"><span class="pl-ent">filebeat.inputs</span>:
-- <span class="pl-ent">type</span>: <span class="pl-s">filestream </span><span class="pl-c"><span class="pl-c">#</span>新版本常用文件流输入方式</span>
-  <span class="pl-ent">id</span>: <span class="pl-s">my-filestream-id </span><span class="pl-c"><span class="pl-c">#</span>每个文件流输入必须有一个唯一的 ID。省略或更改文件流 ID 可能会导致数据重复。如果没有唯一的 ID，filestream 无法正确跟踪文件的状态。</span>
-  <span class="pl-ent">paths</span>:
-    - <span class="pl-s">/var/log/messages</span>
-    - <span class="pl-s">/var/log/*.log</span>
+<pre lang="yaml" class="notranslate"><code class="notranslate">filebeat.inputs:
+- type: filestream #新版本常用文件流输入方式
+  id: my-filestream-id #每个文件流输入必须有一个唯一的 ID。省略或更改文件流 ID 可能会导致数据重复。如果没有唯一的 ID，filestream 无法正确跟踪文件的状态。
+  paths:
+    - /var/log/messages
+    - /var/log/*.log
     
-- <span class="pl-ent">type</span>: <span class="pl-s">filestream </span>
-  <span class="pl-ent">id</span>: <span class="pl-s">apache-filestream-id</span>
-  <span class="pl-ent">paths</span>:
-    - <span class="pl-s"><span class="pl-pds">"</span>/var/log/apache2/*<span class="pl-pds">"</span></span>
-  <span class="pl-ent">fields</span>:
-    <span class="pl-ent">apache</span>: <span class="pl-s">true </span><span class="pl-c"><span class="pl-c">#</span>fields字段随后会被存储在es中通过kibana进行查询，便于识别这些日志数据来源于Apache服务；</span>
+- type: filestream 
+  id: apache-filestream-id
+  paths:
+    - "/var/log/apache2/*"
+  fields:
+    apache: true #fields字段随后会被存储在es中通过kibana进行查询，便于识别这些日志数据来源于Apache服务；
     
     
-<span class="pl-c"><span class="pl-c">#</span>输出到kafka 此输出可以连接到 Kafka 0.8.2.0 及更高版本</span>
-<span class="pl-ent">output.kafka</span>:
-  <span class="pl-c"><span class="pl-c">#</span>用于读取集群元数据的brokers</span>
-  <span class="pl-ent">hosts</span>: <span class="pl-s">["kafka1:9092", "kafka2:9092", "kafka3:9092"]</span>
-  <span class="pl-c"><span class="pl-c">#</span>消息主题选择+分区</span>
-  <span class="pl-ent">topic</span>: <span class="pl-s"><span class="pl-pds">'</span>%{[fields.log_topic]}<span class="pl-pds">'</span></span>
-  <span class="pl-ent">partition.round_robin</span>:
-    <span class="pl-ent">reachable_only</span>: <span class="pl-c1">false</span>
+#输出到kafka 此输出可以连接到 Kafka 0.8.2.0 及更高版本
+output.kafka:
+  #用于读取集群元数据的brokers
+  hosts: ["kafka1:9092", "kafka2:9092", "kafka3:9092"]
+  #消息主题选择+分区
+  topic: '%{[fields.log_topic]}'
+  partition.round_robin:
+    reachable_only: false
 
-  <span class="pl-ent">required_acks</span>: <span class="pl-c1">1</span>
-  <span class="pl-ent">compression</span>: <span class="pl-s">gzip</span>
-  <span class="pl-ent">max_message_bytes</span>: <span class="pl-c1">1000000</span> <span class="pl-c"><span class="pl-c">#</span>大于 max_message_bytes 的事件将被丢弃</span></pre></div>
+  required_acks: 1
+  compression: gzip
+  max_message_bytes: 1000000 #大于 max_message_bytes 的事件将被丢弃
+</code></pre>
 <h3>kafka+kafka-ui</h3>
 <blockquote>
 <p>kafka为docker部署，镜像版本为：apache/kafka:3.7.0</p>
 </blockquote>
 <p><strong>docker-compose.yml</strong></p>
-<div class="highlight highlight-source-yaml"><pre class="notranslate"><span class="pl-ent">networks</span>:
-  <span class="pl-ent">kafka</span>:
-    <span class="pl-ent">name</span>: <span class="pl-s">kafka</span>
-    <span class="pl-ent">driver</span>: <span class="pl-s">bridge</span>
+<pre lang="yaml" class="notranslate"><code class="notranslate">networks:
+  kafka:
+    name: kafka
+    driver: bridge
 
-<span class="pl-ent">services</span>:
-  <span class="pl-ent">kafka</span>:
-    <span class="pl-ent">image</span>: <span class="pl-s">apache/kafka:3.7.0</span>
-    <span class="pl-ent">restart</span>: <span class="pl-s">unless-stopped</span>
-    <span class="pl-ent">user</span>: <span class="pl-s">root</span>
-    <span class="pl-ent">volumes</span>:
-      - <span class="pl-s">./config:/mnt/shared/config	</span><span class="pl-c"><span class="pl-c">#</span> 需要看kafka文档，需要挂载此路径下的配置文件才可以进行更新</span>
-      - <span class="pl-s">./data:/var/lib/kafka/data</span>
-      - <span class="pl-s">./logs:/opt/kafka/logs</span>
-      - <span class="pl-s">./kraft-combined-logs:/var/log/kafka/kraft-combined-logs</span>
-    <span class="pl-ent">ports</span>:
-      - <span class="pl-s"><span class="pl-pds">"</span>9092:9092<span class="pl-pds">"</span></span>
-      - <span class="pl-s"><span class="pl-pds">"</span>9093:9093<span class="pl-pds">"</span></span>
-      - <span class="pl-s"><span class="pl-pds">"</span>9094:9094<span class="pl-pds">"</span></span>
-    <span class="pl-ent">container_name</span>: <span class="pl-s">kafka</span>
-    <span class="pl-ent">networks</span>:
-      - <span class="pl-s">kafka</span>
+services:
+  kafka:
+    image: apache/kafka:3.7.0
+    restart: unless-stopped
+    user: root
+    volumes:
+      - ./config:/mnt/shared/config	# 需要看kafka文档，需要挂载此路径下的配置文件才可以进行更新
+      - ./data:/var/lib/kafka/data
+      - ./logs:/opt/kafka/logs
+      - ./kraft-combined-logs:/var/log/kafka/kraft-combined-logs
+    ports:
+      - "9092:9092"
+      - "9093:9093"
+      - "9094:9094"
+    container_name: kafka
+    networks:
+      - kafka
 
-  <span class="pl-ent">kafka-ui</span>:
-    <span class="pl-ent">container_name</span>: <span class="pl-s">kafka-ui</span>
-    <span class="pl-ent">restart</span>: <span class="pl-s">unless-stopped</span>
-    <span class="pl-ent">image</span>: <span class="pl-s">provectuslabs/kafka-ui:latest</span>
-    <span class="pl-ent">ports</span>:
-      - <span class="pl-s"><span class="pl-pds">"</span>8001:8080<span class="pl-pds">"</span></span>
-    <span class="pl-ent">environment</span>:
-      <span class="pl-ent">DYNAMIC_CONFIG_ENABLED</span>: <span class="pl-c1">true</span>
-    <span class="pl-ent">volumes</span>:
-      - <span class="pl-s">./kafka-ui/dynamic_config.yaml:/etc/kafkaui/dynamic_config.yaml</span>
-    <span class="pl-ent">deploy</span>:
-      <span class="pl-ent">resources</span>:
-        <span class="pl-ent">limits</span>:
-          <span class="pl-ent">memory</span>: <span class="pl-c1">1G</span>
-    <span class="pl-ent">networks</span>:
-      - <span class="pl-s">kafka</span></pre></div>
+  kafka-ui:
+    container_name: kafka-ui
+    restart: unless-stopped
+    image: provectuslabs/kafka-ui:latest
+    ports:
+      - "8001:8080"
+    environment:
+      DYNAMIC_CONFIG_ENABLED: true
+    volumes:
+      - ./kafka-ui/dynamic_config.yaml:/etc/kafkaui/dynamic_config.yaml
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+    networks:
+      - kafka
+</code></pre>
 <blockquote>
 <p>只列出示例配置文件中的原始部分和修改部分</p>
 </blockquote>
 <p><code class="notranslate">server.properties</code></p>
-<div class="highlight highlight-source-shell"><pre class="notranslate"><span class="pl-c"><span class="pl-c">#</span>listeners=PLAINTEXT://:9092,CONTROLLER://:9093</span>
+<pre lang="shell" class="notranslate"><code class="notranslate">#listeners=PLAINTEXT://:9092,CONTROLLER://:9093
 listeners=INSIDE://0.0.0.0:9092,OUTSIDE://0.0.0.0:9094,CONTROLLER://:9093
 
-<span class="pl-c"><span class="pl-c">#</span> Name of listener used for communication between brokers.</span>
-<span class="pl-c"><span class="pl-c">#</span>inter.broker.listener.name=PLAINTEXT,INSIDE,OUTSIDE</span>
+# Name of listener used for communication between brokers.
+#inter.broker.listener.name=PLAINTEXT,INSIDE,OUTSIDE
 inter.broker.listener.name=INSIDE
 
-<span class="pl-c"><span class="pl-c">#</span> Listener name, hostname and port the broker will advertise to clients.</span>
-<span class="pl-c"><span class="pl-c">#</span> If not set, it uses the value for "listeners".</span>
+# Listener name, hostname and port the broker will advertise to clients.
+# If not set, it uses the value for "listeners".
 advertised.listeners=INSIDE://moniti.xxxxxx.cn:9092,OUTSIDE://monito.xxxxxx.cn:9094
 
-<span class="pl-c"><span class="pl-c">#</span> A comma-separated list of the names of the listeners used by the controller.</span>
-<span class="pl-c"><span class="pl-c">#</span> If no explicit mapping set in `listener.security.protocol.map`, default will be using PLAINTEXT protocol</span>
-<span class="pl-c"><span class="pl-c">#</span> This is required if running in KRaft mode.</span>
+# A comma-separated list of the names of the listeners used by the controller.
+# If no explicit mapping set in `listener.security.protocol.map`, default will be using PLAINTEXT protocol
+# This is required if running in KRaft mode.
 controller.listener.names=CONTROLLER
 
-<span class="pl-c"><span class="pl-c">#</span> Maps listener names to security protocols, the default is for them to be the same. See the config documentation for more details</span>
-<span class="pl-c"><span class="pl-c">#</span>listener.security.protocol.map=CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT,SSL:SSL,SASL_PLAINTEXT:SASL_PLAINTEXT,SASL_SSL:SASL_SSL</span>
+# Maps listener names to security protocols, the default is for them to be the same. See the config documentation for more details
+#listener.security.protocol.map=CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT,SSL:SSL,SASL_PLAINTEXT:SASL_PLAINTEXT,SASL_SSL:SASL_SSL
 listener.security.protocol.map=INSIDE:PLAINTEXT,OUTSIDE:PLAINTEXT,CONTROLLER:PLAINTEXT
 
-<span class="pl-c"><span class="pl-c">#</span> A comma separated list of directories under which to store log files</span>
+# A comma separated list of directories under which to store log files
 log.dirs=/var/log/kafka/kraft-combined-logs
 
-<span class="pl-c"><span class="pl-c">#</span> The minimum age of a log file to be eligible for deletion due to age</span>
-log.retention.hours=168</pre></div>
+# The minimum age of a log file to be eligible for deletion due to age
+log.retention.hours=168
+</code></pre>
 <p><code class="notranslate">dynamic_config.yaml</code><em>——此文件为kafka-ui自动生成</em></p>
-<div class="highlight highlight-source-yaml"><pre class="notranslate"><span class="pl-ent">auth</span>:
-  <span class="pl-ent">type</span>: <span class="pl-s">DISABLED </span><span class="pl-c"><span class="pl-c">#</span>此位置可以接入ldap</span>
-<span class="pl-ent">kafka</span>:
-  <span class="pl-ent">clusters</span>:
-  - <span class="pl-ent">bootstrapServers</span>: <span class="pl-s">kafka:9092</span>
-    <span class="pl-ent">name</span>: <span class="pl-s">kafka-log</span>
-    <span class="pl-ent">properties</span>: <span class="pl-s">{}</span>
-    <span class="pl-ent">readOnly</span>: <span class="pl-c1">false</span>
-<span class="pl-ent">rbac</span>:
-  <span class="pl-ent">roles</span>: <span class="pl-s">[]</span>
-<span class="pl-ent">webclient</span>: <span class="pl-s">{}</span></pre></div>
+<pre lang="yaml" class="notranslate"><code class="notranslate">auth:
+  type: DISABLED #此位置可以接入ldap
+kafka:
+  clusters:
+  - bootstrapServers: kafka:9092
+    name: kafka-log
+    properties: {}
+    readOnly: false
+rbac:
+  roles: []
+webclient: {}
+</code></pre>
 <h3>filebeat 2</h3>
 <blockquote>
 <p>此filebeat为消费者，消费kafka中的日志信息并由processer处理后存入es对应的index中</p>
 </blockquote>
 <p><code class="notranslate">filebeat.docker.yml</code></p>
-<div class="highlight highlight-source-yaml"><pre class="notranslate"><span class="pl-ent">filebeat.inputs</span>:
-- <span class="pl-ent">type</span>: <span class="pl-s">kafka</span>
-  <span class="pl-ent">hosts</span>:  <span class="pl-c"><span class="pl-c">#</span> Kafka 引导主机（代理）列表</span>
-    - <span class="pl-s">kafka-broker-1:9092</span>
-    - <span class="pl-s">kafka-broker-2:9092</span>
-  <span class="pl-ent">topics</span>: <span class="pl-s">["my-topic"]</span>
-  <span class="pl-ent">group_id</span>: <span class="pl-s"><span class="pl-pds">"</span>filebeat<span class="pl-pds">"</span></span>  <span class="pl-c"><span class="pl-c">#</span>消费者组 ID</span>
-  <span class="pl-ent">fetch.min</span>: <span class="pl-c1">500000</span>   <span class="pl-c"><span class="pl-c">#</span>要等待的最小字节数,默认为 1。</span>
+<pre lang="yaml" class="notranslate"><code class="notranslate">filebeat.inputs:
+- type: kafka
+  hosts:  # Kafka 引导主机（代理）列表
+    - kafka-broker-1:9092
+    - kafka-broker-2:9092
+  topics: ["my-topic"]
+  group_id: "filebeat"  #消费者组 ID
+  fetch.min: 500000   #要等待的最小字节数,默认为 1。
 
-<span class="pl-ent">processors</span>:
-  - <span class="pl-ent">decode_json_fields</span>:
-      <span class="pl-ent">fields</span>: <span class="pl-s">["message"]</span>
-      <span class="pl-ent">max_depth</span>: <span class="pl-c1">2</span>
-      <span class="pl-ent">target</span>: <span class="pl-s"><span class="pl-pds">"</span><span class="pl-pds">"</span></span>
-      <span class="pl-ent">overwrite_keys</span>: <span class="pl-c1">true</span>
-      <span class="pl-ent">add_error_key</span>: <span class="pl-c1">true</span>
+processors:
+  - decode_json_fields:
+      fields: ["message"]
+      max_depth: 2
+      target: ""
+      overwrite_keys: true
+      add_error_key: true
   
-<span class="pl-c"><span class="pl-c">#</span> 输出到es</span>
-<span class="pl-ent">output.elasticsearch</span>:
-  <span class="pl-ent">hosts</span>: <span class="pl-s">["https://myEShost:9200"]</span>
-  <span class="pl-ent">username</span>: <span class="pl-s"><span class="pl-pds">"</span>filebeat_writer<span class="pl-pds">"</span></span>
-  <span class="pl-ent">password</span>: <span class="pl-s"><span class="pl-pds">"</span>YOUR_PASSWORD<span class="pl-pds">"</span></span>
-  <span class="pl-ent">indices</span>:
-  - <span class="pl-ent">index</span>: <span class="pl-s"><span class="pl-pds">"</span>%{[fields.log_topic]}-%{[agent.version]}-%{+yyyy.MM.dd}<span class="pl-pds">"</span></span>
-    <span class="pl-ent">when.contains</span>:
-      <span class="pl-ent">fields.log_topic</span>: <span class="pl-s"><span class="pl-pds">"</span>log_name_example<span class="pl-pds">"</span></span>
-  - <span class="pl-ent">index</span>: <span class="pl-s"><span class="pl-pds">"</span>filebeat-%{[agent.version]}-%{+yyyy.MM.dd}<span class="pl-pds">"</span></span>
+# 输出到es
+output.elasticsearch:
+  hosts: ["https://myEShost:9200"]
+  username: "filebeat_writer"
+  password: "YOUR_PASSWORD"
+  indices:
+  - index: "%{[fields.log_topic]}-%{[agent.version]}-%{+yyyy.MM.dd}"
+    when.contains:
+      fields.log_topic: "log_name_example"
+  - index: "filebeat-%{[agent.version]}-%{+yyyy.MM.dd}"
   
-<span class="pl-c"><span class="pl-c">#</span> 确保Filebeat可以使用索引模板</span>
-<span class="pl-ent">setup.ilm.enabled</span>: <span class="pl-c1">false</span>
-<span class="pl-ent">setup.template.enabled</span>: <span class="pl-c1">false</span>
-<span class="pl-ent">setup.template.overwrite</span>: <span class="pl-c1">true</span>
-<span class="pl-ent">setup.template.json.enabled</span>: <span class="pl-c1">true</span>
-<span class="pl-ent">setup.template.name</span>: <span class="pl-s"><span class="pl-pds">"</span>filebeat-%{[agent.version]}<span class="pl-pds">"</span></span>
-<span class="pl-ent">setup.template.pattern</span>: <span class="pl-s"><span class="pl-pds">"</span>filebeat-%{[agent.version]}-*<span class="pl-pds">"</span></span>
-<span class="pl-ent">setup.template.settings</span>:
-  <span class="pl-ent">index.number_of_shards</span>: <span class="pl-c1">1</span>
-  <span class="pl-ent">index.number_of_replicas</span>: <span class="pl-c1">0</span></pre></div>
+# 确保Filebeat可以使用索引模板
+setup.ilm.enabled: false
+setup.template.enabled: false
+setup.template.overwrite: true
+setup.template.json.enabled: true
+setup.template.name: "filebeat-%{[agent.version]}"
+setup.template.pattern: "filebeat-%{[agent.version]}-*"
+setup.template.settings:
+  index.number_of_shards: 1
+  index.number_of_replicas: 0
+</code></pre>
 <h3>logstash</h3>
 <blockquote>
 <p>日志数据按需进行过滤和处理</p>
 </blockquote>
-<div class="highlight highlight-source-shell"><pre class="notranslate"><span class="pl-c"><span class="pl-c">#</span> 持久化部署</span>
+<pre lang="bash" class="notranslate"><code class="notranslate"># 持久化部署
 docker cp logstash:/usr/share/logstash/config ./
-docker cp logstash:/usr/share/logstash/pipeline ./</pre></div>
-<div class="highlight highlight-source-yaml"><pre class="notranslate"><span class="pl-c"><span class="pl-c">#</span> 配置文件 logstash.yml</span>
-<span class="pl-ent">http.host</span>: <span class="pl-s"><span class="pl-pds">"</span>0.0.0.0<span class="pl-pds">"</span></span>
-<span class="pl-ent">xpack.monitoring.elasticsearch.hosts</span>: <span class="pl-s">[ "http://elasticsearch:9200" ]</span>
-<span class="pl-ent">xpack.monitoring.elasticsearch.username</span>: <span class="pl-s"><span class="pl-pds">"</span>elastic<span class="pl-pds">"</span></span>
-<span class="pl-ent">xpack.monitoring.elasticsearch.password</span>: <span class="pl-s"><span class="pl-pds">"</span>elastic<span class="pl-pds">"</span></span></pre></div>
-<div class="highlight highlight-source-yaml"><pre class="notranslate"><span class="pl-c"><span class="pl-c">#</span> pipelines.yml</span>
-<span class="pl-c"><span class="pl-c">#</span> This file is where you define your pipelines. You can define multiple.</span>
-<span class="pl-c"><span class="pl-c">#</span> For more information on multiple pipelines, see the documentation:</span>
-<span class="pl-c"><span class="pl-c">#</span>   https://www.elastic.co/guide/en/logstash/current/multiple-pipelines.html</span>
-<span class="pl-c"><span class="pl-c">#</span> 这个需要定义多条独立的管道，否则会混乱写入</span>
-- <span class="pl-ent">pipeline.id</span>: <span class="pl-s">main</span>
-  <span class="pl-ent">path.config</span>: <span class="pl-s"><span class="pl-pds">"</span>/usr/share/logstash/pipeline<span class="pl-pds">"</span></span>
+docker cp logstash:/usr/share/logstash/pipeline ./
+</code></pre>
+<pre lang="yaml" class="notranslate"><code class="notranslate"># 配置文件 logstash.yml
+http.host: "0.0.0.0"
+xpack.monitoring.elasticsearch.hosts: [ "http://elasticsearch:9200" ]
+xpack.monitoring.elasticsearch.username: "elastic"
+xpack.monitoring.elasticsearch.password: "elastic"
+</code></pre>
+<pre lang="yaml" class="notranslate"><code class="notranslate"># pipelines.yml
+# This file is where you define your pipelines. You can define multiple.
+# For more information on multiple pipelines, see the documentation:
+#   https://www.elastic.co/guide/en/logstash/current/multiple-pipelines.html
+# 这个需要定义多条独立的管道，否则会混乱写入
+- pipeline.id: main
+  path.config: "/usr/share/logstash/pipeline"
   
-- <span class="pl-ent">pipeline.id</span>: <span class="pl-s">java_pipeline</span>
-  <span class="pl-ent">path.config</span>: <span class="pl-s"><span class="pl-pds">"</span>/usr/share/logstash/pipeline/java-nginx-pipeline.conf<span class="pl-pds">"</span></span>
+- pipeline.id: java_pipeline
+  path.config: "/usr/share/logstash/pipeline/java-nginx-pipeline.conf"
 
-- <span class="pl-ent">pipeline.id</span>: <span class="pl-s">abroad_pipeline</span>
-  <span class="pl-ent">path.config</span>: <span class="pl-s"><span class="pl-pds">"</span>/usr/share/logstash/pipeline/java-nginx-pipeline-abroad.conf<span class="pl-pds">"</span></span>
-</pre></div>
+- pipeline.id: abroad_pipeline
+  path.config: "/usr/share/logstash/pipeline/java-nginx-pipeline-abroad.conf"
+
+</code></pre>
 <h3>Elasticsearch</h3>
 <p><code class="notranslate">elasticsearch.yml</code></p>
-<div class="highlight highlight-source-yaml"><pre class="notranslate"><span class="pl-ent">cluster.name</span>: <span class="pl-s"><span class="pl-pds">"</span>docker-cluster<span class="pl-pds">"</span></span>
-<span class="pl-ent">network.host</span>: <span class="pl-s">0.0.0.0</span>
-<span class="pl-ent">discovery.seed_hosts</span>: <span class="pl-s">["192.168.8.99"]</span>
-<span class="pl-c"><span class="pl-c">#</span>cluster.initial_master_nodes: ["docker-cluster"]</span>
-<span class="pl-ent">discovery.type</span>: <span class="pl-s">single-node</span>
-<span class="pl-c"><span class="pl-c">#</span> 开启x-pack插件,用于添加账号密码、安全控制等配置</span>
-<span class="pl-ent">xpack.security.enabled</span>: <span class="pl-c1">true</span>
-<span class="pl-c"><span class="pl-c">#</span>xpack.security.http.ssl.enabled: false</span>
-<span class="pl-ent">xpack.security.transport.ssl.enabled</span>: <span class="pl-c1">true</span>
-<span class="pl-ent">xpack.security.transport.ssl.verification_mode</span>: <span class="pl-s">certificate</span>
-<span class="pl-ent">xpack.security.transport.ssl.keystore.path</span>: <span class="pl-s">/usr/share/elasticsearch/data/certs/elastic-certificates.p12</span>
-<span class="pl-ent">xpack.security.transport.ssl.truststore.path</span>: <span class="pl-s">/usr/share/elasticsearch/data/certs/elastic-certificates.p12</span>
-<span class="pl-c"><span class="pl-c">#</span>xpack.security.enrollment.enabled: true</span></pre></div>
+<pre lang="yaml" class="notranslate"><code class="notranslate">cluster.name: "docker-cluster"
+network.host: 0.0.0.0
+discovery.seed_hosts: ["192.168.8.99"]
+#cluster.initial_master_nodes: ["docker-cluster"]
+discovery.type: single-node
+# 开启x-pack插件,用于添加账号密码、安全控制等配置
+xpack.security.enabled: true
+#xpack.security.http.ssl.enabled: false
+xpack.security.transport.ssl.enabled: true
+xpack.security.transport.ssl.verification_mode: certificate
+xpack.security.transport.ssl.keystore.path: /usr/share/elasticsearch/data/certs/elastic-certificates.p12
+xpack.security.transport.ssl.truststore.path: /usr/share/elasticsearch/data/certs/elastic-certificates.p12
+#xpack.security.enrollment.enabled: true
+</code></pre>
 <h3>Kibana</h3>
 <p><code class="notranslate">kibana.yml</code></p>
-<div class="highlight highlight-source-yaml"><pre class="notranslate"><span class="pl-c"><span class="pl-c">#</span> Default Kibana configuration for docker target</span>
-<span class="pl-ent">server.host</span>: <span class="pl-s"><span class="pl-pds">"</span>0.0.0.0<span class="pl-pds">"</span></span>
-<span class="pl-ent">server.shutdownTimeout</span>: <span class="pl-s"><span class="pl-pds">"</span>5s<span class="pl-pds">"</span></span>
-<span class="pl-ent">elasticsearch.hosts</span>: <span class="pl-s">[ "http://elasticsearch:9200" ]</span>
-<span class="pl-ent">monitoring.ui.container.elasticsearch.enabled</span>: <span class="pl-c1">true</span>
-<span class="pl-ent">elasticsearch.ssl.certificateAuthorities</span>: <span class="pl-s"><span class="pl-pds">"</span>/usr/share/kibana/config/certs/elastic-stack-ca.p12<span class="pl-pds">"</span></span>
-<span class="pl-ent">elasticsearch.username</span>: <span class="pl-s"><span class="pl-pds">"</span>kibana<span class="pl-pds">"</span></span>
-<span class="pl-ent">elasticsearch.password</span>: <span class="pl-s"><span class="pl-pds">"</span>elastic<span class="pl-pds">"</span></span>
-<span class="pl-ent">i18n.locale</span>: <span class="pl-s"><span class="pl-pds">"</span>zh-CN<span class="pl-pds">"</span></span></pre></div>
+<pre lang="yaml" class="notranslate"><code class="notranslate"># Default Kibana configuration for docker target
+server.host: "0.0.0.0"
+server.shutdownTimeout: "5s"
+elasticsearch.hosts: [ "http://elasticsearch:9200" ]
+monitoring.ui.container.elasticsearch.enabled: true
+elasticsearch.ssl.certificateAuthorities: "/usr/share/kibana/config/certs/elastic-stack-ca.p12"
+elasticsearch.username: "kibana"
+elasticsearch.password: "elastic"
+i18n.locale: "zh-CN"
+</code></pre>
 <h3>Elastalert</h3>
 <p><a href="https://elastalert.readthedocs.io/en/latest/index.html" rel="nofollow">官方文档</a></p>
 <h4>配置文件</h4>
 <p><code class="notranslate">config.yaml</code></p>
-<div class="highlight highlight-source-yaml"><pre class="notranslate"><span class="pl-c"><span class="pl-c">#</span> This is the folder that contains the rule yaml files</span>
-<span class="pl-c"><span class="pl-c">#</span> This can also be a list of directories</span>
-<span class="pl-c"><span class="pl-c">#</span> Any .yaml file will be loaded as a rule</span>
-<span class="pl-ent">rules_folder</span>: <span class="pl-s">/opt/elastalert/rules</span>
+<pre lang="yaml" class="notranslate"><code class="notranslate"># This is the folder that contains the rule yaml files
+# This can also be a list of directories
+# Any .yaml file will be loaded as a rule
+rules_folder: /opt/elastalert/rules
 
-<span class="pl-c"><span class="pl-c">#</span> How often ElastAlert will query Elasticsearch</span>
-<span class="pl-c"><span class="pl-c">#</span> The unit can be anything from weeks to seconds</span>
-<span class="pl-ent">run_every</span>:
-  <span class="pl-ent">minutes</span>: <span class="pl-c1">1</span>
+# How often ElastAlert will query Elasticsearch
+# The unit can be anything from weeks to seconds
+run_every:
+  minutes: 1
 
-<span class="pl-c"><span class="pl-c">#</span> ElastAlert will buffer results from the most recent</span>
-<span class="pl-c"><span class="pl-c">#</span> period of time, in case some log sources are not in real time</span>
-<span class="pl-ent">buffer_time</span>:
-  <span class="pl-ent">minutes</span>: <span class="pl-c1">15</span>
+# ElastAlert will buffer results from the most recent
+# period of time, in case some log sources are not in real time
+buffer_time:
+  minutes: 15
 
-<span class="pl-c"><span class="pl-c">#</span> The Elasticsearch hostname for metadata writeback</span>
-<span class="pl-c"><span class="pl-c">#</span> Note that every rule can have its own Elasticsearch host</span>
-<span class="pl-ent">es_host</span>: <span class="pl-s">10.1.1.30</span>
+# The Elasticsearch hostname for metadata writeback
+# Note that every rule can have its own Elasticsearch host
+es_host: 10.1.1.30
 
-<span class="pl-c"><span class="pl-c">#</span> The Elasticsearch port</span>
-<span class="pl-ent">es_port</span>: <span class="pl-c1">9200</span>
+# The Elasticsearch port
+es_port: 9200
 
-<span class="pl-c"><span class="pl-c">#</span> The AWS region to use. Set this when using AWS-managed elasticsearch</span>
-<span class="pl-c"><span class="pl-c">#</span>aws_region: us-east-1</span>
+# The AWS region to use. Set this when using AWS-managed elasticsearch
+#aws_region: us-east-1
 
-<span class="pl-c"><span class="pl-c">#</span> The AWS profile to use. Use this if you are using an aws-cli profile.</span>
-<span class="pl-c"><span class="pl-c">#</span> See http://docs.aws.amazon.com/cli/latest/userguide/cli-chap-getting-started.html</span>
-<span class="pl-c"><span class="pl-c">#</span> for details</span>
-<span class="pl-c"><span class="pl-c">#</span>profile: test</span>
+# The AWS profile to use. Use this if you are using an aws-cli profile.
+# See http://docs.aws.amazon.com/cli/latest/userguide/cli-chap-getting-started.html
+# for details
+#profile: test
 
-<span class="pl-c"><span class="pl-c">#</span> Optional URL prefix for Elasticsearch</span>
-<span class="pl-c"><span class="pl-c">#</span>es_url_prefix: elasticsearch</span>
+# Optional URL prefix for Elasticsearch
+#es_url_prefix: elasticsearch
 
-<span class="pl-c"><span class="pl-c">#</span> Optional prefix for statsd metrics</span>
-<span class="pl-c"><span class="pl-c">#</span>statsd_instance_tag: elastalert</span>
+# Optional prefix for statsd metrics
+#statsd_instance_tag: elastalert
 
-<span class="pl-c"><span class="pl-c">#</span> Optional statsd host</span>
-<span class="pl-c"><span class="pl-c">#</span>statsd_host: dogstatsd</span>
+# Optional statsd host
+#statsd_host: dogstatsd
 
-<span class="pl-c"><span class="pl-c">#</span> Connect with TLS to Elasticsearch</span>
-<span class="pl-c"><span class="pl-c">#</span>use_ssl: True</span>
+# Connect with TLS to Elasticsearch
+#use_ssl: True
 
-<span class="pl-c"><span class="pl-c">#</span> Verify TLS certificates</span>
-<span class="pl-c"><span class="pl-c">#</span>verify_certs: True</span>
+# Verify TLS certificates
+#verify_certs: True
 
-<span class="pl-c"><span class="pl-c">#</span> Show TLS or certificate related warnings</span>
-<span class="pl-c"><span class="pl-c">#</span>ssl_show_warn: True</span>
+# Show TLS or certificate related warnings
+#ssl_show_warn: True
 
-<span class="pl-c"><span class="pl-c">#</span> GET request with body is the default option for Elasticsearch.</span>
-<span class="pl-c"><span class="pl-c">#</span> If it fails for some reason, you can pass 'GET', 'POST' or 'source'.</span>
-<span class="pl-c"><span class="pl-c">#</span> See https://elasticsearch-py.readthedocs.io/en/master/connection.html?highlight=send_get_body_as#transport</span>
-<span class="pl-c"><span class="pl-c">#</span> for details</span>
-<span class="pl-c"><span class="pl-c">#</span>es_send_get_body_as: GET</span>
+# GET request with body is the default option for Elasticsearch.
+# If it fails for some reason, you can pass 'GET', 'POST' or 'source'.
+# See https://elasticsearch-py.readthedocs.io/en/master/connection.html?highlight=send_get_body_as#transport
+# for details
+#es_send_get_body_as: GET
 
-<span class="pl-c"><span class="pl-c">#</span> Option basic-auth username and password for Elasticsearch</span>
-<span class="pl-ent">es_username</span>: <span class="pl-s">elastic</span>
-<span class="pl-ent">es_password</span>: <span class="pl-s">elastic</span>
+# Option basic-auth username and password for Elasticsearch
+es_username: elastic
+es_password: elastic
 
-<span class="pl-c"><span class="pl-c">#</span> Use SSL authentication with client certificates client_cert must be</span>
-<span class="pl-c"><span class="pl-c">#</span> a pem file containing both cert and key for client</span>
-<span class="pl-c"><span class="pl-c">#</span>ca_certs: /path/to/cacert.pem</span>
-<span class="pl-c"><span class="pl-c">#</span>client_cert: /path/to/client_cert.pem</span>
-<span class="pl-c"><span class="pl-c">#</span>client_key: /path/to/client_key.key</span>
+# Use SSL authentication with client certificates client_cert must be
+# a pem file containing both cert and key for client
+#ca_certs: /path/to/cacert.pem
+#client_cert: /path/to/client_cert.pem
+#client_key: /path/to/client_key.key
 
-<span class="pl-c"><span class="pl-c">#</span> The index on es_host which is used for metadata storage</span>
-<span class="pl-c"><span class="pl-c">#</span> This can be a unmapped index, but it is recommended that you run</span>
-<span class="pl-c"><span class="pl-c">#</span> elastalert-create-index to set a mapping</span>
-<span class="pl-ent">writeback_index</span>: <span class="pl-s">elastalert_status</span>
+# The index on es_host which is used for metadata storage
+# This can be a unmapped index, but it is recommended that you run
+# elastalert-create-index to set a mapping
+writeback_index: elastalert_status
 
-<span class="pl-c"><span class="pl-c">#</span> If an alert fails for some reason, ElastAlert will retry</span>
-<span class="pl-c"><span class="pl-c">#</span> sending the alert until this time period has elapsed</span>
-<span class="pl-ent">alert_time_limit</span>:
-  <span class="pl-ent">days</span>: <span class="pl-c1">2</span>
+# If an alert fails for some reason, ElastAlert will retry
+# sending the alert until this time period has elapsed
+alert_time_limit:
+  days: 2
 
-<span class="pl-c"><span class="pl-c">#</span> 可选的时间戳格式。</span>
-<span class="pl-c"><span class="pl-c">#</span> ElastAlert将使用此格式在警报消息和日志消息中打印时间戳。</span>
-<span class="pl-ent">custom_pretty_ts_format</span>: <span class="pl-s"><span class="pl-pds">'</span>%Y-%m-%d %H:%M<span class="pl-pds">'</span></span>
+# 可选的时间戳格式。
+# ElastAlert将使用此格式在警报消息和日志消息中打印时间戳。
+custom_pretty_ts_format: '%Y-%m-%d %H:%M'
 
-<span class="pl-c"><span class="pl-c">#</span> 自定义日志配置</span>
-<span class="pl-c"><span class="pl-c">#</span> 如果您希望设置自己的日志配置以记录到文件中，或记录到Logstash，并且/或者修改日志级别，请使用下面的配置并根据需要进行调整。</span>
-<span class="pl-c"><span class="pl-c">#</span> 注意：如果您以--verbose/--debug运行ElastAlert，“elastalert”记录器的日志级别将更改为INFO，如果它还不是INFO/DEBUG。</span>
-<span class="pl-ent">logging</span>:
- <span class="pl-ent">version</span>: <span class="pl-c1">1</span>
- <span class="pl-ent">incremental</span>: <span class="pl-c1">false</span>
- <span class="pl-ent">disable_existing_loggers</span>: <span class="pl-c1">false</span>
- <span class="pl-ent">formatters</span>:
-   <span class="pl-ent">logline</span>:
-     <span class="pl-ent">format</span>: <span class="pl-s"><span class="pl-pds">'</span>%(asctime)s %(levelname)+8s %(name)+20s %(message)s<span class="pl-pds">'</span></span>
+# 自定义日志配置
+# 如果您希望设置自己的日志配置以记录到文件中，或记录到Logstash，并且/或者修改日志级别，请使用下面的配置并根据需要进行调整。
+# 注意：如果您以--verbose/--debug运行ElastAlert，“elastalert”记录器的日志级别将更改为INFO，如果它还不是INFO/DEBUG。
+logging:
+ version: 1
+ incremental: false
+ disable_existing_loggers: false
+ formatters:
+   logline:
+     format: '%(asctime)s %(levelname)+8s %(name)+20s %(message)s'
 
- <span class="pl-ent">handlers</span>:
-   <span class="pl-ent">console</span>:
-     <span class="pl-ent">class</span>: <span class="pl-s">logging.StreamHandler</span>
-     <span class="pl-ent">formatter</span>: <span class="pl-s">logline</span>
-     <span class="pl-ent">level</span>: <span class="pl-s">DEBUG</span>
-     <span class="pl-ent">stream</span>: <span class="pl-s">ext://sys.stderr</span>
+ handlers:
+   console:
+     class: logging.StreamHandler
+     formatter: logline
+     level: DEBUG
+     stream: ext://sys.stderr
 
-   <span class="pl-ent">file</span>:
-     <span class="pl-ent">class </span>: <span class="pl-s">logging.FileHandler</span>
-     <span class="pl-ent">formatter</span>: <span class="pl-s">logline</span>
-     <span class="pl-ent">level</span>: <span class="pl-s">DEBUG</span>
-     <span class="pl-ent">filename</span>: <span class="pl-s">elastalert.log</span>
+   file:
+     class : logging.FileHandler
+     formatter: logline
+     level: DEBUG
+     filename: elastalert.log
 
- <span class="pl-ent">loggers</span>:
-   <span class="pl-ent">elastalert</span>:
-     <span class="pl-ent">level</span>: <span class="pl-s">WARN</span>
-     <span class="pl-ent">handlers</span>: <span class="pl-s">[]</span>
-     <span class="pl-ent">propagate</span>: <span class="pl-c1">true</span>
+ loggers:
+   elastalert:
+     level: WARN
+     handlers: []
+     propagate: true
 
-   <span class="pl-ent">elasticsearch</span>:
-     <span class="pl-ent">level</span>: <span class="pl-s">WARN</span>
-     <span class="pl-ent">handlers</span>: <span class="pl-s">[]</span>
-     <span class="pl-ent">propagate</span>: <span class="pl-c1">true</span>
+   elasticsearch:
+     level: WARN
+     handlers: []
+     propagate: true
 
-   <span class="pl-ent">elasticsearch.trace</span>:
-     <span class="pl-ent">level</span>: <span class="pl-s">WARN</span>
-     <span class="pl-ent">handlers</span>: <span class="pl-s">[]</span>
-     <span class="pl-ent">propagate</span>: <span class="pl-c1">true</span>
+   elasticsearch.trace:
+     level: WARN
+     handlers: []
+     propagate: true
 
-   <span class="pl-s"><span class="pl-pds">'</span><span class="pl-pds">'</span></span>:  <span class="pl-c"><span class="pl-c">#</span> 根记录器</span>
-     <span class="pl-ent">level</span>: <span class="pl-s">WARN</span>
-     <span class="pl-ent">handlers</span>:
-       - <span class="pl-s">console</span>
-       - <span class="pl-s">file</span>
-     <span class="pl-ent">propagate</span>: <span class="pl-c1">false</span></pre></div>
+   '':  # 根记录器
+     level: WARN
+     handlers:
+       - console
+       - file
+     propagate: false
+</code></pre>
 <p><code class="notranslate">nginx-rules.yaml</code></p>
-<div class="highlight highlight-source-yaml"><pre class="notranslate"><span class="pl-ent">name</span>: <span class="pl-s"><span class="pl-pds">"</span>Nginx-Error<span class="pl-pds">"</span></span>
-<span class="pl-ent">type</span>: <span class="pl-s"><span class="pl-pds">"</span>frequency<span class="pl-pds">"</span></span>
-<span class="pl-ent">index</span>: <span class="pl-s"><span class="pl-pds">"</span>nginx-error-8.13.2*<span class="pl-pds">"</span></span>  <span class="pl-c"><span class="pl-c">#</span> 查询日志所在的索引</span>
-<span class="pl-ent">is_enabled</span>: <span class="pl-c1">true</span>
-<span class="pl-ent">num_events</span>: <span class="pl-c1">3</span>  <span class="pl-c"><span class="pl-c">#</span> 事件出现的次数</span>
-<span class="pl-ent">timeframe</span>:
-  <span class="pl-ent">minutes</span>: <span class="pl-c1">2</span>   <span class="pl-c"><span class="pl-c">#</span> 1分钟内出现了num_events几次就报警</span>
-<span class="pl-ent">realert</span>:
-  <span class="pl-ent">minutes</span>: <span class="pl-c1">180</span>   <span class="pl-c"><span class="pl-c">#</span> 5分钟内忽略重复告警</span>
-<span class="pl-ent">timestamp_field</span>: <span class="pl-s"><span class="pl-pds">"</span>@timestamp<span class="pl-pds">"</span></span>
-<span class="pl-ent">timestamp_type</span>: <span class="pl-s"><span class="pl-pds">"</span>iso<span class="pl-pds">"</span></span>
-<span class="pl-ent">use_strftime_index</span>: <span class="pl-c1">true</span>
-<span class="pl-ent">filter</span>:
-  - <span class="pl-ent">query</span>:
-      <span class="pl-ent">query_string</span>:
-        <span class="pl-ent">query</span>: <span class="pl-s"><span class="pl-pds">"</span>message:<span class="pl-cce">\"</span>error<span class="pl-cce">\"</span> NOT message:<span class="pl-cce">\"</span>No such file or directory<span class="pl-cce">\"</span> NOT message:<span class="pl-cce">\"</span>forbidden by rule<span class="pl-cce">\"</span><span class="pl-pds">"</span></span>  <span class="pl-c"><span class="pl-c">#</span> 告警查询语句</span>
+<pre lang="yaml" class="notranslate"><code class="notranslate">name: "Nginx-Error"
+type: "frequency"
+index: "nginx-error-8.13.2*"  # 查询日志所在的索引
+is_enabled: true
+num_events: 3  # 事件出现的次数
+timeframe:
+  minutes: 2   # 1分钟内出现了num_events几次就报警
+realert:
+  minutes: 180   # 5分钟内忽略重复告警
+timestamp_field: "@timestamp"
+timestamp_type: "iso"
+use_strftime_index: true
+filter:
+  - query:
+      query_string:
+        query: "message:\"error\" NOT message:\"No such file or directory\" NOT message:\"forbidden by rule\""  # 告警查询语句
 
-<span class="pl-ent">alert_text_type</span>: <span class="pl-s">alert_text_only</span>
-<span class="pl-ent">alert_text</span>: <span class="pl-s"><span class="pl-pds">"</span>### Nginx-Error(Prod)日志告警<span class="pl-cce">\n</span>- **采集位置:** {0}<span class="pl-cce">\n</span>- **文件:** {1}<span class="pl-cce">\n</span>- **匹配次数:** {2}<span class="pl-cce">\n</span>- **日志id:** {3}<span class="pl-cce">\n\n</span>- [点我去查询]()<span class="pl-pds">"</span></span>
-<span class="pl-c"><span class="pl-c">#</span> 上述括号中填写查询链接</span>
-<span class="pl-ent">alert_text_args</span>:   <span class="pl-c"><span class="pl-c">#</span> 告警模板中用到的参数</span>
-  - <span class="pl-s">agent.name</span>
-  - <span class="pl-s"><span class="pl-pds">"</span>log.file.path<span class="pl-pds">"</span></span>
-  - <span class="pl-s">num_matches</span>
-  - <span class="pl-s">_id</span>
-  - <span class="pl-s">_id</span>
+alert_text_type: alert_text_only
+alert_text: "### Nginx-Error(Prod)日志告警\n- **采集位置:** {0}\n- **文件:** {1}\n- **匹配次数:** {2}\n- **日志id:** {3}\n\n- [点我去查询]()"
+# 上述括号中填写查询链接
+alert_text_args:   # 告警模板中用到的参数
+  - agent.name
+  - "log.file.path"
+  - num_matches
+  - _id
+  - _id
 
-<span class="pl-ent">alert</span>:
-  - <span class="pl-s"><span class="pl-pds">"</span>dingtalk<span class="pl-pds">"</span></span>
-<span class="pl-ent">dingtalk_access_token</span>: <span class="pl-s"><span class="pl-pds">"</span><span class="pl-pds">"</span></span>
-<span class="pl-ent">dingtalk_msgtype</span>: <span class="pl-s"><span class="pl-pds">"</span>markdown<span class="pl-pds">"</span></span></pre></div>
+alert:
+  - "dingtalk"
+dingtalk_access_token: ""
+dingtalk_msgtype: "markdown"
+</code></pre>
 <h4>Enhancements自定义开发&amp;镜像构建</h4>
 <div class="markdown-alert markdown-alert-tip"><p class="markdown-alert-title"><svg class="octicon octicon-light-bulb mr-2" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="M8 1.5c-2.363 0-4 1.69-4 3.75 0 .984.424 1.625.984 2.304l.214.253c.223.264.47.556.673.848.284.411.537.896.621 1.49a.75.75 0 0 1-1.484.211c-.04-.282-.163-.547-.37-.847a8.456 8.456 0 0 0-.542-.68c-.084-.1-.173-.205-.268-.32C3.201 7.75 2.5 6.766 2.5 5.25 2.5 2.31 4.863 0 8 0s5.5 2.31 5.5 5.25c0 1.516-.701 2.5-1.328 3.259-.095.115-.184.22-.268.319-.207.245-.383.453-.541.681-.208.3-.33.565-.37.847a.751.751 0 0 1-1.485-.212c.084-.593.337-1.078.621-1.489.203-.292.45-.584.673-.848.075-.088.147-.173.213-.253.561-.679.985-1.32.985-2.304 0-2.06-1.637-3.75-4-3.75ZM5.75 12h4.5a.75.75 0 0 1 0 1.5h-4.5a.75.75 0 0 1 0-1.5ZM6 15.25a.75.75 0 0 1 .75-.75h2.5a.75.75 0 0 1 0 1.5h-2.5a.75.75 0 0 1-.75-.75Z"></path></svg>Tip</p>
 <p>初始化流程可以按照官方<a href="https://elastalert.readthedocs.io/en/latest/recipes/adding_enhancements.html" rel="nofollow">文档</a>进行</p>
 </div>
 <p>Example：Ruby日志格式匹配提取request-id</p>
 <p>创建文件夹</p>
-<div class="highlight highlight-source-shell"><pre class="notranslate">mkdir elastalert/elastalert_modules
-touch __init__.py extract_request_id.py</pre></div>
+<pre lang="shell" class="notranslate"><code class="notranslate">mkdir elastalert/elastalert_modules
+touch __init__.py extract_request_id.py
+</code></pre>
 <p><code class="notranslate">extract_request_id.py</code></p>
-<div class="highlight highlight-source-python"><pre class="notranslate"><span class="pl-k">from</span> <span class="pl-s1">elastalert</span>.<span class="pl-s1">enhancements</span> <span class="pl-k">import</span> <span class="pl-v">BaseEnhancement</span>
-<span class="pl-k">import</span> <span class="pl-s1">re</span>
+<pre lang="python" class="notranslate"><code class="notranslate">from elastalert.enhancements import BaseEnhancement
+import re
 
-<span class="pl-k">class</span> <span class="pl-v">Extract_Requestid</span>(<span class="pl-v">BaseEnhancement</span>):
-    <span class="pl-k">def</span> <span class="pl-en">process</span>(<span class="pl-s1">self</span>, <span class="pl-s1">match</span>):
-        <span class="pl-c"># 定义正则表达式模式</span>
-        <span class="pl-s1">pattern</span> <span class="pl-c1">=</span> <span class="pl-s">r"\b[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}\b"</span>
-        <span class="pl-c"># 检查 'message' 字段是否存在于match中</span>
-        <span class="pl-k">if</span> <span class="pl-s">'message'</span> <span class="pl-c1">in</span> <span class="pl-s1">match</span>:
-            <span class="pl-s1">log_message</span> <span class="pl-c1">=</span> <span class="pl-s1">match</span>[<span class="pl-s">'message'</span>]
-            <span class="pl-s1">match_obj</span> <span class="pl-c1">=</span> <span class="pl-s1">re</span>.<span class="pl-c1">search</span>(<span class="pl-s1">pattern</span>, <span class="pl-s1">log_message</span>)
-            <span class="pl-k">if</span> <span class="pl-s1">match_obj</span>:
-                <span class="pl-s1">match</span>[<span class="pl-s">'extract_requestid'</span>] <span class="pl-c1">=</span> <span class="pl-s1">match_obj</span>.<span class="pl-c1">group</span>(<span class="pl-c1">0</span>)
-            <span class="pl-k">else</span>:
-                <span class="pl-s1">match</span>[<span class="pl-s">'extract_requestid'</span>] <span class="pl-c1">=</span> <span class="pl-s">"request id not found"</span></pre></div>
+class Extract_Requestid(BaseEnhancement):
+    def process(self, match):
+        # 定义正则表达式模式
+        pattern = r"\b[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}\b"
+        # 检查 'message' 字段是否存在于match中
+        if 'message' in match:
+            log_message = match['message']
+            match_obj = re.search(pattern, log_message)
+            if match_obj:
+                match['extract_requestid'] = match_obj.group(0)
+            else:
+                match['extract_requestid'] = "request id not found"
+
+</code></pre>
 <h3>docker compose 部署</h3>
 <h4>生产端</h4>
-<div class="highlight highlight-source-yaml"><pre class="notranslate"><span class="pl-ent">services</span>:
-  <span class="pl-ent">filebeat</span>:
-    <span class="pl-ent">image</span>: <span class="pl-s">elastic/filebeat:8.13.2</span>
-    <span class="pl-ent">container_name</span>: <span class="pl-s">filebeat</span>
-    <span class="pl-ent">user</span>: <span class="pl-s">root</span>
-    <span class="pl-ent">restart</span>: <span class="pl-s">unless-stopped</span>
-    <span class="pl-ent">volumes</span>:
-      - <span class="pl-s">./filebeat.docker.yml:/usr/share/filebeat/filebeat.yml</span>
-      - <span class="pl-s">/var/lib/docker/containers:/var/lib/docker/containers:ro</span>
-      - <span class="pl-s">/var/run/docker.sock:/var/run/docker.sock:ro</span>
-      - <span class="pl-s">./data:/usr/share/filebeat/data:rw</span>
-      - <span class="pl-s">/home:/home</span>
-      - <span class="pl-s">/var/log:/var/log</span></pre></div>
+<pre lang="yaml" class="notranslate"><code class="notranslate">services:
+  filebeat:
+    image: elastic/filebeat:8.13.2
+    container_name: filebeat
+    user: root
+    restart: unless-stopped
+    volumes:
+      - ./filebeat.docker.yml:/usr/share/filebeat/filebeat.yml
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./data:/usr/share/filebeat/data:rw
+      - /home:/home
+      - /var/log:/var/log
+</code></pre>
 <h4>消费端</h4>
-<div class="highlight highlight-source-yaml"><pre class="notranslate"><span class="pl-ent">networks</span>:
-  <span class="pl-ent">logstack</span>:
-    <span class="pl-ent">name</span>: <span class="pl-s">logstack</span>
-    <span class="pl-ent">driver</span>: <span class="pl-s">bridge</span>
+<pre lang="yaml" class="notranslate"><code class="notranslate">networks:
+  logstack:
+    name: logstack
+    driver: bridge
 
-<span class="pl-ent">services</span>:
-  <span class="pl-ent">filebeat</span>:
-    <span class="pl-ent">image</span>: <span class="pl-s">elastic/filebeat:8.13.2</span>
-    <span class="pl-ent">container_name</span>: <span class="pl-s">filebeat</span>
-    <span class="pl-ent">restart</span>: <span class="pl-s">unless-stopped</span>
-    <span class="pl-ent">ports</span>:
-      - <span class="pl-s"><span class="pl-pds">"</span>5067:5067<span class="pl-pds">"</span></span>
-    <span class="pl-ent">volumes</span>:
-      - <span class="pl-s">./filebeat/filebeat.docker.yml:/usr/share/filebeat/filebeat.yml</span>
-      - <span class="pl-s">/var/lib/docker/containers:/var/lib/docker/containers:ro</span>
-      - <span class="pl-s">/var/run/docker.sock:/var/run/docker.sock:ro</span>
-      - <span class="pl-s">./filebeat/data:/usr/share/filebeat/data:rw</span>
-    <span class="pl-ent">networks</span>:
-      - <span class="pl-s">logstack</span>
+services:
+  filebeat:
+    image: elastic/filebeat:8.13.2
+    container_name: filebeat
+    restart: unless-stopped
+    ports:
+      - "5067:5067"
+    volumes:
+      - ./filebeat/filebeat.docker.yml:/usr/share/filebeat/filebeat.yml
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./filebeat/data:/usr/share/filebeat/data:rw
+    networks:
+      - logstack
 
-  <span class="pl-ent">elasticsearch</span>:
-    <span class="pl-ent">image</span>: <span class="pl-s">elastic/elasticsearch:8.13.2</span>
-    <span class="pl-ent">container_name</span>: <span class="pl-s">elasticsearch</span>
-    <span class="pl-ent">restart</span>: <span class="pl-s">unless-stopped</span>
-    <span class="pl-ent">environment</span>:
-      - <span class="pl-s"><span class="pl-pds">"</span>ES_JAVA_OPTS=-Xms6144m -Xmx6144m<span class="pl-pds">"</span></span>
-      - <span class="pl-s"><span class="pl-pds">"</span>cluster.name=elasticsearch<span class="pl-pds">"</span></span>
-    <span class="pl-ent">volumes</span>:
-      - <span class="pl-s">./elasticsearch/data:/usr/share/elasticsearch/data</span>
-      - <span class="pl-s">./elasticsearch/config/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml</span>
-    <span class="pl-ent">ports</span>:
-      - <span class="pl-s"><span class="pl-pds">"</span>9200:9200<span class="pl-pds">"</span></span>
-      - <span class="pl-s"><span class="pl-pds">"</span>9300:9300<span class="pl-pds">"</span></span>
-    <span class="pl-ent">networks</span>:
-      - <span class="pl-s">logstack</span>
+  elasticsearch:
+    image: elastic/elasticsearch:8.13.2
+    container_name: elasticsearch
+    restart: unless-stopped
+    environment:
+      - "ES_JAVA_OPTS=-Xms6144m -Xmx6144m"
+      - "cluster.name=elasticsearch"
+    volumes:
+      - ./elasticsearch/data:/usr/share/elasticsearch/data
+      - ./elasticsearch/config/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    networks:
+      - logstack
 
-  <span class="pl-ent">kibana</span>:
-    <span class="pl-ent">image</span>: <span class="pl-s">elastic/kibana:8.13.2</span>
-    <span class="pl-ent">container_name</span>: <span class="pl-s">kibana</span>
-    <span class="pl-ent">restart</span>: <span class="pl-s">unless-stopped</span>
-    <span class="pl-ent">volumes</span>:
-      - <span class="pl-s">./kibana/config/kibana.yml:/usr/share/kibana/config/kibana.yml</span>
-      - <span class="pl-s">./kibana/certs:/usr/share/kibana/config/certs</span>
-    <span class="pl-ent">ports</span>:
-      - <span class="pl-s"><span class="pl-pds">"</span>5601:5601<span class="pl-pds">"</span></span>
-    <span class="pl-ent">depends_on</span>:
-      - <span class="pl-s">elasticsearch</span>
-    <span class="pl-ent">networks</span>:
-      - <span class="pl-s">logstack</span>
+  kibana:
+    image: elastic/kibana:8.13.2
+    container_name: kibana
+    restart: unless-stopped
+    volumes:
+      - ./kibana/config/kibana.yml:/usr/share/kibana/config/kibana.yml
+      - ./kibana/certs:/usr/share/kibana/config/certs
+    ports:
+      - "5601:5601"
+    depends_on:
+      - elasticsearch
+    networks:
+      - logstack
 
-  <span class="pl-ent">metricbeat</span>:
-    <span class="pl-ent">image</span>: <span class="pl-s">elastic/metricbeat:8.13.2</span>
-    <span class="pl-ent">container_name</span>: <span class="pl-s">metricbeat</span>
-    <span class="pl-ent">restart</span>: <span class="pl-s">unless-stopped</span>
-    <span class="pl-ent">volumes</span>:
-      - <span class="pl-s">./metricbeat/metricbeat.docker.yml:/usr/share/metricbeat/metricbeat.yml:ro</span>
-      - <span class="pl-s">/var/run/docker.sock:/var/run/docker.sock:ro</span>
-      - <span class="pl-s">/sys/fs/cgroup:/hostfs/sys/fs/cgroup:ro</span>
-      - <span class="pl-s">/proc:/hostfs/proc:ro</span>
-      - <span class="pl-s">/:/hostfs:ro</span>
-    <span class="pl-ent">networks</span>:
-      - <span class="pl-s">logstack</span>
+  metricbeat:
+    image: elastic/metricbeat:8.13.2
+    container_name: metricbeat
+    restart: unless-stopped
+    volumes:
+      - ./metricbeat/metricbeat.docker.yml:/usr/share/metricbeat/metricbeat.yml:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /sys/fs/cgroup:/hostfs/sys/fs/cgroup:ro
+      - /proc:/hostfs/proc:ro
+      - /:/hostfs:ro
+    networks:
+      - logstack
 
-  <span class="pl-ent">esalert</span>:
-    <span class="pl-ent">image</span>: <span class="pl-s">jertel/elastalert2:2.18.0</span>
-    <span class="pl-ent">container_name</span>: <span class="pl-s">esalert</span>
-    <span class="pl-ent">restart</span>: <span class="pl-s">unless-stopped</span>
-    <span class="pl-ent">user</span>: <span class="pl-s">root</span>
-    <span class="pl-ent">volumes</span>:
-      - <span class="pl-s">./esalert/config.yaml:/opt/elastalert/config.yaml</span>
-      - <span class="pl-s">./esalert/rules:/opt/elastalert/rules</span>
-    <span class="pl-ent">depends_on</span>:
-      - <span class="pl-s">elasticsearch</span>
-    <span class="pl-ent">networks</span>:
-      - <span class="pl-s">logstack</span>
-    <span class="pl-ent">environment</span>:
-      <span class="pl-ent">TZ</span>: <span class="pl-s"><span class="pl-pds">"</span>Asia/Shanghai<span class="pl-pds">"</span></span>
+  esalert:
+    image: jertel/elastalert2:2.18.0
+    container_name: esalert
+    restart: unless-stopped
+    user: root
+    volumes:
+      - ./esalert/config.yaml:/opt/elastalert/config.yaml
+      - ./esalert/rules:/opt/elastalert/rules
+    depends_on:
+      - elasticsearch
+    networks:
+      - logstack
+    environment:
+      TZ: "Asia/Shanghai"
       
-  <span class="pl-ent">logstash</span>:
-    <span class="pl-ent">image</span>: <span class="pl-s">elastic/logstash:8.13.2</span>
-    <span class="pl-ent">container_name</span>: <span class="pl-s">logstash</span>
-    <span class="pl-ent">restart</span>: <span class="pl-s">always</span>
-    <span class="pl-ent">volumes</span>:
-      - <span class="pl-s">./logstash/config:/usr/share/logstash/config</span>
-      - <span class="pl-s">./logstash/data:/usr/share/logstash/data</span>
-      - <span class="pl-s">./logstash/pipeline:/usr/share/logstash/pipeline</span>
-      - <span class="pl-s">/var/lib/docker/containers:/var/lib/docker/containers:ro</span>
-      - <span class="pl-s">/var/run/docker.sock:/var/run/docker.sock:ro</span>
-    <span class="pl-ent">networks</span>:
-      - <span class="pl-s">logstack</span></pre></div>
+  logstash:
+    image: elastic/logstash:8.13.2
+    container_name: logstash
+    restart: always
+    volumes:
+      - ./logstash/config:/usr/share/logstash/config
+      - ./logstash/data:/usr/share/logstash/data
+      - ./logstash/pipeline:/usr/share/logstash/pipeline
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks:
+      - logstack
+</code></pre>
 <h2>非结构化日志(未测试)</h2>
 <h3>filebeat 1</h3>
-<div class="highlight highlight-source-yaml"><pre class="notranslate"><span class="pl-ent">filebeat.inputs</span>:
-- <span class="pl-ent">type</span>: <span class="pl-s">filestream </span><span class="pl-c"><span class="pl-c">#</span>新版本常用文件流输入方式</span>
-  <span class="pl-ent">id</span>: <span class="pl-s">my-filestream-id </span><span class="pl-c"><span class="pl-c">#</span>每个文件流输入必须有一个唯一的 ID。省略或更改文件流 ID 可能会导致数据重复。如果没有唯一的 ID，filestream 无法正确跟踪文件的状态。</span>
-  <span class="pl-ent">paths</span>:
-    - <span class="pl-s">/var/log/messages</span>
-    - <span class="pl-s">/var/log/*.log</span>
+<pre lang="yaml" class="notranslate"><code class="notranslate">filebeat.inputs:
+- type: filestream #新版本常用文件流输入方式
+  id: my-filestream-id #每个文件流输入必须有一个唯一的 ID。省略或更改文件流 ID 可能会导致数据重复。如果没有唯一的 ID，filestream 无法正确跟踪文件的状态。
+  paths:
+    - /var/log/messages
+    - /var/log/*.log
     
-- <span class="pl-ent">type</span>: <span class="pl-s">filestream </span>
-  <span class="pl-ent">id</span>: <span class="pl-s">apache-filestream-id</span>
-  <span class="pl-ent">paths</span>:
-    - <span class="pl-s"><span class="pl-pds">"</span>/var/log/apache2/*<span class="pl-pds">"</span></span>
-  <span class="pl-ent">fields</span>:
-    <span class="pl-ent">apache</span>: <span class="pl-s">true </span><span class="pl-c"><span class="pl-c">#</span>fields字段随后会被存储在es中通过kibana进行查询，便于识别这些日志数据来源于Apache服务；</span>
+- type: filestream 
+  id: apache-filestream-id
+  paths:
+    - "/var/log/apache2/*"
+  fields:
+    apache: true #fields字段随后会被存储在es中通过kibana进行查询，便于识别这些日志数据来源于Apache服务；
     
     
-<span class="pl-c"><span class="pl-c">#</span>输出到kafka 此输出可以连接到 Kafka 0.8.2.0 及更高版本</span>
-<span class="pl-ent">output.kafka</span>:
-  <span class="pl-c"><span class="pl-c">#</span>用于读取集群元数据的brokers</span>
-  <span class="pl-ent">hosts</span>: <span class="pl-s">["kafka1:9092", "kafka2:9092", "kafka3:9092"]</span>
-  <span class="pl-c"><span class="pl-c">#</span>消息主题选择+分区</span>
-  <span class="pl-ent">topic</span>: <span class="pl-s"><span class="pl-pds">'</span>%{[fields.log_topic]}<span class="pl-pds">'</span></span>
-  <span class="pl-ent">partition.round_robin</span>:
-    <span class="pl-ent">reachable_only</span>: <span class="pl-c1">false</span>
+#输出到kafka 此输出可以连接到 Kafka 0.8.2.0 及更高版本
+output.kafka:
+  #用于读取集群元数据的brokers
+  hosts: ["kafka1:9092", "kafka2:9092", "kafka3:9092"]
+  #消息主题选择+分区
+  topic: '%{[fields.log_topic]}'
+  partition.round_robin:
+    reachable_only: false
 
-  <span class="pl-ent">required_acks</span>: <span class="pl-c1">1</span>
-  <span class="pl-ent">compression</span>: <span class="pl-s">gzip</span>
-  <span class="pl-ent">max_message_bytes</span>: <span class="pl-c1">1000000</span> <span class="pl-c"><span class="pl-c">#</span>大于 max_message_bytes 的事件将被丢弃</span></pre></div>
+  required_acks: 1
+  compression: gzip
+  max_message_bytes: 1000000 #大于 max_message_bytes 的事件将被丢弃
+</code></pre>
 <h3>kafka</h3>
-<div class="highlight highlight-source-yaml"><pre class="notranslate"><span class="pl-c"><span class="pl-c">#</span>暂定</span></pre></div>
+<pre lang="yaml" class="notranslate"><code class="notranslate">#暂定
+</code></pre>
 <h3>logstash</h3>
 <p>实例配置文件：</p>
 <pre lang="conf" class="notranslate"><code class="notranslate">input {
