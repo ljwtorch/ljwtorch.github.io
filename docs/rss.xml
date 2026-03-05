@@ -1,5 +1,186 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<rss xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/" version="2.0"><channel><title>V's Blog</title><link>https://blog.witter.top</link><description>自有清风常载鹤，从无猜意不惊鸥。</description><copyright>V's Blog</copyright><docs>http://www.rssboard.org/rss-specification</docs><generator>python-feedgen</generator><image><url>https://img.witter.top/file/b037878209903b7d5bb17.jpg</url><title>avatar</title><link>https://blog.witter.top</link></image><lastBuildDate>Wed, 21 Jan 2026 02:00:11 +0000</lastBuildDate><managingEditor>V's Blog</managingEditor><ttl>60</ttl><webMaster>V's Blog</webMaster><item><title>pyenv</title><link>https://blog.witter.top/post/pyenv.html</link><description>1. 安装：`curl -fsSL https://pyenv.run | bash`
+<rss xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/" version="2.0"><channel><title>V's Blog</title><link>https://blog.witter.top</link><description>自有清风常载鹤，从无猜意不惊鸥。</description><copyright>V's Blog</copyright><docs>http://www.rssboard.org/rss-specification</docs><generator>python-feedgen</generator><image><url>https://img.witter.top/file/b037878209903b7d5bb17.jpg</url><title>avatar</title><link>https://blog.witter.top</link></image><lastBuildDate>Thu, 05 Mar 2026 07:37:42 +0000</lastBuildDate><managingEditor>V's Blog</managingEditor><ttl>60</ttl><webMaster>V's Blog</webMaster><item><title>skywalking部署&amp;接入</title><link>https://blog.witter.top/post/skywalking-bu-shu-%26-jie-ru.html</link><description>## 1.docker部署
+
+### 1.1 以banyandb为存储(基础配置无消息队列)
+
+- banyandb web页面：http://ip:17913/banyandb/dashboard
+- 注：在接入12个java服务，测试环境存储24小时指标的资源消耗：
+  - oap-server：4G内存
+  - banyandb：1G内存，1.1G硬盘空间
+  - ui：800M内存
+
+`docker-compose.yml`
+
+```yaml
+services:
+  banyandb:
+    image: registry.cn-beijing.aliyuncs.com/witter/skywalking-banyandb:0.8.0
+    container_name: banyandb
+    restart: always
+    ports:
+      - '17912:17912'
+      - '17913:17913'
+    volumes:
+      - ./banyandb/data:/var/lib/banyandb
+    environment:
+      - BANYANDB_JAVA_OPTS=-Xms1g -Xmx1g
+    command: standalone --stream-root-path /var/lib/banyandb/stream-data --measure-root-path /var/lib/banyandb/measure-data --observability-modes=native
+    healthcheck:
+      test: [ 'CMD', 'sh', '-c', 'nc -nz 127.0.0.1 17912' ]
+      interval: 5s
+      timeout: 60s
+      retries: 120
+    networks:
+      - skywalking
+
+  oap:
+    image: registry.cn-beijing.aliyuncs.com/witter/skywalking-oap-server:10.2.0
+    container_name: oap-server
+    restart: always
+    depends_on:
+      banyandb:
+        condition: service_healthy
+    ports:
+      - '11800:11800'
+      - '12800:12800'
+    # volumes:
+      # - ./oap/config/application.yml:/skywalking/config/application.yml
+    environment:
+      - SW_STORAGE=banyandb
+      - SW_STORAGE_BANYANDB_TARGETS=banyandb:17912
+      - SW_TELEMETRY=prometheus
+      - JAVA_OPTS=-Xms2048m -Xmx2048m
+    networks:
+      - skywalking
+
+  ui:
+    image: registry.cn-beijing.aliyuncs.com/witter/skywalking-ui:10.2.0
+    container_name: ui
+    restart: always
+    depends_on:
+      - oap
+    ports:
+      - '8081:8080'
+    environment:
+      - SW_OAP_ADDRESS=http://oap:12800
+      - SW_ZIPKIN_ADDRESS=http://oap:9412
+    networks:
+      - skywalking
+
+networks:
+  skywalking:
+    driver: bridge
+```
+
+### 1.2 以elasticsearch为存储，skywalking-satellite中转；
+
+&gt; 1. SkyWalking Satellite 目前只支持把 Logs 转发到 Kafka（插件native-log-kafka-forwarder）；
+&gt; 2. Tracing 和 Metrics 没有对应的 Kafka forwarder，只能走 gRPC 转发到 OAP；
+
+推荐场景是：**Java Agent → Satellite（11801）→ OAP → Elasticsearch**
+
+#### 1.2.1 satellite
+
+`satellite_config.yaml`
+
+```yaml
+# 日志记录器配置
+logger:
+  # 日志格式模板配置
+  log_pattern: ${SATELLITE_LOGGER_LOG_PATTERN:%time [%level][%field] - %msg}
+  # 时间格式模板配置
+  time_pattern: ${SATELLITE_LOGGER_TIME_PATTERN:2006-01-02 15:04:05.000}
+  # 允许打印的最低日志级别
+  level: ${SATELLITE_LOGGER_LEVEL:info}
+
+# Satellite 自身的遥测（telemetry）配置
+telemetry:
+  # 部署的空间概念，类似于 Kubernetes 中的 namespace
+  cluster: ${SATELLITE_TELEMETRY_CLUSTER:satellite-cluster}
+  # 部署的服务分组概念，类似于 Kubernetes 中的 service 资源
+  service: ${SATELLITE_TELEMETRY_SERVICE:satellite-service}
+  # 最小运行单元，类似于 Kubernetes 中的 pod
+  instance: ${SATELLITE_TELEMETRY_SERVICE:satellite-instance}
+  # 遥测数据导出类型，支持 'prometheus'、'metrics_service'、'pprof' 或 'none'，多个用逗号分隔
+  export_type: ${SATELLITE_TELEMETRY_EXPORT_TYPE:prometheus,pprof}
+
+# 被不同管道（pipe）中具体插件所引用的共享插件配置
+sharing:
+  clients:
+    - plugin_name: 'grpc-client'
+      # gRPC 服务器地址发现器类型
+      finder_type: ${SATELLITE_GRPC_CLIENT_FINDER:static}
+      # gRPC 服务器地址（默认 localhost:11800）
+      server_addr: ${SATELLITE_GRPC_CLIENT:127.0.0.1:11800}
+      # 是否启用 TLS
+      enable_tls: ${SATELLITE_GRPC_ENABLE_TLS:false}
+      # 客户端证书文件路径（启用 TLS 时生效）
+      client_pem_path: ${SATELLITE_GRPC_CLIENT_PEM_PATH:'client.pem'}
+      # 客户端私钥文件路径（启用 TLS 时生效）
+      client_key_path: ${SATELLITE_GRPC_CLIENT_KEY_PATH:'client.key'}
+      # 是否跳过服务器证书链和主机名验证
+      insecure_skip_verify: ${SATELLITE_GRPC_INSECURE_SKIP_VERIFY:false}
+      # CA 证书文件路径（启用 TLS 时生效）
+      ca_pem_path: ${SATELLITE_grpc_CA_PEM_PATH:'ca.pem'}
+      # 连接检查周期（秒）
+      check_period: ${SATELLITE_GRPC_CHECK_PERIOD:5}
+      # 发送请求时的认证值
+      authentication: ${SATELLITE_GRPC_AUTHENTICATION:''}
+      # gRPC 请求超时配置
+      timeout:
+        # 单次 unary 请求超时
+        unary: ${SATELLITE_GRPC_TIMEOUT_UNARY:5s}
+        # 流式 unary 请求超时
+        stream: ${SATELLITE_GRPC_TIMEOUT_STREAM:20s}
+  servers:
+    - plugin_name: 'grpc-server'
+      # gRPC 服务器监听地址
+      address: ${SATELLITE_GRPC_ADDRESS:':11800'}
+      # TLS 证书文件路径
+      tls_cert_file: ${SATELLITE_GRPC_TLS_CERT_FILE:''}
+      # TLS 私钥文件路径
+      tls_key_file: ${SATELLITE_GRPC_TLS_KEY_FILE:''}
+    - plugin_name: 'prometheus-server'
+      # prometheus 服务器监听地址
+      address: ${SATELLITE_PROMETHEUS_ADDRESS:':11234'}
+      # prometheus 服务器的指标暴露路径（endpoint）
+      endpoint: ${SATELLITE_PROMETHEUS_ENDPOINT:'/metrics'}
+
+# 工作管道（pipe）配置
+pipes:
+  - common_config:
+      pipe_name: meterpipe
+    gatherer:
+      server_name: 'grpc-server'
+      receiver:
+        plugin_name: 'grpc-native-meter-receiver'
+      queue:
+        plugin_name: 'mmap-queue'
+        # 最大缓冲事件数量
+        event_buffer_size: ${SATELLITE_QUEUE_EVENT_BUFFER_SIZE:5000}
+        # 队列分区数量
+        partition: ${SATELLITE_QUEUE_PARTITION:4}
+    processor:
+      filters:
+    sender:
+      client_name: grpc-client
+      forwarders:
+        - plugin_name: native-meter-grpc-forwarder
+          # 用于托管服务实例路由规则的 LRU 缓存大小
+          routing_rule_lru_cache_size: ${SATELLITE_METERPIPE_FORWARD_ROUTING_RULE_LRU_CACHE_SIZE:5000}
+          # 用于托管服务实例路由规则的 LRU 缓存 TTL（秒）
+          routing_rule_lru_cache_ttl: ${SATELLITE_METERPIPE_FORWARD_ROUTING_RULE_LRU_CACHE_TTL:180}
+```
+
+#### 1.2.2 oap-server
+
+`oap-server-application.yml`
+
+```yaml
+cluster:
+  selector: ${SW_CLUSTER:standalone}
+  standalone:
+  # 请确保您的 ZooKeeper 版本为 3.5+，但也兼容 ZooKeeper 3.4.x。</description><guid isPermaLink="true">https://blog.witter.top/post/skywalking-bu-shu-%26-jie-ru.html</guid><pubDate>Thu, 05 Mar 2026 07:37:16 +0000</pubDate></item><item><title>pyenv</title><link>https://blog.witter.top/post/pyenv.html</link><description>1. 安装：`curl -fsSL https://pyenv.run | bash`
 
 2. 配置镜像源：
 
