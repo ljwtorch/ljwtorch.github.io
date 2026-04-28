@@ -1,0 +1,807 @@
+<!DOCTYPE html>
+<html data-color-mode="light" data-dark-theme="dark" data-light-theme="light" lang="zh-CN">
+<head>
+    <meta content="text/html; charset=utf-8" http-equiv="content-type" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <link href='https://mirrors.sustech.edu.cn/cdnjs/ajax/libs/Primer/21.0.7/primer.css' rel='stylesheet' />
+    
+    <link rel="icon" href="https://img.witter.top/file/b037878209903b7d5bb17.jpg"><script>
+        let theme = localStorage.getItem("meek_theme") || "light";
+        document.documentElement.setAttribute("data-color-mode", theme);
+    </script>
+<meta name="description" content="
+## 1.Hadoop概述
+
+**核心组件**
+
+**HDFS**（分布式文件系统）：解决海量数据存储
+
+**YARN**（作业调度和集群资源管理的框架）：解决资源任务调度
+
+**MAPREDUCE**（分布式运算编程框架）：解决海量数据计算
+
+**其他框架**
+
+| **框架**  | **用途**                                                  |
+| --------- | --------------------------------------------------------- |
+| HDFS      | 分布式文件系统                                            |
+| MapReduce | 分布式运算程序开发框架                                    |
+| ZooKeeper | 分布式协调服务基础组件                                    |
+| HIVE      | 基于HADOOP的分布式数据仓库，提供基于SQL的查询数据操作     |
+| FLUME     | 日志数据采集框架                                          |
+| oozie     | 工作流调度框架                                            |
+| Sqoop     | 数据导入导出工具（比如用于mysql和HDFS之间）               |
+| Impala    | 基于hive的实时sql查询分析                                 |
+| Mahout    | 基于mapreduce/spark/flink等分布式运算框架的机器学习算法库 |
+
+**默认端口更改**
+
+1. 在hadoop3.x之前，多个Hadoop服务的默认端口都属于Linux的临时端口范围（32768-61000）。">
+<meta property="og:title" content="Hadoop">
+<meta property="og:description" content="
+## 1.Hadoop概述
+
+**核心组件**
+
+**HDFS**（分布式文件系统）：解决海量数据存储
+
+**YARN**（作业调度和集群资源管理的框架）：解决资源任务调度
+
+**MAPREDUCE**（分布式运算编程框架）：解决海量数据计算
+
+**其他框架**
+
+| **框架**  | **用途**                                                  |
+| --------- | --------------------------------------------------------- |
+| HDFS      | 分布式文件系统                                            |
+| MapReduce | 分布式运算程序开发框架                                    |
+| ZooKeeper | 分布式协调服务基础组件                                    |
+| HIVE      | 基于HADOOP的分布式数据仓库，提供基于SQL的查询数据操作     |
+| FLUME     | 日志数据采集框架                                          |
+| oozie     | 工作流调度框架                                            |
+| Sqoop     | 数据导入导出工具（比如用于mysql和HDFS之间）               |
+| Impala    | 基于hive的实时sql查询分析                                 |
+| Mahout    | 基于mapreduce/spark/flink等分布式运算框架的机器学习算法库 |
+
+**默认端口更改**
+
+1. 在hadoop3.x之前，多个Hadoop服务的默认端口都属于Linux的临时端口范围（32768-61000）。">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://blog.witter.top/post/Hadoop.html">
+<meta property="og:image" content="https://img.witter.top/file/b037878209903b7d5bb17.jpg">
+<title>Hadoop</title>
+<link href="//unpkg.com/@wooorm/starry-night@2.1.1/style/both.css" rel="stylesheet" />
+
+
+</head>
+<style>
+body{box-sizing: border-box;min-width: 200px;max-width: 900px;margin: 20px auto;padding: 45px;font-size: 16px;font-family: sans-serif;line-height: 1.25;}
+#header{display:flex;padding-bottom:8px;border-bottom: 1px solid var(--borderColor-muted, var(--color-border-muted));margin-bottom: 16px;}
+#footer {margin-top:64px; text-align: center;font-size: small;}
+
+</style>
+
+<style>
+.postTitle{margin: auto 0;font-size:40px;font-weight:bold;}
+.title-right{display:flex;margin:auto 0 0 auto;}
+.title-right .circle{padding: 14px 16px;margin-right:8px;}
+#postBody{border-bottom: 1px solid var(--color-border-default);padding-bottom:36px;}
+#postBody hr{height:2px;}
+#cmButton{height:48px;margin-top:48px;}
+#comments{margin-top:64px;}
+.g-emoji{font-size:24px;}
+@media (max-width: 600px) {
+    body {padding: 8px;}
+    .postTitle{font-size:24px;}
+}
+.copy-feedback {
+    display: none;
+    position: absolute;
+    top: 10px;
+    right: 50px;
+    color: var(--color-fg-on-emphasis);
+    background-color: var(--color-fg-muted);
+    border-radius: 3px;
+    padding: 5px 8px;
+    font-size: 12px;
+}
+</style>
+
+
+
+
+<body>
+    <div id="header">
+<h1 class="postTitle">Hadoop</h1>
+<div class="title-right">
+    <a href="https://blog.witter.top" id="buttonHome" class="btn btn-invisible circle" title="首页">
+        <svg class="octicon" width="16" height="16">
+            <path id="pathHome" fill-rule="evenodd"></path>
+        </svg>
+    </a>
+    
+    <a href="https://github.com/ljwtorch/ljwtorch.github.io/issues/6" target="_blank" class="btn btn-invisible circle" title="Issue">
+        <svg class="octicon" width="16" height="16">
+            <path id="pathIssue" fill-rule="evenodd"></path>
+        </svg>
+    </a>
+    
+
+    <a class="btn btn-invisible circle" onclick="modeSwitch();" title="切换主题">
+        <svg class="octicon" width="16" height="16" >
+            <path id="themeSwitch" fill-rule="evenodd"></path>
+        </svg>
+    </a>
+
+</div>
+</div>
+    <div id="content">
+<div class="markdown-body" id="postBody"><h2>1.Hadoop概述</h2>
+<p><strong>核心组件</strong></p>
+<p><strong>HDFS</strong>（分布式文件系统）：解决海量数据存储</p>
+<p><strong>YARN</strong>（作业调度和集群资源管理的框架）：解决资源任务调度</p>
+<p><strong>MAPREDUCE</strong>（分布式运算编程框架）：解决海量数据计算</p>
+<p><strong>其他框架</strong></p>
+<markdown-accessiblity-table><table role="table">
+<thead>
+<tr>
+<th><strong>框架</strong></th>
+<th><strong>用途</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>HDFS</td>
+<td>分布式文件系统</td>
+</tr>
+<tr>
+<td>MapReduce</td>
+<td>分布式运算程序开发框架</td>
+</tr>
+<tr>
+<td>ZooKeeper</td>
+<td>分布式协调服务基础组件</td>
+</tr>
+<tr>
+<td>HIVE</td>
+<td>基于HADOOP的分布式数据仓库，提供基于SQL的查询数据操作</td>
+</tr>
+<tr>
+<td>FLUME</td>
+<td>日志数据采集框架</td>
+</tr>
+<tr>
+<td>oozie</td>
+<td>工作流调度框架</td>
+</tr>
+<tr>
+<td>Sqoop</td>
+<td>数据导入导出工具（比如用于mysql和HDFS之间）</td>
+</tr>
+<tr>
+<td>Impala</td>
+<td>基于hive的实时sql查询分析</td>
+</tr>
+<tr>
+<td>Mahout</td>
+<td>基于mapreduce/spark/flink等分布式运算框架的机器学习算法库</td>
+</tr>
+</tbody>
+</table></markdown-accessiblity-table>
+<p><strong>默认端口更改</strong></p>
+<ol>
+<li>在hadoop3.x之前，多个Hadoop服务的默认端口都属于Linux的临时端口范围（32768-61000）。这就意味着用户的服务在启动的时候可能因为和其他应用程序产生端口冲突而无法启动</li>
+<li>现在这些可能会产生冲突的端口已经不再属于临时端口的范围，这些端口的改变会影响NameNode, Secondary NameNode, DataNode以及KMS。与此同时，官方文档也进行了相应的改变，具体可以参见 HDFS-9427以及HADOOP-12811</li>
+<li>Namenode ports: 50470 --&gt; 9871, 50070--&gt; 9870, 8020 --&gt; 9820</li>
+<li>Secondary NN ports: 50091 --&gt; 9869,50090 --&gt; 9868</li>
+<li>Datanode ports: 50020 --&gt; 9867, 50010--&gt; 9866, 50475 --&gt; 9865, 50075 --&gt; 9864</li>
+<li>Kms server ports: 16000 --&gt; 9600 (原先的16000与HMaster端口冲突)</li>
+</ol>
+<p><strong>YARN</strong> <strong>资源类型</strong></p>
+<ol>
+<li>YARN 资源模型（YARN resource model）已被推广为支持用户自定义的可数资源类型（support user-defined countable resource types），不仅仅支持 CPU 和内存；</li>
+<li>比如集群管理员可以定义诸如 GPUs、软件许可证（software licenses）或本地附加存储器（locally-attached storage）之类的资源。YARN 任务可以根据这些资源的可用性进行调度；</li>
+</ol>
+<h2>2.Hadoop集群搭建</h2>
+<h3>2.1 集群简介</h3>
+<p>HADOOP集群具体来说包含两个集群：HDFS集群和YARN集群，两者逻辑上分离，但物理上常在一起。</p>
+<p>**HDFS集群负责海量数据的存储，**集群中的角色主要有：<code class="notranslate">NameNode、DataNode、SecondaryNameNode</code></p>
+<p><strong>YARN集群负责海量数据运算时的资源调度</strong>，集群中的角色主要有：<code class="notranslate">ResourceManager、NodeManager</code></p>
+<p><strong>mapreduce</strong>是一个分布式运算编程框架，是应用程序开发包，由用户按照编程规范进行程序开发，后打包运行在HDFS集群上，并且受到YARN集群的资源调度管理。</p>
+<h3>2.2 架构模型</h3>
+<p><strong>第一种：NameNode与ResourceManager单节点架构模型</strong></p>
+<p>文件系统核心模块：</p>
+<p>NameNode：集群当中的主节点，主要用于管理集群当中的各种数据</p>
+<p>secondaryNameNode：主要能用于hadoop当中元数据信息的辅助管理</p>
+<p>DataNode：集群当中的从节点，主要用于存储集群当中的各种数据</p>
+<p>数据计算核心模块：</p>
+<p>ResourceManager：接收用户的计算请求任务，并负责集群的资源分配</p>
+<p>NodeManager：负责执行主节点APPmaster分配的任务</p>
+<p><strong>第二种：NameNode高可用与ResourceManager单节点架构模型</strong></p>
+<p>文件系统核心模块：</p>
+<p>NameNode：集群当中的主节点，主要用于管理集群当中的各种数据，其中NameNode可以有两个，形成高可用状态</p>
+<p>DataNode：集群当中的从节点，主要用于存储集群当中的各种数据</p>
+<p>JournalNode：文件系统元数据信息管理</p>
+<p>数据计算核心模块：</p>
+<p>ResourceManager：接收用户的计算请求任务，并负责集群的资源分配，以及计算任务的划分</p>
+<p>NodeManager：负责执行主节点ResourceManager分配的任务</p>
+<p><strong>第三种：NameNode单节点与ResourceManager高可用架构模型</strong></p>
+<p>文件系统核心模块：</p>
+<p>NameNode：集群当中的主节点，主要用于管理集群当中的各种数据</p>
+<p>secondaryNameNode：主要能用于hadoop当中元数据信息的辅助管理</p>
+<p>DataNode：集群当中的从节点，主要用于存储集群当中的各种数据</p>
+<p>数据计算核心模块：</p>
+<p>ResourceManager：接收用户的计算请求任务，并负责集群的资源分配，以及计算任务的划分，通过zookeeper实现ResourceManager的高可用</p>
+<p>NodeManager：负责执行主节点ResourceManager分配的任务</p>
+<p><strong>第四种：NameNode与ResourceManager高可用架构模型</strong></p>
+<p>文件系统核心模块：</p>
+<p>NameNode：集群当中的主节点，主要用于管理集群当中的各种数据，一般都是使用两个，实现HA高可用</p>
+<p>JournalNode：元数据信息管理进程，一般都是奇数个</p>
+<p>DataNode：从节点，用于数据的存储</p>
+<p>数据计算核心模块：</p>
+<p>ResourceManager：Yarn平台的主节点，主要用于接收各种任务，通过两个，构建成高可用</p>
+<p>NodeManager：Yarn平台的从节点，主要用于处理ResourceManager分配的任务</p>
+<h3>2.3 集群搭建</h3>
+<p><a href="https://hadoop.apache.org/" rel="nofollow">https://hadoop.apache.org/</a> 下载/解压安装包</p>
+<div class="highlight highlight-text-xml"><pre class="notranslate">vim core-site.xml
+--------------------------------
+在第19行下添加以下内容：
+<span class="pl-c"><span class="pl-c">&lt;!--</span> 默认文件系统的名称。通过URI中schema区分不同文件系统。<span class="pl-c">--&gt;</span></span>
+<span class="pl-c"><span class="pl-c">&lt;!--</span> file:///本地文件系统 hdfs:// hadoop分布式文件系统 gfs://。<span class="pl-c">--&gt;</span></span>
+<span class="pl-c"><span class="pl-c">&lt;!--</span> hdfs文件系统访问地址：http://nn_host:8020。<span class="pl-c">--&gt;</span></span>
+&lt;<span class="pl-ent">property</span>&gt;
+    &lt;<span class="pl-ent">name</span>&gt;fs.defaultFS&lt;/<span class="pl-ent">name</span>&gt;
+    &lt;<span class="pl-ent">value</span>&gt;hdfs://node1:8020&lt;/<span class="pl-ent">value</span>&gt;
+&lt;/<span class="pl-ent">property</span>&gt;
+<span class="pl-c"><span class="pl-c">&lt;!--</span> hadoop本地数据存储目录 format时自动生成 <span class="pl-c">--&gt;</span></span>
+&lt;<span class="pl-ent">property</span>&gt;
+    &lt;<span class="pl-ent">name</span>&gt;hadoop.tmp.dir&lt;/<span class="pl-ent">name</span>&gt;
+    &lt;<span class="pl-ent">value</span>&gt;/export/server/hadoop-3.1.4/data&lt;/<span class="pl-ent">value</span>&gt;
+&lt;/<span class="pl-ent">property</span>&gt;
+<span class="pl-c"><span class="pl-c">&lt;!--</span> 在Web UI访问HDFS使用的用户名。<span class="pl-c">--&gt;</span></span>
+&lt;<span class="pl-ent">property</span>&gt;
+    &lt;<span class="pl-ent">name</span>&gt;hadoop.http.staticuser.user&lt;/<span class="pl-ent">name</span>&gt;
+    &lt;<span class="pl-ent">value</span>&gt;root&lt;/<span class="pl-ent">value</span>&gt;
+&lt;/<span class="pl-ent">property</span>&gt;
+</pre></div>
+<p><strong>配置HDFS路径</strong></p>
+<div class="highlight highlight-text-xml"><pre class="notranslate">vim hdfs-site.xml
+--------------------------------
+在第20行下添加以下内容：
+<span class="pl-c"><span class="pl-c">&lt;!--</span> 设定SNN运行主机和端口。<span class="pl-c">--&gt;</span></span>
+&lt;<span class="pl-ent">property</span>&gt;
+    &lt;<span class="pl-ent">name</span>&gt;dfs.namenode.secondary.http-address&lt;/<span class="pl-ent">name</span>&gt;
+    &lt;<span class="pl-ent">value</span>&gt;node2:9868&lt;/<span class="pl-ent">value</span>&gt;
+&lt;/<span class="pl-ent">property</span>&gt;</pre></div>
+<p><strong>配置YARN</strong></p>
+<div class="highlight highlight-text-xml"><pre class="notranslate">vim yarn-site.xml
+--------------------------------
+在第18行下添加以下内容：
+
+<span class="pl-c"><span class="pl-c">&lt;!--</span> yarn集群主角色RM运行机器。<span class="pl-c">--&gt;</span></span>
+&lt;<span class="pl-ent">property</span>&gt;
+    &lt;<span class="pl-ent">name</span>&gt;yarn.resourcemanager.hostname&lt;/<span class="pl-ent">name</span>&gt;
+    &lt;<span class="pl-ent">value</span>&gt;node1&lt;/<span class="pl-ent">value</span>&gt;
+&lt;/<span class="pl-ent">property</span>&gt;
+<span class="pl-c"><span class="pl-c">&lt;!--</span> NodeManager上运行的附属服务。需配置成mapreduce_shuffle,才可运行MR程序。<span class="pl-c">--&gt;</span></span>
+&lt;<span class="pl-ent">property</span>&gt;
+    &lt;<span class="pl-ent">name</span>&gt;yarn.nodemanager.aux-services&lt;/<span class="pl-ent">name</span>&gt;
+    &lt;<span class="pl-ent">value</span>&gt;mapreduce_shuffle&lt;/<span class="pl-ent">value</span>&gt;
+&lt;/<span class="pl-ent">property</span>&gt;
+<span class="pl-c"><span class="pl-c">&lt;!--</span> 每个容器请求的最小内存资源（以MB为单位）。<span class="pl-c">--&gt;</span></span>
+&lt;<span class="pl-ent">property</span>&gt;
+  &lt;<span class="pl-ent">name</span>&gt;yarn.scheduler.minimum-allocation-mb&lt;/<span class="pl-ent">name</span>&gt;
+  &lt;<span class="pl-ent">value</span>&gt;512&lt;/<span class="pl-ent">value</span>&gt;
+&lt;/<span class="pl-ent">property</span>&gt;
+<span class="pl-c"><span class="pl-c">&lt;!--</span> 每个容器请求的最大内存资源（以MB为单位）。<span class="pl-c">--&gt;</span></span>
+&lt;<span class="pl-ent">property</span>&gt;
+  &lt;<span class="pl-ent">name</span>&gt;yarn.scheduler.maximum-allocation-mb&lt;/<span class="pl-ent">name</span>&gt;
+  &lt;<span class="pl-ent">value</span>&gt;2048&lt;/<span class="pl-ent">value</span>&gt;
+&lt;/<span class="pl-ent">property</span>&gt;
+<span class="pl-c"><span class="pl-c">&lt;!--</span> 容器虚拟内存与物理内存之间的比率。<span class="pl-c">--&gt;</span></span>
+&lt;<span class="pl-ent">property</span>&gt;
+  &lt;<span class="pl-ent">name</span>&gt;yarn.nodemanager.vmem-pmem-ratio&lt;/<span class="pl-ent">name</span>&gt;
+  &lt;<span class="pl-ent">value</span>&gt;4&lt;/<span class="pl-ent">value</span>&gt;
+&lt;/<span class="pl-ent">property</span>&gt;</pre></div>
+<p><strong>配置MapReduce</strong></p>
+<div class="highlight highlight-text-xml"><pre class="notranslate">vim mapred-site.xml
+----------------------------------
+在第20行下添加以下内容：
+<span class="pl-c"><span class="pl-c">&lt;!--</span> mr程序默认运行方式。yarn集群模式 local本地模式<span class="pl-c">--&gt;</span></span>
+&lt;<span class="pl-ent">property</span>&gt;
+  &lt;<span class="pl-ent">name</span>&gt;mapreduce.framework.name&lt;/<span class="pl-ent">name</span>&gt;
+  &lt;<span class="pl-ent">value</span>&gt;yarn&lt;/<span class="pl-ent">value</span>&gt;
+&lt;/<span class="pl-ent">property</span>&gt;
+<span class="pl-c"><span class="pl-c">&lt;!--</span> MR App Master环境变量。<span class="pl-c">--&gt;</span></span>
+&lt;<span class="pl-ent">property</span>&gt;
+  &lt;<span class="pl-ent">name</span>&gt;yarn.app.mapreduce.am.env&lt;/<span class="pl-ent">name</span>&gt;
+  &lt;<span class="pl-ent">value</span>&gt;HADOOP_MAPRED_HOME=${HADOOP_HOME}&lt;/<span class="pl-ent">value</span>&gt;
+&lt;/<span class="pl-ent">property</span>&gt;
+<span class="pl-c"><span class="pl-c">&lt;!--</span> MR MapTask环境变量。<span class="pl-c">--&gt;</span></span>
+&lt;<span class="pl-ent">property</span>&gt;
+  &lt;<span class="pl-ent">name</span>&gt;mapreduce.map.env&lt;/<span class="pl-ent">name</span>&gt;
+  &lt;<span class="pl-ent">value</span>&gt;HADOOP_MAPRED_HOME=${HADOOP_HOME}&lt;/<span class="pl-ent">value</span>&gt;
+&lt;/<span class="pl-ent">property</span>&gt;
+<span class="pl-c"><span class="pl-c">&lt;!--</span> MR ReduceTask环境变量。<span class="pl-c">--&gt;</span></span>
+&lt;<span class="pl-ent">property</span>&gt;
+  &lt;<span class="pl-ent">name</span>&gt;mapreduce.reduce.env&lt;/<span class="pl-ent">name</span>&gt;
+  &lt;<span class="pl-ent">value</span>&gt;HADOOP_MAPRED_HOME=${HADOOP_HOME}&lt;/<span class="pl-ent">value</span>&gt;
+&lt;/<span class="pl-ent">property</span>&gt; &lt;<span class="pl-ent">property</span>&gt;
+  &lt;<span class="pl-ent">name</span>&gt;mapreduce.reduce.env&lt;/<span class="pl-ent">name</span>&gt;
+  &lt;<span class="pl-ent">value</span>&gt;HADOOP_MAPRED_HOME=${HADOOP_HOME}&lt;/<span class="pl-ent">value</span>&gt;
+&lt;/<span class="pl-ent">property</span>&gt;</pre></div>
+<p><strong>works文件</strong></p>
+<div class="highlight highlight-source-shell"><pre class="notranslate">vim /export/server/hadoop-3.1.4/etc/hadoop/workers
+----------------------------------
+<span class="pl-c"><span class="pl-c">#</span> 删除第一行localhost，然后添加以下三行</span>
+node1
+node2
+node3</pre></div>
+<p><strong>修改hadoop.env环境变量</strong></p>
+<div class="highlight highlight-source-shell"><pre class="notranslate">hadoop.env文件
+vim /export/server/hadoop-3.1.4/etc/hadoop/hadoop-env.sh 
+修改第54行为：
+<span class="pl-k">export</span> JAVA_HOME=/export/server/jdk1.8.0_241
+
+<span class="pl-k">export</span> HDFS_NAMENODE_USER=root
+<span class="pl-k">export</span> HDFS_DATANODE_USER=root
+<span class="pl-k">export</span> HDFS_SECONDARYNAMENODE_USER=root
+<span class="pl-k">export</span> YARN_RESOURCEMANAGER_USER=root
+<span class="pl-k">export</span> YARN_NODEMANAGER_USER=root </pre></div>
+<p><strong>配置环境变量</strong></p>
+<div class="highlight highlight-source-shell"><pre class="notranslate">vim /etc/profile
+<span class="pl-k">export</span> HADOOP_HOME=/export/server/hadoop-3.1.4
+<span class="pl-k">export</span> PATH=<span class="pl-smi">$PATH</span>:<span class="pl-smi">${HADOOP_HOME}</span>/bin:<span class="pl-smi">${HADOOP_HOME}</span>/sbin
+
+<span class="pl-c1">source</span> /etc/profile</pre></div>
+<p><strong>分发Hadoop安装文件和环境变量</strong></p>
+<div class="highlight highlight-source-shell"><pre class="notranslate"><span class="pl-c1">cd</span> /export/server/
+scp -r hadoop-3.1.4 node2:<span class="pl-smi">$PWD</span>
+scp -r hadoop-3.1.4 node3:<span class="pl-smi">$PWD</span>
+scp /etc/profile node2:/etc
+scp /etc/profile node3:/etc
+在每个节点上执行
+<span class="pl-c1">source</span> /etc/profile</pre></div>
+<p><strong>格式化HDFS</strong></p>
+<p>首次启动HDFS时，必须对其进行格式化操作。本质上是一些清理和准备工作，因为此时的HDFS在物理上还是不存在的。只需要在node1上进行格式化，只能格式化一次</p>
+<div class="highlight highlight-source-shell"><pre class="notranslate"><span class="pl-c1">cd</span> /export/server/hadoop-3.1.4
+bin/hdfs namenode -format</pre></div>
+<h3>2.4 集群启动</h3>
+<p>需要启动HDFS和YARN两个集群</p>
+<div class="highlight highlight-source-shell"><pre class="notranslate">-- 选择node1节点启动NameNode节点
+hdfs --daemon start namenode
+
+-- 在所有节点上启动DataNode
+hdfs --daemon start datanode
+
+-- 在node2启动Secondary NameNode
+hdfs --daemon start secondarynamenode
+
+-- 选择node1节点启动ResourceManager节点
+yarn --daemon start resourcemanager
+
+-- 在所有节点上启动NodeManager
+yarn --daemon start nodemanager</pre></div>
+<p><em>注意:如果在启动之后，有些服务没有启动成功，则需要查看启动日志，Hadoop的启动日志在每台主机的/export/server/hadoop-x.x.x/logs/目录，需要根据哪台主机的哪个服务启动情况去对应的主机上查看相应的日志，以下是node1主机的日志目录.</em></p>
+<h3>2.5 集群关闭</h3>
+<p><strong>方式1</strong></p>
+<div class="highlight highlight-source-shell"><pre class="notranslate"><span class="pl-c"><span class="pl-c">#</span> 关闭NameNode</span>
+hdfs --daemon stop namenode
+
+<span class="pl-c"><span class="pl-c">#</span> 每个节点关闭DataNode</span>
+hdfs --daemon stop datanode
+
+<span class="pl-c"><span class="pl-c">#</span> 关闭Secondary NameNode</span>
+hdfs --daemon stop secondarynamenode
+
+<span class="pl-c"><span class="pl-c">#</span> 每个节点关闭ResourceManager</span>
+yarn --daemon stop resourcemanager
+
+<span class="pl-c"><span class="pl-c">#</span> 每个节点关闭NodeManager</span>
+yarn --daemon stop nodemanager</pre></div>
+<p><strong>方式2</strong></p>
+<div class="highlight highlight-source-shell"><pre class="notranslate">start-dfs.sh
+stop-dfs.sh
+
+start-yarn.sh
+stop-yarn.sh</pre></div>
+<p><strong>方式3</strong></p>
+<div class="highlight highlight-source-shell"><pre class="notranslate">-- 一键启动HDFS、YARN
+start-all.sh
+-- 一键关闭HDFS、YARN
+stop-all.sh</pre></div>
+<h3>2.6 访问WebUI</h3>
+<p>NameNode: <a href="http://node1:9870" rel="nofollow">http://node1:9870</a></p>
+<p>YARN: <a href="http://node1:8088" rel="nofollow">http://node1:8088</a></p>
+<h2>3.使用Hadoop</h2>
+<h3>3.1 使用HDFS</h3>
+<div class="highlight highlight-source-shell"><pre class="notranslate"><span class="pl-c"><span class="pl-c">#</span>在/export/data/目录中创建a.txt文件，并写入数据</span>
+<span class="pl-c1">cd</span> /export/data/
+touch a.txt
+<span class="pl-c1">echo</span> <span class="pl-s"><span class="pl-pds">"</span>hello<span class="pl-pds">"</span></span> <span class="pl-k">&gt;</span> a.txt 
+
+<span class="pl-c"><span class="pl-c">#</span>将a.txt上传到HDFS的根目录</span>
+hadoop fs -put a.txt  /</pre></div>
+<p><strong>可以通过<a href="http://node1:9870%E8%AE%BF%E9%97%AEHDFS%E6%9F%A5%E7%9C%8B%E6%98%AF%E5%90%A6%E5%88%9B%E5%BB%BA%E6%88%90%E5%8A%9F" rel="nofollow">http://node1:9870访问HDFS查看是否创建成功</a></strong></p>
+<h3>3.2 运行MapReduce程序</h3>
+<blockquote>
+<p>在Hadoop安装包的share/hadoop/mapreduce下有官方自带的mapreduce程序，可以用以下命令测试</p>
+</blockquote>
+<div class="highlight highlight-source-shell"><pre class="notranslate">yarn jar /export/server/hadoop-3.1.4/share/hadoop/mapreduce/hadoop-mapreduce-examples-2.7.5.jar pi 2 50</pre></div>
+<h3>3.3 安装目录结构</h3>
+<markdown-accessiblity-table><table role="table">
+<thead>
+<tr>
+<th>bin</th>
+<th>Hadoop最基本的管理脚本和使用脚本的目录，这些脚本是sbin目录下管理脚本的基础实现，用户可以直接使用这些脚本管理和使用Hadoop</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>etc</td>
+<td>Hadoop配置文件所在的目录，包括core-site,xml、hdfs-site.xml、mapred-site.xml等从Hadoop1.0继承而来的配置文件和yarn-site.xml等Hadoop2.0新增的配置文件。</td>
+</tr>
+<tr>
+<td>include</td>
+<td>对外提供的编程库头文件（具体动态库和静态库在lib目录中），这些头文件均是用C++定义的，通常用于C++程序访问HDFS或者编写MapReduce程序。</td>
+</tr>
+<tr>
+<td>lib</td>
+<td>该目录包含了Hadoop对外提供的编程动态库和静态库，与include目录中的头文件结合使用。</td>
+</tr>
+<tr>
+<td>libexec</td>
+<td>各个服务对用的shell配置文件所在的目录，可用于配置日志输出、启动参数（比如JVM参数）等基本信息。</td>
+</tr>
+<tr>
+<td>sbin</td>
+<td>Hadoop管理脚本所在的目录，主要包含HDFS和YARN中各类服务的启动/关闭脚本。</td>
+</tr>
+<tr>
+<td>share</td>
+<td>Hadoop各个模块编译后的jar包所在的目录，官方自带示例。</td>
+</tr>
+</tbody>
+</table></markdown-accessiblity-table>
+<p><strong>配置文件：</strong></p>
+<h5>hadoop-env.sh</h5>
+<p>文件中设置的是Hadoop运行时需要的环境变量。JAVA_HOME是必须设置的，即使我们当前的系统中设置了JAVA_HOME，它也是不认识的，因为Hadoop即使是在本机上执行，它也是把当前的执行环境当成远程服务器。</p>
+<h5>core-site.xml</h5>
+<p>hadoop的核心配置文件，有默认的配置项core-default.xml</p>
+<p>core-default.xml与core-site.xml的功能是一样的，如果在core-site.xml里没有配置的属性，则会自动会获取core-default.xml里的相同属性的值。</p>
+<h5>hdfs-site.xml</h5>
+<p>HDFS的核心配置文件，主要配置HDFS相关参数，有默认的配置项hdfs-default.xml</p>
+<p>hdfs-default.xml与hdfs-site.xml的功能是一样的，如果在hdfs-site.xml里没有配置的属性，则会自动会获取hdfs-default.xml里的相同属性的值。</p>
+<h5>mapred-site.xml</h5>
+<p>MapReduce的核心配置文件，Hadoop默认只有个模板文件mapred-site.xml.template,需要使用该文件复制出来一份mapred-site.xml文件</p>
+<h5>yarn-site.xml</h5>
+<p>YARN的核心配置文件,在该文件中的标签中添加以下配置</p>
+<h5>workers</h5>
+<p>workers文件里面记录的是集群主机名，配合一键启动脚本如start-dfs.sh、stop-yarn.sh用来进行集群启动。这时候workers文件里面的主机标记的就是从节点角色所在的机器</p>
+<h3>3.4 测试读写速度</h3>
+<ol>
+<li>
+<p>启动集群</p>
+</li>
+<li>
+<p>启动写入基准测试</p>
+<div class="highlight highlight-source-shell"><pre class="notranslate">hadoop jar hadoop-3.1.4/share/hadoop/mapreduce/hadoop-mapreduce-client-jobclient-3.1.4-tests.jar  TestDFSIO -write -nrFiles 10  -fileSize 10MB
+
+2023-12-18 15:51:59,799 INFO fs.TestDFSIO: ----- TestDFSIO ----- <span class="pl-c1">:</span> write
+2023-12-18 15:51:59,800 INFO fs.TestDFSIO:             Date <span class="pl-k">&amp;</span> time: Mon Dec 18 15:51:59 CST 2023
+2023-12-18 15:51:59,800 INFO fs.TestDFSIO:         Number of files: 10
+2023-12-18 15:51:59,800 INFO fs.TestDFSIO:  Total MBytes processed: 50
+2023-12-18 15:51:59,801 INFO fs.TestDFSIO:       Throughput mb/sec: 15.09
+2023-12-18 15:51:59,801 INFO fs.TestDFSIO:  Average IO rate mb/sec: 19.14
+2023-12-18 15:51:59,801 INFO fs.TestDFSIO:   IO rate std deviation: 9.13
+2023-12-18 15:51:59,801 INFO fs.TestDFSIO:      Test <span class="pl-c1">exec</span> <span class="pl-k">time</span> sec: 47.94</pre></div>
+</li>
+<li>
+<p>启动读取基准测试</p>
+<div class="highlight highlight-source-shell"><pre class="notranslate">hadoop jar share/hadoop/mapreduce/hadoop-mapreduce-client-jobclient-3.3.6-tests.jar TestDFSIO -read -nrFiles 10 -fileSize 5MB
+
+2023-12-18 15:54:15,511 INFO fs.TestDFSIO: ----- TestDFSIO ----- <span class="pl-c1">:</span> <span class="pl-c1">read</span>
+2023-12-18 15:54:15,511 INFO fs.TestDFSIO:             Date <span class="pl-k">&amp;</span> time: Mon Dec 18 15:54:15 CST 2023
+2023-12-18 15:54:15,511 INFO fs.TestDFSIO:         Number of files: 10
+2023-12-18 15:54:15,511 INFO fs.TestDFSIO:  Total MBytes processed: 50
+2023-12-18 15:54:15,511 INFO fs.TestDFSIO:       Throughput mb/sec: 74.29
+2023-12-18 15:54:15,511 INFO fs.TestDFSIO:  Average IO rate mb/sec: 101.05
+2023-12-18 15:54:15,511 INFO fs.TestDFSIO:   IO rate std deviation: 55.18
+2023-12-18 15:54:15,511 INFO fs.TestDFSIO:      Test <span class="pl-c1">exec</span> <span class="pl-k">time</span> sec: 65.45
+2023-12-18 15:54:15,511 INFO fs.TestDFSIO: </pre></div>
+</li>
+<li>
+<p>清理测试数据<code class="notranslate">hadoop jar share/hadoop/mapreduce/hadoop-mapreduce-client-jobclient-3.3.6-tests.jar TestDFSIO -clean</code></p>
+</li>
+</ol>
+<h1>HDFS</h1>
+<h2>1.目录规划</h2>
+<markdown-accessiblity-table><table role="table">
+<thead>
+<tr>
+<th>目录</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>/source</td>
+<td>用于存储原始采集数据</td>
+</tr>
+<tr>
+<td>/common</td>
+<td>用于存储公共数据集，例如：IP库、省份信息、经纬度等</td>
+</tr>
+<tr>
+<td>/workspace</td>
+<td>工作空间，存储各团队计算出来的结果数据</td>
+</tr>
+<tr>
+<td>/tmp</td>
+<td>存储临时数据，每周清理一次</td>
+</tr>
+<tr>
+<td>/warehouse</td>
+<td>存储hive数据仓库中的数据</td>
+</tr>
+</tbody>
+</table></markdown-accessiblity-table>
+<h2>2.指令操作</h2>
+<p>Hadoop提供了文件系统的shell命令行客户端，使用方法： <code class="notranslate">hdfs [SHELL_OPTIONS] COMMAND  [GENERIC_OPTIONS] [COMMAND_OPTIONS]</code></p>
+<p>选项：</p>
+<markdown-accessiblity-table><table role="table">
+<thead>
+<tr>
+<th><strong>COMMAND_OPTIONS</strong></th>
+<th><strong>Description</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>SHELL_OPTIONS</td>
+<td>常见的shell选项，例如：操作文件系统、管理hdfs集群..</td>
+</tr>
+<tr>
+<td>GENERIC_OPTIONS</td>
+<td>多个命令支持的公共选项</td>
+</tr>
+<tr>
+<td>COMMAND COMMAND_OPTIONS</td>
+<td>用户命令、或者是管理命令</td>
+</tr>
+</tbody>
+</table></markdown-accessiblity-table>
+<p>示例：</p>
+<ol>
+<li>
+<p>查看HDFS中/parent/child目录下的文件或者文件夹 <code class="notranslate">hdfs  dfs -ls  /parent/child</code></p>
+</li>
+<li>
+<p>所有HDFS命令都可以通过bin/hdfs脚本执行；</p>
+</li>
+<li>
+<p>还有一个hadoop命令也可以执行文件系统操作，还可以用来提交作业，此处我们均使用hdfs，为了更好地区分和对hdfs更好的支持；</p>
+</li>
+<li>
+<p>mkdir命令</p>
+<div class="highlight highlight-source-shell"><pre class="notranslate"><span class="pl-c"><span class="pl-c">#</span> 以&lt;paths&gt;中的URI作为参数，创建目录。使用-p参数可以递归创建目录</span>
+hdfs dfs -mkdir /common
+hdfs dfs -mkdir /workspace
+hdfs dfs -mkdir /tmp/
+hdfs dfs -mkdir /warehouse
+hdfs dfs -mkdir /source</pre></div>
+</li>
+<li>
+<p>ls命令：<code class="notranslate">hdfs dfs -ls /</code>，-R表示递归展示目录下的内容</p>
+</li>
+<li>
+<p>put命令：<code class="notranslate">hdfs dfs -put ...</code></p>
+</li>
+<li>
+<p>rm命令：<code class="notranslate">hdfs dfs -rm ...</code>，删除参数指定的文件和目录，参数可以有多个，那么在回收站可用的情况下，该选项将跳过回收站而直接删除文件；否则，在回收站可用时，执行命令后会将文件暂时放到回收站中；</p>
+</li>
+<li>
+<p>moveFromLocal命令： <code class="notranslate">hdfs dfs -moveFromLocal &lt;localsrc&gt; &lt;dst&gt; </code></p>
+</li>
+<li>
+<p>查看hdfs文件的内容：</p>
+<ol>
+<li>get命令，从HDFS下载文件到Linux；将文件拷贝到本地文件系统，可以通过指定-ignorecrc选项拷贝CRC校验失败的文件。-crc选项表示获取文件以及CRC校验文件；<code class="notranslate">hdfs dfs -get [-ignorecrc ] [-crc] &lt;src&gt; &lt;localdst&gt;</code></li>
+<li>less命令，在Linux上查看下载的文件；</li>
+<li>head命令：显示要输出的文件的开头的1KB数据；<code class="notranslate">hdfs dfs -head ... </code></li>
+<li>tail命令：显示文件结尾的1KB数据，与Linux一样-f选项表示数据只要有变化也会输出到控制台；<code class="notranslate">hdfs dfs -tail [-f] ...</code></li>
+</ol>
+</li>
+<li>
+<p>cp命令：将文件拷贝到目标路径中，如果为目录的话，可以将多个文件拷贝到该目录下，-f选项将覆盖目标，如果它已经存在，-p选项将保留文件属性；<code class="notranslate">hdfs dfs -cp ... &lt;dest&gt;</code></p>
+</li>
+<li>
+<p>appendToFile命令：追加一个或多个文件到hdfs指定文件中，也可以从命令行读取输入；<code class="notranslate">hdfs dfs -appendToFile &lt;localsrc&gt; ... &lt;dest&gt;</code></p>
+</li>
+<li>
+<p>df命令：<code class="notranslate">hdfs dfs -df -h /</code></p>
+</li>
+<li>
+<p>du命令：<code class="notranslate">hdfs dfs -du</code></p>
+<ol>
+<li>-s：表示显示文件长度的汇总摘要，而不是单个文件的摘要；</li>
+<li>-h：选项将以“人类可读”的方式格式化文件大小；</li>
+<li>-v：选项将列名显示为标题行；</li>
+<li>-x：选项将从结果计算中排除快照；</li>
+</ol>
+</li>
+<li>
+<p>mv命令：从原路径移动到目标路径，该命令不能跨文件系统；<code class="notranslate">hdfs dfs -mv ... &lt;dest&gt;</code></p>
+</li>
+<li>
+<p><strong>setrep命令</strong>：减少副本数提升存储资源利用率，-w标志请求命令等待复制完成，可能会耗费很长时间，-R是为了向后兼容，没有作用；<code class="notranslate">hdfs dfs -setrep [-R] [-w] &lt;numReplicas&gt; &lt;path&gt;</code></p>
+</li>
+</ol></div>
+<div style="font-size:small;margin-top:8px;float:right;">🍺转载文章请注明出处，谢谢！🍺</div>
+
+<button class="btn btn-block" type="button" onclick="openComments()" id="cmButton">评论</button>
+<div class="comments" id="comments"></div>
+
+</div>
+    <div id="footer"><div id="footer1">Copyright © <span id="copyrightYear"></span> <a href="https://blog.witter.top">V's Blog</a></div>
+<div id="footer2"><span id="filingNum"><a href="https://beian.miit.gov.cn/" target="_blank">冀ICP备2022019998号</a> • </span>
+    <span id="runday"></span><span>Powered by <a href="https://meekdai.com/Gmeek.html" target="_blank">Gmeek</a></span>
+</div>
+
+<script>
+var now=new Date();
+document.getElementById("copyrightYear").innerHTML=now.getFullYear();
+
+if("06/20/2024"!=""){
+    var startSite=new Date("06/20/2024");
+    var diff=now.getTime()-startSite.getTime();
+    var diffDay=Math.floor(diff/(1000*60*60*24));
+    document.getElementById("runday").innerHTML="网站运行 "+diffDay+" 天"+" • ";
+}
+</script></div>
+</body>
+<script>
+var IconList={'sun': 'M8 10.5a2.5 2.5 0 100-5 2.5 2.5 0 000 5zM8 12a4 4 0 100-8 4 4 0 000 8zM8 0a.75.75 0 01.75.75v1.5a.75.75 0 01-1.5 0V.75A.75.75 0 018 0zm0 13a.75.75 0 01.75.75v1.5a.75.75 0 01-1.5 0v-1.5A.75.75 0 018 13zM2.343 2.343a.75.75 0 011.061 0l1.06 1.061a.75.75 0 01-1.06 1.06l-1.06-1.06a.75.75 0 010-1.06zm9.193 9.193a.75.75 0 011.06 0l1.061 1.06a.75.75 0 01-1.06 1.061l-1.061-1.06a.75.75 0 010-1.061zM16 8a.75.75 0 01-.75.75h-1.5a.75.75 0 010-1.5h1.5A.75.75 0 0116 8zM3 8a.75.75 0 01-.75.75H.75a.75.75 0 010-1.5h1.5A.75.75 0 013 8zm10.657-5.657a.75.75 0 010 1.061l-1.061 1.06a.75.75 0 11-1.06-1.06l1.06-1.06a.75.75 0 011.06 0zm-9.193 9.193a.75.75 0 010 1.06l-1.06 1.061a.75.75 0 11-1.061-1.06l1.06-1.061a.75.75 0 011.061 0z', 'moon': 'M9.598 1.591a.75.75 0 01.785-.175 7 7 0 11-8.967 8.967.75.75 0 01.961-.96 5.5 5.5 0 007.046-7.046.75.75 0 01.175-.786zm1.616 1.945a7 7 0 01-7.678 7.678 5.5 5.5 0 107.678-7.678z', 'sync': 'M1.705 8.005a.75.75 0 0 1 .834.656 5.5 5.5 0 0 0 9.592 2.97l-1.204-1.204a.25.25 0 0 1 .177-.427h3.646a.25.25 0 0 1 .25.25v3.646a.25.25 0 0 1-.427.177l-1.38-1.38A7.002 7.002 0 0 1 1.05 8.84a.75.75 0 0 1 .656-.834ZM8 2.5a5.487 5.487 0 0 0-4.131 1.869l1.204 1.204A.25.25 0 0 1 4.896 6H1.25A.25.25 0 0 1 1 5.75V2.104a.25.25 0 0 1 .427-.177l1.38 1.38A7.002 7.002 0 0 1 14.95 7.16a.75.75 0 0 1-1.49.178A5.5 5.5 0 0 0 8 2.5Z', 'home': 'M6.906.664a1.749 1.749 0 0 1 2.187 0l5.25 4.2c.415.332.657.835.657 1.367v7.019A1.75 1.75 0 0 1 13.25 15h-3.5a.75.75 0 0 1-.75-.75V9H7v5.25a.75.75 0 0 1-.75.75h-3.5A1.75 1.75 0 0 1 1 13.25V6.23c0-.531.242-1.034.657-1.366l5.25-4.2Zm1.25 1.171a.25.25 0 0 0-.312 0l-5.25 4.2a.25.25 0 0 0-.094.196v7.019c0 .138.112.25.25.25H5.5V8.25a.75.75 0 0 1 .75-.75h3.5a.75.75 0 0 1 .75.75v5.25h2.75a.25.25 0 0 0 .25-.25V6.23a.25.25 0 0 0-.094-.195Z', 'github': 'M8 0c4.42 0 8 3.58 8 8a8.013 8.013 0 0 1-5.45 7.59c-.4.08-.55-.17-.55-.38 0-.27.01-1.13.01-2.2 0-.75-.25-1.23-.54-1.48 1.78-.2 3.65-.88 3.65-3.95 0-.88-.31-1.59-.82-2.15.08-.2.36-1.02-.08-2.12 0 0-.67-.22-2.2.82-.64-.18-1.32-.27-2-.27-.68 0-1.36.09-2 .27-1.53-1.03-2.2-.82-2.2-.82-.44 1.1-.16 1.92-.08 2.12-.51.56-.82 1.28-.82 2.15 0 3.06 1.86 3.75 3.64 3.95-.23.2-.44.55-.51 1.07-.46.21-1.61.55-2.33-.66-.15-.24-.6-.83-1.23-.82-.67.01-.27.38.01.53.34.19.73.9.82 1.13.16.45.68 1.31 2.69.94 0 .67.01 1.3.01 1.49 0 .21-.15.45-.55.38A7.995 7.995 0 0 1 0 8c0-4.42 3.58-8 8-8Z', 'copy': 'M0 6.75C0 5.784.784 5 1.75 5h1.5a.75.75 0 0 1 0 1.5h-1.5a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 0 0 .25-.25v-1.5a.75.75 0 0 1 1.5 0v1.5A1.75 1.75 0 0 1 9.25 16h-7.5A1.75 1.75 0 0 1 0 14.25Z M5 1.75C5 .784 5.784 0 6.75 0h7.5C15.216 0 16 .784 16 1.75v7.5A1.75 1.75 0 0 1 14.25 11h-7.5A1.75 1.75 0 0 1 5 9.25Zm1.75-.25a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 0 0 .25-.25v-7.5a.25.25 0 0 0-.25-.25Z', 'check': 'M13.78 4.22a.75.75 0 0 1 0 1.06l-7.25 7.25a.75.75 0 0 1-1.06 0L2.22 9.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018L6 10.94l6.72-6.72a.75.75 0 0 1 1.06 0Z'};
+var utterancesLoad=0;
+
+let themeSettings={
+    "dark": ["dark","moon","#00f0ff","dark-blue"],
+    "light": ["light","sun","#ff5000","github-light"],
+    "auto": ["auto","sync","","preferred-color-scheme"]
+};
+function changeTheme(mode, icon, color, utheme){
+    document.documentElement.setAttribute("data-color-mode",mode);
+    document.getElementById("themeSwitch").setAttribute("d",value=IconList[icon]);
+    document.getElementById("themeSwitch").parentNode.style.color=color;
+    if(utterancesLoad==1){utterancesTheme(utheme);}
+}
+function modeSwitch(){
+    let currentMode=document.documentElement.getAttribute('data-color-mode');
+    let newMode = currentMode === "light" ? "dark" : currentMode === "dark" ? "auto" : "light";
+    localStorage.setItem("meek_theme", newMode);
+    if(themeSettings[newMode]){
+        changeTheme(...themeSettings[newMode]);
+    }
+}
+function utterancesTheme(theme){
+    const message={type:'set-theme',theme: theme};
+    const iframe=document.getElementsByClassName('utterances-frame')[0];
+    iframe.contentWindow.postMessage(message,'https://utteranc.es');
+}
+if(themeSettings[theme]){changeTheme(...themeSettings[theme]);}
+console.log("\n %c Gmeek last https://github.com/Meekdai/Gmeek \n","padding:5px 0;background:#02d81d;color:#fff");
+</script>
+
+<script>
+document.getElementById("pathHome").setAttribute("d",IconList["home"]);
+document.getElementById("pathIssue").setAttribute("d",IconList["github"]);
+
+
+
+function openComments(){
+    cm=document.getElementById("comments");
+    cmButton=document.getElementById("cmButton");
+    cmButton.disabled=true;
+    cmButton.innerHTML="loading";
+    span=document.createElement("span");
+    span.setAttribute("class","AnimatedEllipsis");
+    cmButton.appendChild(span);
+
+    script=document.createElement("script");
+    script.setAttribute("src","https://utteranc.es/client.js");
+    script.setAttribute("repo","ljwtorch/ljwtorch.github.io");
+    script.setAttribute("issue-term","title");
+    
+    if(localStorage.getItem("meek_theme")=="dark"){script.setAttribute("theme","dark-blue");}
+    else if(localStorage.getItem("meek_theme")=="light") {script.setAttribute("theme","github-light");}
+    else{script.setAttribute("theme","preferred-color-scheme");}
+    
+    script.setAttribute("crossorigin","anonymous");
+    script.setAttribute("async","");
+    cm.appendChild(script);
+
+    int=self.setInterval("iFrameLoading()",200);
+}
+
+function iFrameLoading(){
+    var utterances=document.getElementsByClassName('utterances');
+    if(utterances.length==1){
+        if(utterances[0].style.height!=""){
+            utterancesLoad=1;
+            int=window.clearInterval(int);
+            document.getElementById("cmButton").style.display="none";
+            console.log("utterances Load OK");
+        }
+    }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    const createClipboardHTML = (codeContent, additionalClasses = '') => `
+        <pre class="notranslate"><code class="notranslate">${codeContent}</code></pre>
+        <div class="clipboard-container position-absolute right-0 top-0 ${additionalClasses}">
+            <clipboard-copy class="ClipboardButton btn m-2 p-0" role="button" style="display: inherit;">
+                <svg height="16" width="16" class="octicon octicon-copy m-2"><path d="${IconList["copy"]}"></path></svg>
+                <svg height="16" width="16" class="octicon octicon-check color-fg-success m-2 d-none"><path d="${IconList["check"]}"></path></svg>
+            </clipboard-copy>
+            <div class="copy-feedback">Copied!</div>
+        </div>
+    `;
+
+    const handleCodeElements = (selector = '') => {
+        document.querySelectorAll(selector).forEach(codeElement => {
+            const codeContent = codeElement.innerHTML;
+            const newStructure = document.createElement('div');
+            newStructure.className = 'snippet-clipboard-content position-relative overflow-auto';
+            newStructure.innerHTML = createClipboardHTML(codeContent);
+
+            const parentElement = codeElement.parentElement;
+            if (selector.includes('highlight')) {
+                parentElement.insertBefore(newStructure, codeElement.nextSibling);
+                parentElement.removeChild(codeElement);
+            } else {
+                parentElement.parentElement.replaceChild(newStructure, parentElement);
+            }
+        });
+    };
+
+    handleCodeElements('pre.notranslate > code.notranslate');
+    handleCodeElements('div.highlight > pre.notranslate');
+
+    let currentFeedback = null;
+    document.querySelectorAll('clipboard-copy').forEach(copyButton => {
+        copyButton.addEventListener('click', () => {
+            const codeContent = copyButton.closest('.snippet-clipboard-content').innerText;
+            const tempTextArea = document.createElement('textarea');
+            tempTextArea.value = codeContent;
+            document.body.appendChild(tempTextArea);
+            tempTextArea.select();
+            document.execCommand('copy');
+            document.body.removeChild(tempTextArea);
+
+            const copyIcon = copyButton.querySelector('.octicon-copy');
+            const checkIcon = copyButton.querySelector('.octicon-check');
+            const copyFeedback = copyButton.nextElementSibling;
+
+            if (currentFeedback && currentFeedback !== copyFeedback) {currentFeedback.style.display = 'none';}
+            currentFeedback = copyFeedback;
+
+            copyIcon.classList.add('d-none');
+            checkIcon.classList.remove('d-none');
+            copyFeedback.style.display = 'block';
+            copyButton.style.borderColor = 'var(--color-success-fg)';
+
+            setTimeout(() => {
+                copyIcon.classList.remove('d-none');
+                checkIcon.classList.add('d-none');
+                copyFeedback.style.display = 'none';
+                copyButton.style.borderColor = '';
+            }, 2000);
+        });
+    });
+});
+
+</script>
+<script defer src="http://ssh.witter.top:10012/script.js" data-website-id="b891c729-62b4-46cb-bdca-d622dc706106"></script>
+
+</html>

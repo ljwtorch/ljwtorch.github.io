@@ -1,0 +1,1469 @@
+<!DOCTYPE html>
+<html data-color-mode="light" data-dark-theme="dark" data-light-theme="light" lang="zh-CN">
+<head>
+    <meta content="text/html; charset=utf-8" http-equiv="content-type" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <link href='https://mirrors.sustech.edu.cn/cdnjs/ajax/libs/Primer/21.0.7/primer.css' rel='stylesheet' />
+    
+    <link rel="icon" href="https://img.witter.top/file/b037878209903b7d5bb17.jpg"><script>
+        let theme = localStorage.getItem("meek_theme") || "light";
+        document.documentElement.setAttribute("data-color-mode", theme);
+    </script>
+<meta name="description" content="## 1.docker部署
+
+### 1.1 以banyandb为存储(基础配置无消息队列)
+
+- banyandb web页面：http://ip:17913/banyandb/dashboard
+- 注：在接入12个java服务，测试环境存储24小时指标的资源消耗：
+  - oap-server：4G内存
+  - banyandb：1G内存，1.1G硬盘空间
+  - ui：800M内存
+
+`docker-compose.yml`
+
+```yaml
+services:
+  banyandb:
+    image: registry.cn-beijing.aliyuncs.com/witter/skywalking-banyandb:0.8.0
+    container_name: banyandb
+    restart: always
+    ports:
+      - '17912:17912'
+      - '17913:17913'
+    volumes:
+      - ./banyandb/data:/var/lib/banyandb
+    environment:
+      - BANYANDB_JAVA_OPTS=-Xms1g -Xmx1g
+    command: standalone --stream-root-path /var/lib/banyandb/stream-data --measure-root-path /var/lib/banyandb/measure-data --observability-modes=native
+    healthcheck:
+      test: [ 'CMD', 'sh', '-c', 'nc -nz 127.0.0.1 17912' ]
+      interval: 5s
+      timeout: 60s
+      retries: 120
+    networks:
+      - skywalking
+
+  oap:
+    image: registry.cn-beijing.aliyuncs.com/witter/skywalking-oap-server:10.2.0
+    container_name: oap-server
+    restart: always
+    depends_on:
+      banyandb:
+        condition: service_healthy
+    ports:
+      - '11800:11800'
+      - '12800:12800'
+    # volumes:
+      # - ./oap/config/application.yml:/skywalking/config/application.yml
+    environment:
+      - SW_STORAGE=banyandb
+      - SW_STORAGE_BANYANDB_TARGETS=banyandb:17912
+      - SW_TELEMETRY=prometheus
+      - JAVA_OPTS=-Xms2048m -Xmx2048m
+    networks:
+      - skywalking
+
+  ui:
+    image: registry.cn-beijing.aliyuncs.com/witter/skywalking-ui:10.2.0
+    container_name: ui
+    restart: always
+    depends_on:
+      - oap
+    ports:
+      - '8081:8080'
+    environment:
+      - SW_OAP_ADDRESS=http://oap:12800
+      - SW_ZIPKIN_ADDRESS=http://oap:9412
+    networks:
+      - skywalking
+
+networks:
+  skywalking:
+    driver: bridge
+```
+
+### 1.2 以elasticsearch为存储，skywalking-satellite中转；
+
+> 1. SkyWalking Satellite 目前只支持把 Logs 转发到 Kafka（插件native-log-kafka-forwarder）；
+> 2. Tracing 和 Metrics 没有对应的 Kafka forwarder，只能走 gRPC 转发到 OAP；
+
+推荐场景是：**Java Agent → Satellite（11801）→ OAP → Elasticsearch**
+
+#### 1.2.1 satellite
+
+`satellite_config.yaml`
+
+```yaml
+# 日志记录器配置
+logger:
+  # 日志格式模板配置
+  log_pattern: ${SATELLITE_LOGGER_LOG_PATTERN:%time [%level][%field] - %msg}
+  # 时间格式模板配置
+  time_pattern: ${SATELLITE_LOGGER_TIME_PATTERN:2006-01-02 15:04:05.000}
+  # 允许打印的最低日志级别
+  level: ${SATELLITE_LOGGER_LEVEL:info}
+
+# Satellite 自身的遥测（telemetry）配置
+telemetry:
+  # 部署的空间概念，类似于 Kubernetes 中的 namespace
+  cluster: ${SATELLITE_TELEMETRY_CLUSTER:satellite-cluster}
+  # 部署的服务分组概念，类似于 Kubernetes 中的 service 资源
+  service: ${SATELLITE_TELEMETRY_SERVICE:satellite-service}
+  # 最小运行单元，类似于 Kubernetes 中的 pod
+  instance: ${SATELLITE_TELEMETRY_SERVICE:satellite-instance}
+  # 遥测数据导出类型，支持 'prometheus'、'metrics_service'、'pprof' 或 'none'，多个用逗号分隔
+  export_type: ${SATELLITE_TELEMETRY_EXPORT_TYPE:prometheus,pprof}
+
+# 被不同管道（pipe）中具体插件所引用的共享插件配置
+sharing:
+  clients:
+    - plugin_name: 'grpc-client'
+      # gRPC 服务器地址发现器类型
+      finder_type: ${SATELLITE_GRPC_CLIENT_FINDER:static}
+      # gRPC 服务器地址（默认 localhost:11800）
+      server_addr: ${SATELLITE_GRPC_CLIENT:127.0.0.1:11800}
+      # 是否启用 TLS
+      enable_tls: ${SATELLITE_GRPC_ENABLE_TLS:false}
+      # 客户端证书文件路径（启用 TLS 时生效）
+      client_pem_path: ${SATELLITE_GRPC_CLIENT_PEM_PATH:'client.pem'}
+      # 客户端私钥文件路径（启用 TLS 时生效）
+      client_key_path: ${SATELLITE_GRPC_CLIENT_KEY_PATH:'client.key'}
+      # 是否跳过服务器证书链和主机名验证
+      insecure_skip_verify: ${SATELLITE_GRPC_INSECURE_SKIP_VERIFY:false}
+      # CA 证书文件路径（启用 TLS 时生效）
+      ca_pem_path: ${SATELLITE_grpc_CA_PEM_PATH:'ca.pem'}
+      # 连接检查周期（秒）
+      check_period: ${SATELLITE_GRPC_CHECK_PERIOD:5}
+      # 发送请求时的认证值
+      authentication: ${SATELLITE_GRPC_AUTHENTICATION:''}
+      # gRPC 请求超时配置
+      timeout:
+        # 单次 unary 请求超时
+        unary: ${SATELLITE_GRPC_TIMEOUT_UNARY:5s}
+        # 流式 unary 请求超时
+        stream: ${SATELLITE_GRPC_TIMEOUT_STREAM:20s}
+  servers:
+    - plugin_name: 'grpc-server'
+      # gRPC 服务器监听地址
+      address: ${SATELLITE_GRPC_ADDRESS:':11800'}
+      # TLS 证书文件路径
+      tls_cert_file: ${SATELLITE_GRPC_TLS_CERT_FILE:''}
+      # TLS 私钥文件路径
+      tls_key_file: ${SATELLITE_GRPC_TLS_KEY_FILE:''}
+    - plugin_name: 'prometheus-server'
+      # prometheus 服务器监听地址
+      address: ${SATELLITE_PROMETHEUS_ADDRESS:':11234'}
+      # prometheus 服务器的指标暴露路径（endpoint）
+      endpoint: ${SATELLITE_PROMETHEUS_ENDPOINT:'/metrics'}
+
+# 工作管道（pipe）配置
+pipes:
+  - common_config:
+      pipe_name: meterpipe
+    gatherer:
+      server_name: 'grpc-server'
+      receiver:
+        plugin_name: 'grpc-native-meter-receiver'
+      queue:
+        plugin_name: 'mmap-queue'
+        # 最大缓冲事件数量
+        event_buffer_size: ${SATELLITE_QUEUE_EVENT_BUFFER_SIZE:5000}
+        # 队列分区数量
+        partition: ${SATELLITE_QUEUE_PARTITION:4}
+    processor:
+      filters:
+    sender:
+      client_name: grpc-client
+      forwarders:
+        - plugin_name: native-meter-grpc-forwarder
+          # 用于托管服务实例路由规则的 LRU 缓存大小
+          routing_rule_lru_cache_size: ${SATELLITE_METERPIPE_FORWARD_ROUTING_RULE_LRU_CACHE_SIZE:5000}
+          # 用于托管服务实例路由规则的 LRU 缓存 TTL（秒）
+          routing_rule_lru_cache_ttl: ${SATELLITE_METERPIPE_FORWARD_ROUTING_RULE_LRU_CACHE_TTL:180}
+```
+
+#### 1.2.2 oap-server
+
+`oap-server-application.yml`
+
+```yaml
+cluster:
+  selector: ${SW_CLUSTER:standalone}
+  standalone:
+  # 请确保您的 ZooKeeper 版本为 3.5+，但也兼容 ZooKeeper 3.4.x。">
+<meta property="og:title" content="skywalking部署&接入">
+<meta property="og:description" content="## 1.docker部署
+
+### 1.1 以banyandb为存储(基础配置无消息队列)
+
+- banyandb web页面：http://ip:17913/banyandb/dashboard
+- 注：在接入12个java服务，测试环境存储24小时指标的资源消耗：
+  - oap-server：4G内存
+  - banyandb：1G内存，1.1G硬盘空间
+  - ui：800M内存
+
+`docker-compose.yml`
+
+```yaml
+services:
+  banyandb:
+    image: registry.cn-beijing.aliyuncs.com/witter/skywalking-banyandb:0.8.0
+    container_name: banyandb
+    restart: always
+    ports:
+      - '17912:17912'
+      - '17913:17913'
+    volumes:
+      - ./banyandb/data:/var/lib/banyandb
+    environment:
+      - BANYANDB_JAVA_OPTS=-Xms1g -Xmx1g
+    command: standalone --stream-root-path /var/lib/banyandb/stream-data --measure-root-path /var/lib/banyandb/measure-data --observability-modes=native
+    healthcheck:
+      test: [ 'CMD', 'sh', '-c', 'nc -nz 127.0.0.1 17912' ]
+      interval: 5s
+      timeout: 60s
+      retries: 120
+    networks:
+      - skywalking
+
+  oap:
+    image: registry.cn-beijing.aliyuncs.com/witter/skywalking-oap-server:10.2.0
+    container_name: oap-server
+    restart: always
+    depends_on:
+      banyandb:
+        condition: service_healthy
+    ports:
+      - '11800:11800'
+      - '12800:12800'
+    # volumes:
+      # - ./oap/config/application.yml:/skywalking/config/application.yml
+    environment:
+      - SW_STORAGE=banyandb
+      - SW_STORAGE_BANYANDB_TARGETS=banyandb:17912
+      - SW_TELEMETRY=prometheus
+      - JAVA_OPTS=-Xms2048m -Xmx2048m
+    networks:
+      - skywalking
+
+  ui:
+    image: registry.cn-beijing.aliyuncs.com/witter/skywalking-ui:10.2.0
+    container_name: ui
+    restart: always
+    depends_on:
+      - oap
+    ports:
+      - '8081:8080'
+    environment:
+      - SW_OAP_ADDRESS=http://oap:12800
+      - SW_ZIPKIN_ADDRESS=http://oap:9412
+    networks:
+      - skywalking
+
+networks:
+  skywalking:
+    driver: bridge
+```
+
+### 1.2 以elasticsearch为存储，skywalking-satellite中转；
+
+> 1. SkyWalking Satellite 目前只支持把 Logs 转发到 Kafka（插件native-log-kafka-forwarder）；
+> 2. Tracing 和 Metrics 没有对应的 Kafka forwarder，只能走 gRPC 转发到 OAP；
+
+推荐场景是：**Java Agent → Satellite（11801）→ OAP → Elasticsearch**
+
+#### 1.2.1 satellite
+
+`satellite_config.yaml`
+
+```yaml
+# 日志记录器配置
+logger:
+  # 日志格式模板配置
+  log_pattern: ${SATELLITE_LOGGER_LOG_PATTERN:%time [%level][%field] - %msg}
+  # 时间格式模板配置
+  time_pattern: ${SATELLITE_LOGGER_TIME_PATTERN:2006-01-02 15:04:05.000}
+  # 允许打印的最低日志级别
+  level: ${SATELLITE_LOGGER_LEVEL:info}
+
+# Satellite 自身的遥测（telemetry）配置
+telemetry:
+  # 部署的空间概念，类似于 Kubernetes 中的 namespace
+  cluster: ${SATELLITE_TELEMETRY_CLUSTER:satellite-cluster}
+  # 部署的服务分组概念，类似于 Kubernetes 中的 service 资源
+  service: ${SATELLITE_TELEMETRY_SERVICE:satellite-service}
+  # 最小运行单元，类似于 Kubernetes 中的 pod
+  instance: ${SATELLITE_TELEMETRY_SERVICE:satellite-instance}
+  # 遥测数据导出类型，支持 'prometheus'、'metrics_service'、'pprof' 或 'none'，多个用逗号分隔
+  export_type: ${SATELLITE_TELEMETRY_EXPORT_TYPE:prometheus,pprof}
+
+# 被不同管道（pipe）中具体插件所引用的共享插件配置
+sharing:
+  clients:
+    - plugin_name: 'grpc-client'
+      # gRPC 服务器地址发现器类型
+      finder_type: ${SATELLITE_GRPC_CLIENT_FINDER:static}
+      # gRPC 服务器地址（默认 localhost:11800）
+      server_addr: ${SATELLITE_GRPC_CLIENT:127.0.0.1:11800}
+      # 是否启用 TLS
+      enable_tls: ${SATELLITE_GRPC_ENABLE_TLS:false}
+      # 客户端证书文件路径（启用 TLS 时生效）
+      client_pem_path: ${SATELLITE_GRPC_CLIENT_PEM_PATH:'client.pem'}
+      # 客户端私钥文件路径（启用 TLS 时生效）
+      client_key_path: ${SATELLITE_GRPC_CLIENT_KEY_PATH:'client.key'}
+      # 是否跳过服务器证书链和主机名验证
+      insecure_skip_verify: ${SATELLITE_GRPC_INSECURE_SKIP_VERIFY:false}
+      # CA 证书文件路径（启用 TLS 时生效）
+      ca_pem_path: ${SATELLITE_grpc_CA_PEM_PATH:'ca.pem'}
+      # 连接检查周期（秒）
+      check_period: ${SATELLITE_GRPC_CHECK_PERIOD:5}
+      # 发送请求时的认证值
+      authentication: ${SATELLITE_GRPC_AUTHENTICATION:''}
+      # gRPC 请求超时配置
+      timeout:
+        # 单次 unary 请求超时
+        unary: ${SATELLITE_GRPC_TIMEOUT_UNARY:5s}
+        # 流式 unary 请求超时
+        stream: ${SATELLITE_GRPC_TIMEOUT_STREAM:20s}
+  servers:
+    - plugin_name: 'grpc-server'
+      # gRPC 服务器监听地址
+      address: ${SATELLITE_GRPC_ADDRESS:':11800'}
+      # TLS 证书文件路径
+      tls_cert_file: ${SATELLITE_GRPC_TLS_CERT_FILE:''}
+      # TLS 私钥文件路径
+      tls_key_file: ${SATELLITE_GRPC_TLS_KEY_FILE:''}
+    - plugin_name: 'prometheus-server'
+      # prometheus 服务器监听地址
+      address: ${SATELLITE_PROMETHEUS_ADDRESS:':11234'}
+      # prometheus 服务器的指标暴露路径（endpoint）
+      endpoint: ${SATELLITE_PROMETHEUS_ENDPOINT:'/metrics'}
+
+# 工作管道（pipe）配置
+pipes:
+  - common_config:
+      pipe_name: meterpipe
+    gatherer:
+      server_name: 'grpc-server'
+      receiver:
+        plugin_name: 'grpc-native-meter-receiver'
+      queue:
+        plugin_name: 'mmap-queue'
+        # 最大缓冲事件数量
+        event_buffer_size: ${SATELLITE_QUEUE_EVENT_BUFFER_SIZE:5000}
+        # 队列分区数量
+        partition: ${SATELLITE_QUEUE_PARTITION:4}
+    processor:
+      filters:
+    sender:
+      client_name: grpc-client
+      forwarders:
+        - plugin_name: native-meter-grpc-forwarder
+          # 用于托管服务实例路由规则的 LRU 缓存大小
+          routing_rule_lru_cache_size: ${SATELLITE_METERPIPE_FORWARD_ROUTING_RULE_LRU_CACHE_SIZE:5000}
+          # 用于托管服务实例路由规则的 LRU 缓存 TTL（秒）
+          routing_rule_lru_cache_ttl: ${SATELLITE_METERPIPE_FORWARD_ROUTING_RULE_LRU_CACHE_TTL:180}
+```
+
+#### 1.2.2 oap-server
+
+`oap-server-application.yml`
+
+```yaml
+cluster:
+  selector: ${SW_CLUSTER:standalone}
+  standalone:
+  # 请确保您的 ZooKeeper 版本为 3.5+，但也兼容 ZooKeeper 3.4.x。">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://blog.witter.top/post/skywalking-bu-shu-%26-jie-ru.html">
+<meta property="og:image" content="https://img.witter.top/file/b037878209903b7d5bb17.jpg">
+<title>skywalking部署&接入</title>
+<link href="//unpkg.com/@wooorm/starry-night@2.1.1/style/both.css" rel="stylesheet" />
+
+
+</head>
+<style>
+body{box-sizing: border-box;min-width: 200px;max-width: 900px;margin: 20px auto;padding: 45px;font-size: 16px;font-family: sans-serif;line-height: 1.25;}
+#header{display:flex;padding-bottom:8px;border-bottom: 1px solid var(--borderColor-muted, var(--color-border-muted));margin-bottom: 16px;}
+#footer {margin-top:64px; text-align: center;font-size: small;}
+
+</style>
+
+<style>
+.postTitle{margin: auto 0;font-size:40px;font-weight:bold;}
+.title-right{display:flex;margin:auto 0 0 auto;}
+.title-right .circle{padding: 14px 16px;margin-right:8px;}
+#postBody{border-bottom: 1px solid var(--color-border-default);padding-bottom:36px;}
+#postBody hr{height:2px;}
+#cmButton{height:48px;margin-top:48px;}
+#comments{margin-top:64px;}
+.g-emoji{font-size:24px;}
+@media (max-width: 600px) {
+    body {padding: 8px;}
+    .postTitle{font-size:24px;}
+}
+.copy-feedback {
+    display: none;
+    position: absolute;
+    top: 10px;
+    right: 50px;
+    color: var(--color-fg-on-emphasis);
+    background-color: var(--color-fg-muted);
+    border-radius: 3px;
+    padding: 5px 8px;
+    font-size: 12px;
+}
+</style>
+
+
+
+
+<body>
+    <div id="header">
+<h1 class="postTitle">skywalking部署&接入</h1>
+<div class="title-right">
+    <a href="https://blog.witter.top" id="buttonHome" class="btn btn-invisible circle" title="首页">
+        <svg class="octicon" width="16" height="16">
+            <path id="pathHome" fill-rule="evenodd"></path>
+        </svg>
+    </a>
+    
+    <a href="https://github.com/ljwtorch/ljwtorch.github.io/issues/34" target="_blank" class="btn btn-invisible circle" title="Issue">
+        <svg class="octicon" width="16" height="16">
+            <path id="pathIssue" fill-rule="evenodd"></path>
+        </svg>
+    </a>
+    
+
+    <a class="btn btn-invisible circle" onclick="modeSwitch();" title="切换主题">
+        <svg class="octicon" width="16" height="16" >
+            <path id="themeSwitch" fill-rule="evenodd"></path>
+        </svg>
+    </a>
+
+</div>
+</div>
+    <div id="content">
+<div class="markdown-body" id="postBody"><h2>1.docker部署</h2>
+<h3>1.1 以banyandb为存储(基础配置无消息队列)</h3>
+<ul>
+<li>banyandb web页面：<a href="http://ip:17913/banyandb/dashboard" rel="nofollow">http://ip:17913/banyandb/dashboard</a></li>
+<li>注：在接入12个java服务，测试环境存储24小时指标的资源消耗：
+<ul>
+<li>oap-server：4G内存</li>
+<li>banyandb：1G内存，1.1G硬盘空间</li>
+<li>ui：800M内存</li>
+</ul>
+</li>
+</ul>
+<p><code class="notranslate">docker-compose.yml</code></p>
+<div class="highlight highlight-source-yaml"><pre class="notranslate"><span class="pl-ent">services</span>:
+  <span class="pl-ent">banyandb</span>:
+    <span class="pl-ent">image</span>: <span class="pl-s">registry.cn-beijing.aliyuncs.com/witter/skywalking-banyandb:0.8.0</span>
+    <span class="pl-ent">container_name</span>: <span class="pl-s">banyandb</span>
+    <span class="pl-ent">restart</span>: <span class="pl-s">always</span>
+    <span class="pl-ent">ports</span>:
+      - <span class="pl-s"><span class="pl-pds">"</span>17912:17912<span class="pl-pds">"</span></span>
+      - <span class="pl-s"><span class="pl-pds">"</span>17913:17913<span class="pl-pds">"</span></span>
+    <span class="pl-ent">volumes</span>:
+      - <span class="pl-s">./banyandb/data:/var/lib/banyandb</span>
+    <span class="pl-ent">environment</span>:
+      - <span class="pl-s">BANYANDB_JAVA_OPTS=-Xms1g -Xmx1g</span>
+    <span class="pl-ent">command</span>: <span class="pl-s">standalone --stream-root-path /var/lib/banyandb/stream-data --measure-root-path /var/lib/banyandb/measure-data --observability-modes=native</span>
+    <span class="pl-ent">healthcheck</span>:
+      <span class="pl-ent">test</span>: <span class="pl-s">[ "CMD", "sh", "-c", "nc -nz 127.0.0.1 17912" ]</span>
+      <span class="pl-ent">interval</span>: <span class="pl-c1">5s</span>
+      <span class="pl-ent">timeout</span>: <span class="pl-c1">60s</span>
+      <span class="pl-ent">retries</span>: <span class="pl-c1">120</span>
+    <span class="pl-ent">networks</span>:
+      - <span class="pl-s">skywalking</span>
+
+  <span class="pl-ent">oap</span>:
+    <span class="pl-ent">image</span>: <span class="pl-s">registry.cn-beijing.aliyuncs.com/witter/skywalking-oap-server:10.2.0</span>
+    <span class="pl-ent">container_name</span>: <span class="pl-s">oap-server</span>
+    <span class="pl-ent">restart</span>: <span class="pl-s">always</span>
+    <span class="pl-ent">depends_on</span>:
+      <span class="pl-ent">banyandb</span>:
+        <span class="pl-ent">condition</span>: <span class="pl-s">service_healthy</span>
+    <span class="pl-ent">ports</span>:
+      - <span class="pl-s"><span class="pl-pds">"</span>11800:11800<span class="pl-pds">"</span></span>
+      - <span class="pl-s"><span class="pl-pds">"</span>12800:12800<span class="pl-pds">"</span></span>
+    <span class="pl-c"><span class="pl-c">#</span> volumes:</span>
+      <span class="pl-c"><span class="pl-c">#</span> - ./oap/config/application.yml:/skywalking/config/application.yml</span>
+    <span class="pl-ent">environment</span>:
+      - <span class="pl-s">SW_STORAGE=banyandb</span>
+      - <span class="pl-s">SW_STORAGE_BANYANDB_TARGETS=banyandb:17912</span>
+      - <span class="pl-s">SW_TELEMETRY=prometheus</span>
+      - <span class="pl-s">JAVA_OPTS=-Xms2048m -Xmx2048m</span>
+    <span class="pl-ent">networks</span>:
+      - <span class="pl-s">skywalking</span>
+
+  <span class="pl-ent">ui</span>:
+    <span class="pl-ent">image</span>: <span class="pl-s">registry.cn-beijing.aliyuncs.com/witter/skywalking-ui:10.2.0</span>
+    <span class="pl-ent">container_name</span>: <span class="pl-s">ui</span>
+    <span class="pl-ent">restart</span>: <span class="pl-s">always</span>
+    <span class="pl-ent">depends_on</span>:
+      - <span class="pl-s">oap</span>
+    <span class="pl-ent">ports</span>:
+      - <span class="pl-s"><span class="pl-pds">"</span>8081:8080<span class="pl-pds">"</span></span>
+    <span class="pl-ent">environment</span>:
+      - <span class="pl-s">SW_OAP_ADDRESS=http://oap:12800</span>
+      - <span class="pl-s">SW_ZIPKIN_ADDRESS=http://oap:9412</span>
+    <span class="pl-ent">networks</span>:
+      - <span class="pl-s">skywalking</span>
+
+<span class="pl-ent">networks</span>:
+  <span class="pl-ent">skywalking</span>:
+    <span class="pl-ent">driver</span>: <span class="pl-s">bridge</span></pre></div>
+<h3>1.2 以elasticsearch为存储，skywalking-satellite中转；</h3>
+<blockquote>
+<ol>
+<li>SkyWalking Satellite 目前只支持把 Logs 转发到 Kafka（插件native-log-kafka-forwarder）；</li>
+<li>Tracing 和 Metrics 没有对应的 Kafka forwarder，只能走 gRPC 转发到 OAP；</li>
+</ol>
+</blockquote>
+<p>推荐场景是：<strong>Java Agent → Satellite（11801）→ OAP → Elasticsearch</strong></p>
+<h4>1.2.1 satellite</h4>
+<p><code class="notranslate">satellite_config.yaml</code></p>
+<div class="highlight highlight-source-yaml"><pre class="notranslate"><span class="pl-c"><span class="pl-c">#</span> 日志记录器配置</span>
+<span class="pl-ent">logger</span>:
+  <span class="pl-c"><span class="pl-c">#</span> 日志格式模板配置</span>
+  <span class="pl-ent">log_pattern</span>: <span class="pl-s">${SATELLITE_LOGGER_LOG_PATTERN:%time [%level][%field] - %msg}</span>
+  <span class="pl-c"><span class="pl-c">#</span> 时间格式模板配置</span>
+  <span class="pl-ent">time_pattern</span>: <span class="pl-s">${SATELLITE_LOGGER_TIME_PATTERN:2006-01-02 15:04:05.000}</span>
+  <span class="pl-c"><span class="pl-c">#</span> 允许打印的最低日志级别</span>
+  <span class="pl-ent">level</span>: <span class="pl-s">${SATELLITE_LOGGER_LEVEL:info}</span>
+
+<span class="pl-c"><span class="pl-c">#</span> Satellite 自身的遥测（telemetry）配置</span>
+<span class="pl-ent">telemetry</span>:
+  <span class="pl-c"><span class="pl-c">#</span> 部署的空间概念，类似于 Kubernetes 中的 namespace</span>
+  <span class="pl-ent">cluster</span>: <span class="pl-s">${SATELLITE_TELEMETRY_CLUSTER:satellite-cluster}</span>
+  <span class="pl-c"><span class="pl-c">#</span> 部署的服务分组概念，类似于 Kubernetes 中的 service 资源</span>
+  <span class="pl-ent">service</span>: <span class="pl-s">${SATELLITE_TELEMETRY_SERVICE:satellite-service}</span>
+  <span class="pl-c"><span class="pl-c">#</span> 最小运行单元，类似于 Kubernetes 中的 pod</span>
+  <span class="pl-ent">instance</span>: <span class="pl-s">${SATELLITE_TELEMETRY_SERVICE:satellite-instance}</span>
+  <span class="pl-c"><span class="pl-c">#</span> 遥测数据导出类型，支持 "prometheus"、"metrics_service"、"pprof" 或 "none"，多个用逗号分隔</span>
+  <span class="pl-ent">export_type</span>: <span class="pl-s">${SATELLITE_TELEMETRY_EXPORT_TYPE:prometheus,pprof}</span>
+
+<span class="pl-c"><span class="pl-c">#</span> 被不同管道（pipe）中具体插件所引用的共享插件配置</span>
+<span class="pl-ent">sharing</span>:
+  <span class="pl-ent">clients</span>:
+    - <span class="pl-ent">plugin_name</span>: <span class="pl-s"><span class="pl-pds">"</span>grpc-client<span class="pl-pds">"</span></span>
+      <span class="pl-c"><span class="pl-c">#</span> gRPC 服务器地址发现器类型</span>
+      <span class="pl-ent">finder_type</span>: <span class="pl-s">${SATELLITE_GRPC_CLIENT_FINDER:static}</span>
+      <span class="pl-c"><span class="pl-c">#</span> gRPC 服务器地址（默认 localhost:11800）</span>
+      <span class="pl-ent">server_addr</span>: <span class="pl-s">${SATELLITE_GRPC_CLIENT:127.0.0.1:11800}</span>
+      <span class="pl-c"><span class="pl-c">#</span> 是否启用 TLS</span>
+      <span class="pl-ent">enable_tls</span>: <span class="pl-s">${SATELLITE_GRPC_ENABLE_TLS:false}</span>
+      <span class="pl-c"><span class="pl-c">#</span> 客户端证书文件路径（启用 TLS 时生效）</span>
+      <span class="pl-ent">client_pem_path</span>: <span class="pl-s">${SATELLITE_GRPC_CLIENT_PEM_PATH:"client.pem"}</span>
+      <span class="pl-c"><span class="pl-c">#</span> 客户端私钥文件路径（启用 TLS 时生效）</span>
+      <span class="pl-ent">client_key_path</span>: <span class="pl-s">${SATELLITE_GRPC_CLIENT_KEY_PATH:"client.key"}</span>
+      <span class="pl-c"><span class="pl-c">#</span> 是否跳过服务器证书链和主机名验证</span>
+      <span class="pl-ent">insecure_skip_verify</span>: <span class="pl-s">${SATELLITE_GRPC_INSECURE_SKIP_VERIFY:false}</span>
+      <span class="pl-c"><span class="pl-c">#</span> CA 证书文件路径（启用 TLS 时生效）</span>
+      <span class="pl-ent">ca_pem_path</span>: <span class="pl-s">${SATELLITE_grpc_CA_PEM_PATH:"ca.pem"}</span>
+      <span class="pl-c"><span class="pl-c">#</span> 连接检查周期（秒）</span>
+      <span class="pl-ent">check_period</span>: <span class="pl-s">${SATELLITE_GRPC_CHECK_PERIOD:5}</span>
+      <span class="pl-c"><span class="pl-c">#</span> 发送请求时的认证值</span>
+      <span class="pl-ent">authentication</span>: <span class="pl-s">${SATELLITE_GRPC_AUTHENTICATION:""}</span>
+      <span class="pl-c"><span class="pl-c">#</span> gRPC 请求超时配置</span>
+      <span class="pl-ent">timeout</span>:
+        <span class="pl-c"><span class="pl-c">#</span> 单次 unary 请求超时</span>
+        <span class="pl-ent">unary</span>: <span class="pl-s">${SATELLITE_GRPC_TIMEOUT_UNARY:5s}</span>
+        <span class="pl-c"><span class="pl-c">#</span> 流式 unary 请求超时</span>
+        <span class="pl-ent">stream</span>: <span class="pl-s">${SATELLITE_GRPC_TIMEOUT_STREAM:20s}</span>
+  <span class="pl-ent">servers</span>:
+    - <span class="pl-ent">plugin_name</span>: <span class="pl-s"><span class="pl-pds">"</span>grpc-server<span class="pl-pds">"</span></span>
+      <span class="pl-c"><span class="pl-c">#</span> gRPC 服务器监听地址</span>
+      <span class="pl-ent">address</span>: <span class="pl-s">${SATELLITE_GRPC_ADDRESS:":11800"}</span>
+      <span class="pl-c"><span class="pl-c">#</span> TLS 证书文件路径</span>
+      <span class="pl-ent">tls_cert_file</span>: <span class="pl-s">${SATELLITE_GRPC_TLS_CERT_FILE:""}</span>
+      <span class="pl-c"><span class="pl-c">#</span> TLS 私钥文件路径</span>
+      <span class="pl-ent">tls_key_file</span>: <span class="pl-s">${SATELLITE_GRPC_TLS_KEY_FILE:""}</span>
+    - <span class="pl-ent">plugin_name</span>: <span class="pl-s"><span class="pl-pds">"</span>prometheus-server<span class="pl-pds">"</span></span>
+      <span class="pl-c"><span class="pl-c">#</span> prometheus 服务器监听地址</span>
+      <span class="pl-ent">address</span>: <span class="pl-s">${SATELLITE_PROMETHEUS_ADDRESS:":11234"}</span>
+      <span class="pl-c"><span class="pl-c">#</span> prometheus 服务器的指标暴露路径（endpoint）</span>
+      <span class="pl-ent">endpoint</span>: <span class="pl-s">${SATELLITE_PROMETHEUS_ENDPOINT:"/metrics"}</span>
+
+<span class="pl-c"><span class="pl-c">#</span> 工作管道（pipe）配置</span>
+<span class="pl-ent">pipes</span>:
+  - <span class="pl-ent">common_config</span>:
+      <span class="pl-ent">pipe_name</span>: <span class="pl-s">meterpipe</span>
+    <span class="pl-ent">gatherer</span>:
+      <span class="pl-ent">server_name</span>: <span class="pl-s"><span class="pl-pds">"</span>grpc-server<span class="pl-pds">"</span></span>
+      <span class="pl-ent">receiver</span>:
+        <span class="pl-ent">plugin_name</span>: <span class="pl-s"><span class="pl-pds">"</span>grpc-native-meter-receiver<span class="pl-pds">"</span></span>
+      <span class="pl-ent">queue</span>:
+        <span class="pl-ent">plugin_name</span>: <span class="pl-s"><span class="pl-pds">"</span>mmap-queue<span class="pl-pds">"</span></span>
+        <span class="pl-c"><span class="pl-c">#</span> 最大缓冲事件数量</span>
+        <span class="pl-ent">event_buffer_size</span>: <span class="pl-s">${SATELLITE_QUEUE_EVENT_BUFFER_SIZE:5000}</span>
+        <span class="pl-c"><span class="pl-c">#</span> 队列分区数量</span>
+        <span class="pl-ent">partition</span>: <span class="pl-s">${SATELLITE_QUEUE_PARTITION:4}</span>
+    <span class="pl-ent">processor</span>:
+      <span class="pl-ent">filters</span>:
+    <span class="pl-ent">sender</span>:
+      <span class="pl-ent">client_name</span>: <span class="pl-s">grpc-client</span>
+      <span class="pl-ent">forwarders</span>:
+        - <span class="pl-ent">plugin_name</span>: <span class="pl-s">native-meter-grpc-forwarder</span>
+          <span class="pl-c"><span class="pl-c">#</span> 用于托管服务实例路由规则的 LRU 缓存大小</span>
+          <span class="pl-ent">routing_rule_lru_cache_size</span>: <span class="pl-s">${SATELLITE_METERPIPE_FORWARD_ROUTING_RULE_LRU_CACHE_SIZE:5000}</span>
+          <span class="pl-c"><span class="pl-c">#</span> 用于托管服务实例路由规则的 LRU 缓存 TTL（秒）</span>
+          <span class="pl-ent">routing_rule_lru_cache_ttl</span>: <span class="pl-s">${SATELLITE_METERPIPE_FORWARD_ROUTING_RULE_LRU_CACHE_TTL:180}</span></pre></div>
+<h4>1.2.2 oap-server</h4>
+<p><code class="notranslate">oap-server-application.yml</code></p>
+<div class="highlight highlight-source-yaml"><pre class="notranslate"><span class="pl-ent">cluster</span>:
+  <span class="pl-ent">selector</span>: <span class="pl-s">${SW_CLUSTER:standalone}</span>
+  <span class="pl-ent">standalone</span>:
+  <span class="pl-c"><span class="pl-c">#</span> 请确保您的 ZooKeeper 版本为 3.5+，但也兼容 ZooKeeper 3.4.x。</span>
+  <span class="pl-c"><span class="pl-c">#</span> 如需使用 3.4.x，请将 oap-libs 文件夹中的 ZooKeeper 3.5+ 库替换为对应的 3.4.x 库。</span>
+  <span class="pl-ent">zookeeper</span>:
+    <span class="pl-ent">namespace</span>: <span class="pl-s">${SW_NAMESPACE:""}</span>
+    <span class="pl-ent">hostPort</span>: <span class="pl-s">${SW_CLUSTER_ZK_HOST_PORT:localhost:2181}</span>
+    <span class="pl-c"><span class="pl-c">#</span> 重试策略</span>
+    <span class="pl-ent">baseSleepTimeMs</span>: <span class="pl-s">${SW_CLUSTER_ZK_SLEEP_TIME:1000}     </span><span class="pl-c"><span class="pl-c">#</span> 重试之间的初始等待时间（毫秒）</span>
+    <span class="pl-ent">maxRetries</span>: <span class="pl-s">${SW_CLUSTER_ZK_MAX_RETRIES:3}            </span><span class="pl-c"><span class="pl-c">#</span> 最大重试次数</span>
+    <span class="pl-c"><span class="pl-c">#</span> 是否启用 ACL</span>
+    <span class="pl-ent">enableACL</span>: <span class="pl-s">${SW_ZK_ENABLE_ACL:false}                  </span><span class="pl-c"><span class="pl-c">#</span> 默认关闭 ACL</span>
+    <span class="pl-ent">schema</span>: <span class="pl-s">${SW_ZK_SCHEMA:digest}                        </span><span class="pl-c"><span class="pl-c">#</span> 仅支持 digest 模式</span>
+    <span class="pl-ent">expression</span>: <span class="pl-s">${SW_ZK_EXPRESSION:skywalking:skywalking}</span>
+    <span class="pl-ent">internalComHost</span>: <span class="pl-s">${SW_CLUSTER_INTERNAL_COM_HOST:""}</span>
+    <span class="pl-ent">internalComPort</span>: <span class="pl-s">${SW_CLUSTER_INTERNAL_COM_PORT:-1}</span>
+  <span class="pl-ent">kubernetes</span>:
+    <span class="pl-ent">namespace</span>: <span class="pl-s">${SW_CLUSTER_K8S_NAMESPACE:default}</span>
+    <span class="pl-ent">labelSelector</span>: <span class="pl-s">${SW_CLUSTER_K8S_LABEL:app=collector,release=skywalking}</span>
+    <span class="pl-ent">uidEnvName</span>: <span class="pl-s">${SW_CLUSTER_K8S_UID:SKYWALKING_COLLECTOR_UID}</span>
+  <span class="pl-ent">consul</span>:
+    <span class="pl-ent">serviceName</span>: <span class="pl-s">${SW_SERVICE_NAME:"SkyWalking_OAP_Cluster"}</span>
+    <span class="pl-c"><span class="pl-c">#</span> Consul 集群节点，示例：10.0.0.1:8500,10.0.0.2:8500,10.0.0.3:8500</span>
+    <span class="pl-ent">hostPort</span>: <span class="pl-s">${SW_CLUSTER_CONSUL_HOST_PORT:localhost:8500}</span>
+    <span class="pl-ent">aclToken</span>: <span class="pl-s">${SW_CLUSTER_CONSUL_ACLTOKEN:""}</span>
+    <span class="pl-ent">internalComHost</span>: <span class="pl-s">${SW_CLUSTER_INTERNAL_COM_HOST:""}</span>
+    <span class="pl-ent">internalComPort</span>: <span class="pl-s">${SW_CLUSTER_INTERNAL_COM_PORT:-1}</span>
+  <span class="pl-ent">etcd</span>:
+    <span class="pl-c"><span class="pl-c">#</span> etcd 集群节点，示例：10.0.0.1:2379,10.0.0.2:2379,10.0.0.3:2379</span>
+    <span class="pl-ent">endpoints</span>: <span class="pl-s">${SW_CLUSTER_ETCD_ENDPOINTS:localhost:2379}</span>
+    <span class="pl-ent">namespace</span>: <span class="pl-s">${SW_CLUSTER_ETCD_NAMESPACE:/skywalking}</span>
+    <span class="pl-ent">serviceName</span>: <span class="pl-s">${SW_CLUSTER_ETCD_SERVICE_NAME:"SkyWalking_OAP_Cluster"}</span>
+    <span class="pl-ent">authentication</span>: <span class="pl-s">${SW_CLUSTER_ETCD_AUTHENTICATION:false}</span>
+    <span class="pl-ent">user</span>: <span class="pl-s">${SW_CLUSTER_ETCD_USER:}</span>
+    <span class="pl-ent">password</span>: <span class="pl-s">${SW_CLUSTER_ETCD_PASSWORD:}</span>
+    <span class="pl-ent">internalComHost</span>: <span class="pl-s">${SW_CLUSTER_INTERNAL_COM_HOST:""}</span>
+    <span class="pl-ent">internalComPort</span>: <span class="pl-s">${SW_CLUSTER_INTERNAL_COM_PORT:-1}</span>
+  <span class="pl-ent">nacos</span>:
+    <span class="pl-ent">serviceName</span>: <span class="pl-s">${SW_SERVICE_NAME:"SkyWalking_OAP_Cluster"}</span>
+    <span class="pl-ent">hostPort</span>: <span class="pl-s">${SW_CLUSTER_NACOS_HOST_PORT:localhost:8848}</span>
+    <span class="pl-c"><span class="pl-c">#</span> Nacos 命名空间</span>
+    <span class="pl-ent">namespace</span>: <span class="pl-s">${SW_CLUSTER_NACOS_NAMESPACE:"public"}</span>
+    <span class="pl-ent">contextPath</span>: <span class="pl-s">${SW_CLUSTER_NACOS_CONTEXT_PATH:""}</span>
+    <span class="pl-c"><span class="pl-c">#</span> Nacos 认证用户名</span>
+    <span class="pl-ent">username</span>: <span class="pl-s">${SW_CLUSTER_NACOS_USERNAME:""}</span>
+    <span class="pl-ent">password</span>: <span class="pl-s">${SW_CLUSTER_NACOS_PASSWORD:""}</span>
+    <span class="pl-c"><span class="pl-c">#</span> Nacos 认证 accessKey</span>
+    <span class="pl-ent">accessKey</span>: <span class="pl-s">${SW_CLUSTER_NACOS_ACCESSKEY:""}</span>
+    <span class="pl-ent">secretKey</span>: <span class="pl-s">${SW_CLUSTER_NACOS_SECRETKEY:""}</span>
+    <span class="pl-ent">internalComHost</span>: <span class="pl-s">${SW_CLUSTER_INTERNAL_COM_HOST:""}</span>
+    <span class="pl-ent">internalComPort</span>: <span class="pl-s">${SW_CLUSTER_INTERNAL_COM_PORT:-1}</span>
+<span class="pl-ent">core</span>:
+  <span class="pl-ent">selector</span>: <span class="pl-s">${SW_CORE:default}</span>
+  <span class="pl-ent">default</span>:
+    <span class="pl-c"><span class="pl-c">#</span> Mixed: 接收 Agent 数据，进行 L1 聚合和 L2 聚合</span>
+    <span class="pl-c"><span class="pl-c">#</span> Receiver: 仅接收 Agent 数据，进行 L1 聚合</span>
+    <span class="pl-c"><span class="pl-c">#</span> Aggregator: 仅进行 L2 聚合</span>
+    <span class="pl-ent">role</span>: <span class="pl-s">${SW_CORE_ROLE:Mixed} </span><span class="pl-c"><span class="pl-c">#</span> Mixed/Receiver/Aggregator</span>
+    <span class="pl-ent">restHost</span>: <span class="pl-s">${SW_CORE_REST_HOST:0.0.0.0}</span>
+    <span class="pl-ent">restPort</span>: <span class="pl-s">${SW_CORE_REST_PORT:12800}</span>
+    <span class="pl-ent">restContextPath</span>: <span class="pl-s">${SW_CORE_REST_CONTEXT_PATH:/}</span>
+    <span class="pl-ent">restMaxThreads</span>: <span class="pl-s">${SW_CORE_REST_MAX_THREADS:200}</span>
+    <span class="pl-ent">restIdleTimeOut</span>: <span class="pl-s">${SW_CORE_REST_IDLE_TIMEOUT:30000}</span>
+    <span class="pl-ent">restAcceptQueueSize</span>: <span class="pl-s">${SW_CORE_REST_QUEUE_SIZE:0}</span>
+    <span class="pl-ent">httpMaxRequestHeaderSize</span>: <span class="pl-s">${SW_CORE_HTTP_MAX_REQUEST_HEADER_SIZE:8192}</span>
+    <span class="pl-ent">gRPCHost</span>: <span class="pl-s">${SW_CORE_GRPC_HOST:0.0.0.0}</span>
+    <span class="pl-ent">gRPCPort</span>: <span class="pl-s">${SW_CORE_GRPC_PORT:11800}</span>
+    <span class="pl-ent">maxConcurrentCallsPerConnection</span>: <span class="pl-s">${SW_CORE_GRPC_MAX_CONCURRENT_CALL:0}</span>
+    <span class="pl-ent">maxMessageSize</span>: <span class="pl-s">${SW_CORE_GRPC_MAX_MESSAGE_SIZE:52428800}  </span><span class="pl-c"><span class="pl-c">#</span> 50MB</span>
+    <span class="pl-ent">gRPCThreadPoolSize</span>: <span class="pl-s">${SW_CORE_GRPC_THREAD_POOL_SIZE:-1}</span>
+    <span class="pl-ent">gRPCSslEnabled</span>: <span class="pl-s">${SW_CORE_GRPC_SSL_ENABLED:false}</span>
+    <span class="pl-ent">gRPCSslKeyPath</span>: <span class="pl-s">${SW_CORE_GRPC_SSL_KEY_PATH:""}</span>
+    <span class="pl-ent">gRPCSslCertChainPath</span>: <span class="pl-s">${SW_CORE_GRPC_SSL_CERT_CHAIN_PATH:""}</span>
+    <span class="pl-ent">gRPCSslTrustedCAPath</span>: <span class="pl-s">${SW_CORE_GRPC_SSL_TRUSTED_CA_PATH:""}</span>
+    <span class="pl-ent">downsampling</span>:
+      - <span class="pl-s">Hour</span>
+      - <span class="pl-s">Day</span>
+    <span class="pl-c"><span class="pl-c">#</span> 是否启用数据清理执行器，关闭后自动删除指标数据也会关闭</span>
+    <span class="pl-ent">enableDataKeeperExecutor</span>: <span class="pl-s">${SW_CORE_ENABLE_DATA_KEEPER_EXECUTOR:true}</span>
+    <span class="pl-c"><span class="pl-c">#</span> 数据清理执行器运行周期，单位：分钟</span>
+    <span class="pl-ent">dataKeeperExecutePeriod</span>: <span class="pl-s">${SW_CORE_DATA_KEEPER_EXECUTE_PERIOD:5}</span>
+    <span class="pl-ent">recordDataTTL</span>: <span class="pl-s">${SW_CORE_RECORD_DATA_TTL:3}           </span><span class="pl-c"><span class="pl-c">#</span> 记录数据保留天数（单位：天）</span>
+    <span class="pl-ent">metricsDataTTL</span>: <span class="pl-s">${SW_CORE_METRICS_DATA_TTL:7}         </span><span class="pl-c"><span class="pl-c">#</span> 指标数据保留天数（单位：天）</span>
+    <span class="pl-c"><span class="pl-c">#</span> L1 聚合向 L2 聚合刷新的周期，单位：毫秒</span>
+    <span class="pl-ent">l1FlushPeriod</span>: <span class="pl-s">${SW_CORE_L1_AGGREGATION_FLUSH_PERIOD:500}</span>
+    <span class="pl-c"><span class="pl-c">#</span> 会话超时阈值，单位：毫秒，默认 70 秒</span>
+    <span class="pl-ent">storageSessionTimeout</span>: <span class="pl-s">${SW_CORE_STORAGE_SESSION_TIMEOUT:70000}</span>
+    <span class="pl-c"><span class="pl-c">#</span> 数据持久化周期，单位：秒，默认 25 秒</span>
+    <span class="pl-ent">persistentPeriod</span>: <span class="pl-s">${SW_CORE_PERSISTENT_PERIOD:25}</span>
+    <span class="pl-ent">topNReportPeriod</span>: <span class="pl-s">${SW_CORE_TOPN_REPORT_PERIOD:10}    </span><span class="pl-c"><span class="pl-c">#</span> TopN 记录上报周期，单位：分钟</span>
+    <span class="pl-c"><span class="pl-c">#</span> 激活代码中额外定义的模型列，这些列在聚合或查询中逻辑上非必须，</span>
+    <span class="pl-c"><span class="pl-c">#</span> 会增加 OAP 的内存、网络和存储负载，但激活后可在 Kibana 等第三方工具中更容易查询。</span>
+    <span class="pl-ent">activeExtraModelColumns</span>: <span class="pl-s">${SW_CORE_ACTIVE_EXTRA_MODEL_COLUMNS:false}</span>
+    <span class="pl-c"><span class="pl-c">#</span> 服务名 + 实例名总长度最大值应小于 200</span>
+    <span class="pl-ent">serviceNameMaxLength</span>: <span class="pl-s">${SW_SERVICE_NAME_MAX_LENGTH:70}</span>
+    <span class="pl-c"><span class="pl-c">#</span> 服务缓存刷新周期，单位：秒，默认 10 秒</span>
+    <span class="pl-ent">serviceCacheRefreshInterval</span>: <span class="pl-s">${SW_SERVICE_CACHE_REFRESH_INTERVAL:10}</span>
+    <span class="pl-ent">instanceNameMaxLength</span>: <span class="pl-s">${SW_INSTANCE_NAME_MAX_LENGTH:70}</span>
+    <span class="pl-c"><span class="pl-c">#</span> 服务名 + 端点名总长度最大值应小于 240</span>
+    <span class="pl-ent">endpointNameMaxLength</span>: <span class="pl-s">${SW_ENDPOINT_NAME_MAX_LENGTH:150}</span>
+    <span class="pl-c"><span class="pl-c">#</span> 可通过 GraphQL 搜索的 Span 标签键集合</span>
+    <span class="pl-c"><span class="pl-c">#</span> key=value 最大长度小于 256，否则会被丢弃</span>
+    <span class="pl-ent">searchableTracesTags</span>: <span class="pl-s">${SW_SEARCHABLE_TAG_KEYS:http.method,http.status_code,rpc.status_code,db.type,db.instance,mq.queue,mq.topic,mq.broker}</span>
+    <span class="pl-c"><span class="pl-c">#</span> 可通过 GraphQL 搜索的日志标签键集合</span>
+    <span class="pl-ent">searchableLogsTags</span>: <span class="pl-s">${SW_SEARCHABLE_LOGS_TAG_KEYS:level,http.status_code}</span>
+    <span class="pl-c"><span class="pl-c">#</span> 可通过 GraphQL 搜索的告警标签键集合</span>
+    <span class="pl-ent">searchableAlarmTags</span>: <span class="pl-s">${SW_SEARCHABLE_ALARM_TAG_KEYS:level}</span>
+    <span class="pl-c"><span class="pl-c">#</span> 自动完成标签键查询的最大数量</span>
+    <span class="pl-ent">autocompleteTagKeysQueryMaxSize</span>: <span class="pl-s">${SW_AUTOCOMPLETE_TAG_KEYS_QUERY_MAX_SIZE:100}</span>
+    <span class="pl-c"><span class="pl-c">#</span> 自动完成标签值查询的最大数量</span>
+    <span class="pl-ent">autocompleteTagValuesQueryMaxSize</span>: <span class="pl-s">${SW_AUTOCOMPLETE_TAG_VALUES_QUERY_MAX_SIZE:100}</span>
+    <span class="pl-c"><span class="pl-c">#</span> 用于准备指标数据到存储的线程数</span>
+    <span class="pl-ent">prepareThreads</span>: <span class="pl-s">${SW_CORE_PREPARE_THREADS:2}</span>
+    <span class="pl-c"><span class="pl-c">#</span> 开启后根据 OpenAPI 定义自动对端点名进行分组</span>
+    <span class="pl-ent">enableEndpointNameGroupingByOpenapi</span>: <span class="pl-s">${SW_CORE_ENABLE_ENDPOINT_NAME_GROUPING_BY_OPENAPI:true}</span>
+    <span class="pl-c"><span class="pl-c">#</span> HTTP URI 模式识别的同步周期，单位：秒</span>
+    <span class="pl-ent">syncPeriodHttpUriRecognitionPattern</span>: <span class="pl-s">${SW_CORE_SYNC_PERIOD_HTTP_URI_RECOGNITION_PATTERN:10}</span>
+    <span class="pl-c"><span class="pl-c">#</span> HTTP URI 模式识别的训练周期，单位：秒</span>
+    <span class="pl-ent">trainingPeriodHttpUriRecognitionPattern</span>: <span class="pl-s">${SW_CORE_TRAINING_PERIOD_HTTP_URI_RECOGNITION_PATTERN:60}</span>
+    <span class="pl-c"><span class="pl-c">#</span> 每个服务用于进一步 URI 模式识别的最大 HTTP URI 数量</span>
+    <span class="pl-ent">maxHttpUrisNumberPerService</span>: <span class="pl-s">${SW_CORE_MAX_HTTP_URIS_NUMBER_PER_SVR:3000}</span>
+    <span class="pl-c"><span class="pl-c">#</span> 如果禁用层级关系，服务和实例的层级关系将不会构建，层级查询将返回空结果</span>
+    <span class="pl-c"><span class="pl-c">#</span> 所有层级关系定义在 hierarchy-definition.yml 中</span>
+    <span class="pl-c"><span class="pl-c">#</span> 注意：部分配置仅适用于 Kubernetes 环境</span>
+    <span class="pl-ent">enableHierarchy</span>: <span class="pl-s">${SW_CORE_ENABLE_HIERARCHY:true}</span>
+    <span class="pl-c"><span class="pl-c">#</span> 最大堆内存使用百分比（整数），默认 96%</span>
+    <span class="pl-ent">maxHeapMemoryUsagePercent</span>: <span class="pl-s">${SW_CORE_MAX_HEAP_MEMORY_USAGE_PERCENT:96}</span>
+    <span class="pl-c"><span class="pl-c">#</span> 最大直接内存使用量（字节），-1 表示无限制</span>
+    <span class="pl-ent">maxDirectMemoryUsage</span>: <span class="pl-s">${SW_CORE_MAX_DIRECT_MEMORY_USAGE:-1}</span>
+
+<span class="pl-ent">storage</span>:
+  <span class="pl-ent">selector</span>: <span class="pl-s">${SW_STORAGE:banyandb}</span>
+  <span class="pl-ent">banyandb</span>:
+    <span class="pl-c"><span class="pl-c">#</span> 自 10.2.0 起，BanyanDB 配置已独立分离到 bydb.yaml 文件中</span>
+  <span class="pl-ent">elasticsearch</span>:
+    <span class="pl-ent">namespace</span>: <span class="pl-s">${SW_NAMESPACE:""}</span>
+    <span class="pl-ent">clusterNodes</span>: <span class="pl-s">${SW_STORAGE_ES_CLUSTER_NODES:localhost:9200}</span>
+    <span class="pl-ent">protocol</span>: <span class="pl-s">${SW_STORAGE_ES_HTTP_PROTOCOL:"http"}</span>
+    <span class="pl-ent">connectTimeout</span>: <span class="pl-s">${SW_STORAGE_ES_CONNECT_TIMEOUT:3000}</span>
+    <span class="pl-ent">socketTimeout</span>: <span class="pl-s">${SW_STORAGE_ES_SOCKET_TIMEOUT:30000}</span>
+    <span class="pl-ent">responseTimeout</span>: <span class="pl-s">${SW_STORAGE_ES_RESPONSE_TIMEOUT:15000}</span>
+    <span class="pl-ent">numHttpClientThread</span>: <span class="pl-s">${SW_STORAGE_ES_NUM_HTTP_CLIENT_THREAD:0}</span>
+    <span class="pl-ent">user</span>: <span class="pl-s">${SW_ES_USER:""}</span>
+    <span class="pl-ent">password</span>: <span class="pl-s">${SW_ES_PASSWORD:""}</span>
+    <span class="pl-ent">trustStorePath</span>: <span class="pl-s">${SW_STORAGE_ES_SSL_JKS_PATH:""}</span>
+    <span class="pl-ent">trustStorePass</span>: <span class="pl-s">${SW_STORAGE_ES_SSL_JKS_PASS:""}</span>
+    <span class="pl-ent">secretsManagementFile</span>: <span class="pl-s">${SW_ES_SECRETS_MANAGEMENT_FILE:""} </span><span class="pl-c"><span class="pl-c">#</span> 由第三方工具管理的包含用户名、密码等的密钥文件</span>
+    <span class="pl-ent">dayStep</span>: <span class="pl-s">${SW_STORAGE_DAY_STEP:1}                         </span><span class="pl-c"><span class="pl-c">#</span> 分钟/小时/天索引中代表的天数</span>
+    <span class="pl-ent">indexShardsNumber</span>: <span class="pl-s">${SW_STORAGE_ES_INDEX_SHARDS_NUMBER:1} </span><span class="pl-c"><span class="pl-c">#</span> 新索引的分片数</span>
+    <span class="pl-ent">indexReplicasNumber</span>: <span class="pl-s">${SW_STORAGE_ES_INDEX_REPLICAS_NUMBER:1} </span><span class="pl-c"><span class="pl-c">#</span> 新索引的副本数</span>
+    <span class="pl-c"><span class="pl-c">#</span> 为每个索引单独指定设置，优先级最高，会覆盖通用设置</span>
+    <span class="pl-ent">specificIndexSettings</span>: <span class="pl-s">${SW_STORAGE_ES_SPECIFIC_INDEX_SETTINGS:""}</span>
+    <span class="pl-c"><span class="pl-c">#</span> 超大数据集（如 trace segments）已由代码定义，以下配置可提升 ES 性能</span>
+    <span class="pl-ent">superDatasetDayStep</span>: <span class="pl-s">${SW_STORAGE_ES_SUPER_DATASET_DAY_STEP:-1} </span><span class="pl-c"><span class="pl-c">#</span> 超大数据集记录索引的天数步长，&lt;0 时与 dayStep 相同</span>
+    <span class="pl-ent">superDatasetIndexShardsFactor</span>: <span class="pl-s">${SW_STORAGE_ES_SUPER_DATASET_INDEX_SHARDS_FACTOR:5} </span><span class="pl-c"><span class="pl-c">#</span> 超大数据集分片因子：分片数 = indexShardsNumber × 此因子</span>
+    <span class="pl-ent">superDatasetIndexReplicasNumber</span>: <span class="pl-s">${SW_STORAGE_ES_SUPER_DATASET_INDEX_REPLICAS_NUMBER:0} </span><span class="pl-c"><span class="pl-c">#</span> 超大数据集索引的副本数，默认 0</span>
+    <span class="pl-ent">indexTemplateOrder</span>: <span class="pl-s">${SW_STORAGE_ES_INDEX_TEMPLATE_ORDER:0} </span><span class="pl-c"><span class="pl-c">#</span> 索引模板的顺序</span>
+    <span class="pl-ent">bulkActions</span>: <span class="pl-s">${SW_STORAGE_ES_BULK_ACTIONS:5000}           </span><span class="pl-c"><span class="pl-c">#</span> 每达到此数量的请求执行一次异步批量写入</span>
+    <span class="pl-ent">batchOfBytes</span>: <span class="pl-s">${SW_STORAGE_ES_BATCH_OF_BYTES:10485760}    </span><span class="pl-c"><span class="pl-c">#</span> 控制 ES Bulk 刷新的最大 body 大小（字节）</span>
+    <span class="pl-ent">flushInterval</span>: <span class="pl-s">${SW_STORAGE_ES_FLUSH_INTERVAL:5}          </span><span class="pl-c"><span class="pl-c">#</span> 无论请求数量多少，每隔几秒强制 flush（秒）</span>
+    <span class="pl-ent">concurrentRequests</span>: <span class="pl-s">${SW_STORAGE_ES_CONCURRENT_REQUESTS:2} </span><span class="pl-c"><span class="pl-c">#</span> 并发 Bulk 请求数</span>
+    <span class="pl-ent">resultWindowMaxSize</span>: <span class="pl-s">${SW_STORAGE_ES_QUERY_MAX_WINDOW_SIZE:10000}</span>
+    <span class="pl-ent">metadataQueryMaxSize</span>: <span class="pl-s">${SW_STORAGE_ES_QUERY_MAX_SIZE:10000}</span>
+    <span class="pl-ent">scrollingBatchSize</span>: <span class="pl-s">${SW_STORAGE_ES_SCROLLING_BATCH_SIZE:5000}</span>
+    <span class="pl-ent">segmentQueryMaxSize</span>: <span class="pl-s">${SW_STORAGE_ES_QUERY_SEGMENT_SIZE:200}</span>
+    <span class="pl-ent">profileTaskQueryMaxSize</span>: <span class="pl-s">${SW_STORAGE_ES_QUERY_PROFILE_TASK_SIZE:200}</span>
+    <span class="pl-ent">asyncProfilerTaskQueryMaxSize</span>: <span class="pl-s">${SW_STORAGE_ES_QUERY_ASYNC_PROFILER_TASK_SIZE:200}</span>
+    <span class="pl-ent">profileDataQueryBatchSize</span>: <span class="pl-s">${SW_STORAGE_ES_QUERY_PROFILE_DATA_BATCH_SIZE:100}</span>
+    <span class="pl-ent">oapAnalyzer</span>: <span class="pl-s">${SW_STORAGE_ES_OAP_ANALYZER:"{\"analyzer\":{\"oap_analyzer\":{\"type\":\"stop\"}}}"} </span><span class="pl-c"><span class="pl-c">#</span> OAP 分析器</span>
+    <span class="pl-ent">oapLogAnalyzer</span>: <span class="pl-s">${SW_STORAGE_ES_OAP_LOG_ANALYZER:"{\"analyzer\":{\"oap_log_analyzer\":{\"type\":\"standard\"}}}"} </span><span class="pl-c"><span class="pl-c">#</span> OAP 日志分析器，可自定义支持中文/日文等日志格式</span>
+    <span class="pl-ent">advanced</span>: <span class="pl-s">${SW_STORAGE_ES_ADVANCED:""}</span>
+    <span class="pl-c"><span class="pl-c">#</span> 将指标和记录索引分片到多个物理索引，每个指标/聚合函数一个索引模板</span>
+    <span class="pl-ent">logicSharding</span>: <span class="pl-s">${SW_STORAGE_ES_LOGIC_SHARDING:false}</span>
+    <span class="pl-c"><span class="pl-c">#</span> 启用自定义路由，可减少搜索的扇出范围，只查询匹配路由值的分片</span>
+    <span class="pl-ent">enableCustomRouting</span>: <span class="pl-s">${SW_STORAGE_ES_ENABLE_CUSTOM_ROUTING:false}</span>
+  <span class="pl-ent">mysql</span>:
+    <span class="pl-ent">properties</span>:
+      <span class="pl-ent">jdbcUrl</span>: <span class="pl-s">${SW_JDBC_URL:"jdbc:mysql://localhost:3306/swtest?rewriteBatchedStatements=true&amp;allowMultiQueries=true"}</span>
+      <span class="pl-ent">dataSource.user</span>: <span class="pl-s">${SW_DATA_SOURCE_USER:root}</span>
+      <span class="pl-ent">dataSource.password</span>: <span class="pl-s">${SW_DATA_SOURCE_PASSWORD:root@1234}</span>
+      <span class="pl-ent">dataSource.cachePrepStmts</span>: <span class="pl-s">${SW_DATA_SOURCE_CACHE_PREP_STMTS:true}</span>
+      <span class="pl-ent">dataSource.prepStmtCacheSize</span>: <span class="pl-s">${SW_DATA_SOURCE_PREP_STMT_CACHE_SQL_SIZE:250}</span>
+      <span class="pl-ent">dataSource.prepStmtCacheSqlLimit</span>: <span class="pl-s">${SW_DATA_SOURCE_PREP_STMT_CACHE_SQL_LIMIT:2048}</span>
+      <span class="pl-ent">dataSource.useServerPrepStmts</span>: <span class="pl-s">${SW_DATA_SOURCE_USE_SERVER_PREP_STMTS:true}</span>
+    <span class="pl-ent">metadataQueryMaxSize</span>: <span class="pl-s">${SW_STORAGE_MYSQL_QUERY_MAX_SIZE:5000}</span>
+    <span class="pl-ent">maxSizeOfBatchSql</span>: <span class="pl-s">${SW_STORAGE_MAX_SIZE_OF_BATCH_SQL:2000}</span>
+    <span class="pl-ent">asyncBatchPersistentPoolSize</span>: <span class="pl-s">${SW_STORAGE_ASYNC_BATCH_PERSISTENT_POOL_SIZE:4}</span>
+  <span class="pl-ent">postgresql</span>:
+    <span class="pl-ent">properties</span>:
+      <span class="pl-ent">jdbcUrl</span>: <span class="pl-s">${SW_JDBC_URL:"jdbc:postgresql://localhost:5432/skywalking"}</span>
+      <span class="pl-ent">dataSource.user</span>: <span class="pl-s">${SW_DATA_SOURCE_USER:postgres}</span>
+      <span class="pl-ent">dataSource.password</span>: <span class="pl-s">${SW_DATA_SOURCE_PASSWORD:123456}</span>
+      <span class="pl-ent">dataSource.cachePrepStmts</span>: <span class="pl-s">${SW_DATA_SOURCE_CACHE_PREP_STMTS:true}</span>
+      <span class="pl-ent">dataSource.prepStmtCacheSize</span>: <span class="pl-s">${SW_DATA_SOURCE_PREP_STMT_CACHE_SQL_SIZE:250}</span>
+      <span class="pl-ent">dataSource.prepStmtCacheSqlLimit</span>: <span class="pl-s">${SW_DATA_SOURCE_PREP_STMT_CACHE_SQL_LIMIT:2048}</span>
+      <span class="pl-ent">dataSource.useServerPrepStmts</span>: <span class="pl-s">${SW_DATA_SOURCE_USE_SERVER_PREP_STMTS:true}</span>
+    <span class="pl-ent">metadataQueryMaxSize</span>: <span class="pl-s">${SW_STORAGE_MYSQL_QUERY_MAX_SIZE:5000}</span>
+    <span class="pl-ent">maxSizeOfBatchSql</span>: <span class="pl-s">${SW_STORAGE_MAX_SIZE_OF_BATCH_SQL:2000}</span>
+    <span class="pl-ent">asyncBatchPersistentPoolSize</span>: <span class="pl-s">${SW_STORAGE_ASYNC_BATCH_PERSISTENT_POOL_SIZE:4}</span>
+
+<span class="pl-ent">agent-analyzer</span>:
+  <span class="pl-ent">selector</span>: <span class="pl-s">${SW_AGENT_ANALYZER:default}</span>
+  <span class="pl-ent">default</span>:
+    <span class="pl-c"><span class="pl-c">#</span> 默认采样率和默认追踪延迟时间，由 traceSamplingPolicySettingsFile 文件配置</span>
+    <span class="pl-ent">traceSamplingPolicySettingsFile</span>: <span class="pl-s">${SW_TRACE_SAMPLING_POLICY_SETTINGS_FILE:trace-sampling-policy-settings.yml}</span>
+    <span class="pl-ent">slowDBAccessThreshold</span>: <span class="pl-s">${SW_SLOW_DB_THRESHOLD:default:200,mongodb:100} </span><span class="pl-c"><span class="pl-c">#</span> 慢数据库访问阈值，单位 ms</span>
+    <span class="pl-ent">forceSampleErrorSegment</span>: <span class="pl-s">${SW_FORCE_SAMPLE_ERROR_SEGMENT:true} </span><span class="pl-c"><span class="pl-c">#</span> 当采样机制启用时，强制保存某些错误 Segment（默认 true）</span>
+    <span class="pl-ent">segmentStatusAnalysisStrategy</span>: <span class="pl-s">${SW_SEGMENT_STATUS_ANALYSIS_STRATEGY:FROM_SPAN_STATUS} </span><span class="pl-c"><span class="pl-c">#</span> 从 Span 状态决定最终 Segment 状态，可选：FROM_SPAN_STATUS、FROM_ENTRY_SPAN、FROM_FIRST_SPAN</span>
+    <span class="pl-c"><span class="pl-c">#</span> Nginx 和 Envoy 等 Agent 无法获取真实远程地址</span>
+    <span class="pl-c"><span class="pl-c">#</span> 退出 Span 中 component 在此列表中的，不会生成客户端侧实例关系指标</span>
+    <span class="pl-ent">noUpstreamRealAddressAgents</span>: <span class="pl-s">${SW_NO_UPSTREAM_REAL_ADDRESS:6000,9000}</span>
+    <span class="pl-ent">meterAnalyzerActiveFiles</span>: <span class="pl-s">${SW_METER_ANALYZER_ACTIVE_FILES:datasource,threadpool,satellite,go-runtime,python-runtime,continuous-profiling,java-agent,go-agent} </span><span class="pl-c"><span class="pl-c">#</span> 可进行 Meter 分析的文件列表，用逗号分隔</span>
+    <span class="pl-ent">slowCacheReadThreshold</span>: <span class="pl-s">${SW_SLOW_CACHE_SLOW_READ_THRESHOLD:default:20,redis:10} </span><span class="pl-c"><span class="pl-c">#</span> 慢缓存读取操作阈值，单位 ms</span>
+    <span class="pl-ent">slowCacheWriteThreshold</span>: <span class="pl-s">${SW_SLOW_CACHE_SLOW_WRITE_THRESHOLD:default:20,redis:10} </span><span class="pl-c"><span class="pl-c">#</span> 慢缓存写入操作阈值，单位 ms</span>
+
+<span class="pl-ent">log-analyzer</span>:
+  <span class="pl-ent">selector</span>: <span class="pl-s">${SW_LOG_ANALYZER:default}</span>
+  <span class="pl-ent">default</span>:
+    <span class="pl-ent">lalFiles</span>: <span class="pl-s">${SW_LOG_LAL_FILES:envoy-als,mesh-dp,mysql-slowsql,pgsql-slowsql,redis-slowsql,k8s-service,nginx,default}</span>
+    <span class="pl-ent">malFiles</span>: <span class="pl-s">${SW_LOG_MAL_FILES:"nginx"}</span>
+
+<span class="pl-ent">event-analyzer</span>:
+  <span class="pl-ent">selector</span>: <span class="pl-s">${SW_EVENT_ANALYZER:default}</span>
+  <span class="pl-ent">default</span>:
+
+<span class="pl-ent">receiver-sharing-server</span>:
+  <span class="pl-ent">selector</span>: <span class="pl-s">${SW_RECEIVER_SHARING_SERVER:default}</span>
+  <span class="pl-ent">default</span>:
+    <span class="pl-c"><span class="pl-c">#</span> HTTP 服务</span>
+    <span class="pl-ent">restHost</span>: <span class="pl-s">${SW_RECEIVER_SHARING_REST_HOST:0.0.0.0}</span>
+    <span class="pl-ent">restPort</span>: <span class="pl-s">${SW_RECEIVER_SHARING_REST_PORT:0}</span>
+    <span class="pl-ent">restContextPath</span>: <span class="pl-s">${SW_RECEIVER_SHARING_REST_CONTEXT_PATH:/}</span>
+    <span class="pl-ent">restMaxThreads</span>: <span class="pl-s">${SW_RECEIVER_SHARING_REST_MAX_THREADS:200}</span>
+    <span class="pl-ent">restIdleTimeOut</span>: <span class="pl-s">${SW_RECEIVER_SHARING_REST_IDLE_TIMEOUT:30000}</span>
+    <span class="pl-ent">restAcceptQueueSize</span>: <span class="pl-s">${SW_RECEIVER_SHARING_REST_QUEUE_SIZE:0}</span>
+    <span class="pl-ent">httpMaxRequestHeaderSize</span>: <span class="pl-s">${SW_RECEIVER_SHARING_HTTP_MAX_REQUEST_HEADER_SIZE:8192}</span>
+    <span class="pl-c"><span class="pl-c">#</span> gRPC 服务</span>
+    <span class="pl-ent">gRPCHost</span>: <span class="pl-s">${SW_RECEIVER_GRPC_HOST:0.0.0.0}</span>
+    <span class="pl-ent">gRPCPort</span>: <span class="pl-s">${SW_RECEIVER_GRPC_PORT:0}</span>
+    <span class="pl-ent">maxConcurrentCallsPerConnection</span>: <span class="pl-s">${SW_RECEIVER_GRPC_MAX_CONCURRENT_CALL:0}</span>
+    <span class="pl-ent">maxMessageSize</span>: <span class="pl-s">${SW_RECEIVER_GRPC_MAX_MESSAGE_SIZE:52428800} </span><span class="pl-c"><span class="pl-c">#</span> 50MB</span>
+    <span class="pl-ent">gRPCThreadPoolSize</span>: <span class="pl-s">${SW_RECEIVER_GRPC_THREAD_POOL_SIZE:0}</span>
+    <span class="pl-ent">gRPCSslEnabled</span>: <span class="pl-s">${SW_RECEIVER_GRPC_SSL_ENABLED:false}</span>
+    <span class="pl-ent">gRPCSslKeyPath</span>: <span class="pl-s">${SW_RECEIVER_GRPC_SSL_KEY_PATH:""}</span>
+    <span class="pl-ent">gRPCSslCertChainPath</span>: <span class="pl-s">${SW_RECEIVER_GRPC_SSL_CERT_CHAIN_PATH:""}</span>
+    <span class="pl-ent">gRPCSslTrustedCAsPath</span>: <span class="pl-s">${SW_RECEIVER_GRPC_SSL_TRUSTED_CAS_PATH:""}</span>
+    <span class="pl-ent">authentication</span>: <span class="pl-s">${SW_AUTHENTICATION:""}</span>
+<span class="pl-ent">receiver-register</span>:
+  <span class="pl-ent">selector</span>: <span class="pl-s">${SW_RECEIVER_REGISTER:default}</span>
+  <span class="pl-ent">default</span>:
+
+<span class="pl-ent">receiver-trace</span>:
+  <span class="pl-ent">selector</span>: <span class="pl-s">${SW_RECEIVER_TRACE:default}</span>
+  <span class="pl-ent">default</span>:
+
+<span class="pl-ent">receiver-jvm</span>:
+  <span class="pl-ent">selector</span>: <span class="pl-s">${SW_RECEIVER_JVM:default}</span>
+  <span class="pl-ent">default</span>:
+
+<span class="pl-ent">receiver-clr</span>:
+  <span class="pl-ent">selector</span>: <span class="pl-s">${SW_RECEIVER_CLR:default}</span>
+  <span class="pl-ent">default</span>:
+
+<span class="pl-ent">receiver-profile</span>:
+  <span class="pl-ent">selector</span>: <span class="pl-s">${SW_RECEIVER_PROFILE:default}</span>
+  <span class="pl-ent">default</span>:
+
+<span class="pl-ent">receiver-async-profiler</span>:
+  <span class="pl-ent">selector</span>: <span class="pl-s">${SW_RECEIVER_ASYNC_PROFILER:default}</span>
+  <span class="pl-ent">default</span>:
+    <span class="pl-c"><span class="pl-c">#</span> 用于管理可接收的 JFR 文件最大大小，单位 Byte，默认 30MB</span>
+    <span class="pl-ent">jfrMaxSize</span>: <span class="pl-s">${SW_RECEIVER_ASYNC_PROFILER_JFR_MAX_SIZE:31457280}</span>
+    <span class="pl-c"><span class="pl-c">#</span> 是否使用内存文件模式解析 JFR（默认 true），内存模式对文件系统限制少，但耗内存更多；</span>
+    <span class="pl-c"><span class="pl-c">#</span> 物理文件模式解析时内存占用少，对大文件更友好，但容器 tmp 目录空间不足可能导致崩溃</span>
+    <span class="pl-ent">memoryParserEnabled</span>: <span class="pl-s">${SW_RECEIVER_ASYNC_PROFILER_MEMORY_PARSER_ENABLED:true}</span>
+
+<span class="pl-ent">receiver-zabbix</span>:
+  <span class="pl-ent">selector</span>: <span class="pl-s">${SW_RECEIVER_ZABBIX:-}</span>
+  <span class="pl-ent">default</span>:
+    <span class="pl-ent">port</span>: <span class="pl-s">${SW_RECEIVER_ZABBIX_PORT:10051}</span>
+    <span class="pl-ent">host</span>: <span class="pl-s">${SW_RECEIVER_ZABBIX_HOST:0.0.0.0}</span>
+    <span class="pl-ent">activeFiles</span>: <span class="pl-s">${SW_RECEIVER_ZABBIX_ACTIVE_FILES:agent}</span>
+
+<span class="pl-ent">service-mesh</span>:
+  <span class="pl-ent">selector</span>: <span class="pl-s">${SW_SERVICE_MESH:default}</span>
+  <span class="pl-ent">default</span>:
+
+<span class="pl-ent">envoy-metric</span>:
+  <span class="pl-ent">selector</span>: <span class="pl-s">${SW_ENVOY_METRIC:default}</span>
+  <span class="pl-ent">default</span>:
+    <span class="pl-ent">acceptMetricsService</span>: <span class="pl-s">${SW_ENVOY_METRIC_SERVICE:true}</span>
+    <span class="pl-ent">alsHTTPAnalysis</span>: <span class="pl-s">${SW_ENVOY_METRIC_ALS_HTTP_ANALYSIS:""}</span>
+    <span class="pl-ent">alsTCPAnalysis</span>: <span class="pl-s">${SW_ENVOY_METRIC_ALS_TCP_ANALYSIS:""}</span>
+    <span class="pl-c"><span class="pl-c">#</span> k8sServiceNameRule 允许通过 Kubernetes 元数据自定义服务名，可用变量如 pod、service</span>
+    <span class="pl-c"><span class="pl-c">#</span> 示例：${service.metadata.name}-${pod.metadata.labels.version}</span>
+    <span class="pl-ent">k8sServiceNameRule</span>: <span class="pl-s">${K8S_SERVICE_NAME_RULE:"${pod.metadata.labels.(service.istio.io/canonical-name)}.${pod.metadata.namespace}"}</span>
+    <span class="pl-ent">istioServiceNameRule</span>: <span class="pl-s">${ISTIO_SERVICE_NAME_RULE:"${serviceEntry.metadata.name}.${serviceEntry.metadata.namespace}"}</span>
+    <span class="pl-c"><span class="pl-c">#</span> 从 Istio ServiceEntries 查找服务信息时，排除某些命名空间的 ServiceEntries</span>
+    <span class="pl-ent">istioServiceEntryIgnoredNamespaces</span>: <span class="pl-s">${SW_ISTIO_SERVICE_ENTRY_IGNORED_NAMESPACES:""}</span>
+    <span class="pl-ent">gRPCHost</span>: <span class="pl-s">${SW_ALS_GRPC_HOST:0.0.0.0}</span>
+    <span class="pl-ent">gRPCPort</span>: <span class="pl-s">${SW_ALS_GRPC_PORT:0}</span>
+    <span class="pl-ent">maxConcurrentCallsPerConnection</span>: <span class="pl-s">${SW_ALS_GRPC_MAX_CONCURRENT_CALL:0}</span>
+    <span class="pl-ent">maxMessageSize</span>: <span class="pl-s">${SW_ALS_GRPC_MAX_MESSAGE_SIZE:0}</span>
+    <span class="pl-ent">gRPCThreadPoolSize</span>: <span class="pl-s">${SW_ALS_GRPC_THREAD_POOL_SIZE:0}</span>
+    <span class="pl-ent">gRPCSslEnabled</span>: <span class="pl-s">${SW_ALS_GRPC_SSL_ENABLED:false}</span>
+    <span class="pl-ent">gRPCSslKeyPath</span>: <span class="pl-s">${SW_ALS_GRPC_SSL_KEY_PATH:""}</span>
+    <span class="pl-ent">gRPCSslCertChainPath</span>: <span class="pl-s">${SW_ALS_GRPC_SSL_CERT_CHAIN_PATH:""}</span>
+    <span class="pl-ent">gRPCSslTrustedCAsPath</span>: <span class="pl-s">${SW_ALS_GRPC_SSL_TRUSTED_CAS_PATH:""}</span>
+
+<span class="pl-ent">kafka-fetcher</span>:
+  <span class="pl-ent">selector</span>: <span class="pl-s">${SW_KAFKA_FETCHER:-}</span>
+  <span class="pl-ent">default</span>:
+    <span class="pl-ent">bootstrapServers</span>: <span class="pl-s">${SW_KAFKA_FETCHER_SERVERS:localhost:9092}</span>
+    <span class="pl-ent">namespace</span>: <span class="pl-s">${SW_NAMESPACE:""}</span>
+    <span class="pl-ent">partitions</span>: <span class="pl-s">${SW_KAFKA_FETCHER_PARTITIONS:3}</span>
+    <span class="pl-ent">replicationFactor</span>: <span class="pl-s">${SW_KAFKA_FETCHER_PARTITIONS_FACTOR:2}</span>
+    <span class="pl-ent">enableNativeProtoLog</span>: <span class="pl-s">${SW_KAFKA_FETCHER_ENABLE_NATIVE_PROTO_LOG:true}</span>
+    <span class="pl-ent">enableNativeJsonLog</span>: <span class="pl-s">${SW_KAFKA_FETCHER_ENABLE_NATIVE_JSON_LOG:true}</span>
+    <span class="pl-ent">consumers</span>: <span class="pl-s">${SW_KAFKA_FETCHER_CONSUMERS:1}</span>
+    <span class="pl-ent">kafkaHandlerThreadPoolSize</span>: <span class="pl-s">${SW_KAFKA_HANDLER_THREAD_POOL_SIZE:-1}</span>
+    <span class="pl-ent">kafkaHandlerThreadPoolQueueSize</span>: <span class="pl-s">${SW_KAFKA_HANDLER_THREAD_POOL_QUEUE_SIZE:-1}</span>
+
+<span class="pl-ent">cilium-fetcher</span>:
+  <span class="pl-ent">selector</span>: <span class="pl-s">${SW_CILIUM_FETCHER:-}</span>
+  <span class="pl-ent">default</span>:
+    <span class="pl-ent">peerHost</span>: <span class="pl-s">${SW_CILIUM_FETCHER_PEER_HOST:hubble-peer.kube-system.svc.cluster.local}</span>
+    <span class="pl-ent">peerPort</span>: <span class="pl-s">${SW_CILIUM_FETCHER_PEER_PORT:80}</span>
+    <span class="pl-ent">fetchFailureRetrySecond</span>: <span class="pl-s">${SW_CILIUM_FETCHER_FETCH_FAILURE_RETRY_SECOND:10}</span>
+    <span class="pl-ent">sslConnection</span>: <span class="pl-s">${SW_CILIUM_FETCHER_SSL_CONNECTION:false}</span>
+    <span class="pl-ent">sslPrivateKeyFile</span>: <span class="pl-s">${SW_CILIUM_FETCHER_PRIVATE_KEY_FILE_PATH:}</span>
+    <span class="pl-ent">sslCertChainFile</span>: <span class="pl-s">${SW_CILIUM_FETCHER_CERT_CHAIN_FILE_PATH:}</span>
+    <span class="pl-ent">sslCaFile</span>: <span class="pl-s">${SW_CILIUM_FETCHER_CA_FILE_PATH:}</span>
+    <span class="pl-ent">convertClientAsServerTraffic</span>: <span class="pl-s">${SW_CILIUM_FETCHER_CONVERT_CLIENT_AS_SERVER_TRAFFIC:true}</span>
+
+<span class="pl-ent">receiver-meter</span>:
+  <span class="pl-ent">selector</span>: <span class="pl-s">${SW_RECEIVER_METER:default}</span>
+  <span class="pl-ent">default</span>:
+
+<span class="pl-ent">receiver-otel</span>:
+  <span class="pl-ent">selector</span>: <span class="pl-s">${SW_OTEL_RECEIVER:default}</span>
+  <span class="pl-ent">default</span>:
+    <span class="pl-ent">enabledHandlers</span>: <span class="pl-s">${SW_OTEL_RECEIVER_ENABLED_HANDLERS:"otlp-metrics,otlp-logs"}</span>
+    <span class="pl-ent">enabledOtelMetricsRules</span>: <span class="pl-s">${SW_OTEL_RECEIVER_ENABLED_OTEL_METRICS_RULES:"apisix,nginx/*,k8s/*,istio-controlplane,vm,mysql/*,postgresql/*,oap,aws-eks/*,windows,aws-s3/*,aws-dynamodb/*,aws-gateway/*,redis/*,elasticsearch/*,rabbitmq/*,mongodb/*,kafka/*,pulsar/*,bookkeeper/*,rocketmq/*,clickhouse/*,activemq/*,kong/*"}</span>
+
+<span class="pl-ent">receiver-zipkin</span>:
+  <span class="pl-ent">selector</span>: <span class="pl-s">${SW_RECEIVER_ZIPKIN:-}</span>
+  <span class="pl-ent">default</span>:
+    <span class="pl-c"><span class="pl-c">#</span> 可搜索的 Span 标签键集合，key=value 最大长度小于 256，否则丢弃</span>
+    <span class="pl-ent">searchableTracesTags</span>: <span class="pl-s">${SW_ZIPKIN_SEARCHABLE_TAG_KEYS:http.method}</span>
+    <span class="pl-c"><span class="pl-c">#</span> 采样率精度 1/10000，范围 0~10000</span>
+    <span class="pl-ent">sampleRate</span>: <span class="pl-s">${SW_ZIPKIN_SAMPLE_RATE:10000}</span>
+    <span class="pl-c"><span class="pl-c">#</span> 以下配置用于从 HTTP 收集 Zipkin Trace</span>
+    <span class="pl-ent">enableHttpCollector</span>: <span class="pl-s">${SW_ZIPKIN_HTTP_COLLECTOR_ENABLED:true}</span>
+    <span class="pl-ent">restHost</span>: <span class="pl-s">${SW_RECEIVER_ZIPKIN_REST_HOST:0.0.0.0}</span>
+    <span class="pl-ent">restPort</span>: <span class="pl-s">${SW_RECEIVER_ZIPKIN_REST_PORT:9411}</span>
+    <span class="pl-ent">restContextPath</span>: <span class="pl-s">${SW_RECEIVER_ZIPKIN_REST_CONTEXT_PATH:/}</span>
+    <span class="pl-ent">restMaxThreads</span>: <span class="pl-s">${SW_RECEIVER_ZIPKIN_REST_MAX_THREADS:200}</span>
+    <span class="pl-ent">restIdleTimeOut</span>: <span class="pl-s">${SW_RECEIVER_ZIPKIN_REST_IDLE_TIMEOUT:30000}</span>
+    <span class="pl-ent">restAcceptQueueSize</span>: <span class="pl-s">${SW_RECEIVER_ZIPKIN_REST_QUEUE_SIZE:0}</span>
+    <span class="pl-c"><span class="pl-c">#</span> 以下配置用于从 Kafka 收集 Zipkin Trace</span>
+    <span class="pl-ent">enableKafkaCollector</span>: <span class="pl-s">${SW_ZIPKIN_KAFKA_COLLECTOR_ENABLED:false}</span>
+    <span class="pl-ent">kafkaBootstrapServers</span>: <span class="pl-s">${SW_ZIPKIN_KAFKA_SERVERS:localhost:9092}</span>
+    <span class="pl-ent">kafkaGroupId</span>: <span class="pl-s">${SW_ZIPKIN_KAFKA_GROUP_ID:zipkin}</span>
+    <span class="pl-ent">kafkaTopic</span>: <span class="pl-s">${SW_ZIPKIN_KAFKA_TOPIC:zipkin}</span>
+    <span class="pl-c"><span class="pl-c">#</span> Kafka 消费者配置，JSON 格式的 Properties，若与上方键重复则覆盖</span>
+    <span class="pl-ent">kafkaConsumerConfig</span>: <span class="pl-s">${SW_ZIPKIN_KAFKA_CONSUMER_CONFIG:"{\"auto.offset.reset\":\"earliest\",\"enable.auto.commit\":true}"}</span>
+    <span class="pl-c"><span class="pl-c">#</span> Topic 消费者数量</span>
+    <span class="pl-ent">kafkaConsumers</span>: <span class="pl-s">${SW_ZIPKIN_KAFKA_CONSUMERS:1}</span>
+    <span class="pl-ent">kafkaHandlerThreadPoolSize</span>: <span class="pl-s">${SW_ZIPKIN_KAFKA_HANDLER_THREAD_POOL_SIZE:-1}</span>
+    <span class="pl-ent">kafkaHandlerThreadPoolQueueSize</span>: <span class="pl-s">${SW_ZIPKIN_KAFKA_HANDLER_THREAD_POOL_QUEUE_SIZE:-1}</span>
+
+<span class="pl-ent">receiver-browser</span>:
+  <span class="pl-ent">selector</span>: <span class="pl-s">${SW_RECEIVER_BROWSER:default}</span>
+  <span class="pl-ent">default</span>:
+    <span class="pl-c"><span class="pl-c">#</span> 采样率精度 1/10000，10000 表示默认 100% 采样</span>
+    <span class="pl-ent">sampleRate</span>: <span class="pl-s">${SW_RECEIVER_BROWSER_SAMPLE_RATE:10000}</span>
+
+<span class="pl-ent">receiver-log</span>:
+  <span class="pl-ent">selector</span>: <span class="pl-s">${SW_RECEIVER_LOG:default}</span>
+  <span class="pl-ent">default</span>:
+
+<span class="pl-ent">query</span>:
+  <span class="pl-ent">selector</span>: <span class="pl-s">${SW_QUERY:graphql}</span>
+  <span class="pl-ent">graphql</span>:
+    <span class="pl-c"><span class="pl-c">#</span> 启用日志测试 API 来测试 LAL（注意：此 API 会评估不受信任的代码，具有风险，仅在完全信任用户时启用）</span>
+    <span class="pl-ent">enableLogTestTool</span>: <span class="pl-s">${SW_QUERY_GRAPHQL_ENABLE_LOG_TEST_TOOL:false}</span>
+    <span class="pl-c"><span class="pl-c">#</span> GraphQL 查询允许的最大复杂度，超过阈值将被中止</span>
+    <span class="pl-ent">maxQueryComplexity</span>: <span class="pl-s">${SW_QUERY_MAX_QUERY_COMPLEXITY:3000}</span>
+    <span class="pl-c"><span class="pl-c">#</span> 允许用户添加、禁用和更新 UI 模板</span>
+    <span class="pl-ent">enableUpdateUITemplate</span>: <span class="pl-s">${SW_ENABLE_UPDATE_UI_TEMPLATE:false}</span>
+    <span class="pl-c"><span class="pl-c">#</span> “On demand log” 允许实时获取 Pod 容器日志（可能暴露日志中的秘密，需要为 OAP cluster role 添加权限）</span>
+    <span class="pl-ent">enableOnDemandPodLog</span>: <span class="pl-s">${SW_ENABLE_ON_DEMAND_POD_LOG:false}</span>
+
+<span class="pl-c"><span class="pl-c">#</span> 此模块用于 Zipkin 查询 API 并支持 zipkin-lens UI</span>
+<span class="pl-ent">query-zipkin</span>:
+  <span class="pl-ent">selector</span>: <span class="pl-s">${SW_QUERY_ZIPKIN:-}</span>
+  <span class="pl-ent">default</span>:
+    <span class="pl-c"><span class="pl-c">#</span> HTTP 服务</span>
+    <span class="pl-ent">restHost</span>: <span class="pl-s">${SW_QUERY_ZIPKIN_REST_HOST:0.0.0.0}</span>
+    <span class="pl-ent">restPort</span>: <span class="pl-s">${SW_QUERY_ZIPKIN_REST_PORT:9412}</span>
+    <span class="pl-ent">restContextPath</span>: <span class="pl-s">${SW_QUERY_ZIPKIN_REST_CONTEXT_PATH:/zipkin}</span>
+    <span class="pl-ent">restMaxThreads</span>: <span class="pl-s">${SW_QUERY_ZIPKIN_REST_MAX_THREADS:200}</span>
+    <span class="pl-ent">restIdleTimeOut</span>: <span class="pl-s">${SW_QUERY_ZIPKIN_REST_IDLE_TIMEOUT:30000}</span>
+    <span class="pl-ent">restAcceptQueueSize</span>: <span class="pl-s">${SW_QUERY_ZIPKIN_REST_QUEUE_SIZE:0}</span>
+    <span class="pl-c"><span class="pl-c">#</span> 默认 traces 查询回溯时间，1 天（毫秒）</span>
+    <span class="pl-ent">lookback</span>: <span class="pl-s">${SW_QUERY_ZIPKIN_LOOKBACK:86400000}</span>
+    <span class="pl-c"><span class="pl-c">#</span> 服务名、远程服务名、Span 名的 Cache-Control max-age（秒）</span>
+    <span class="pl-ent">namesMaxAge</span>: <span class="pl-s">${SW_QUERY_ZIPKIN_NAMES_MAX_AGE:300}</span>
+    <span class="pl-c"><span class="pl-c">#</span> UI 查询 traces 的默认最大数量</span>
+    <span class="pl-ent">uiQueryLimit</span>: <span class="pl-s">${SW_QUERY_ZIPKIN_UI_QUERY_LIMIT:10}</span>
+    <span class="pl-c"><span class="pl-c">#</span> UI 搜索 traces 的默认回溯时间，15 分钟（毫秒）</span>
+    <span class="pl-ent">uiDefaultLookback</span>: <span class="pl-s">${SW_QUERY_ZIPKIN_UI_DEFAULT_LOOKBACK:900000}</span>
+
+<span class="pl-c"><span class="pl-c">#</span> 此模块用于 PromQL API</span>
+<span class="pl-ent">promql</span>:
+  <span class="pl-ent">selector</span>: <span class="pl-s">${SW_PROMQL:default}</span>
+  <span class="pl-ent">default</span>:
+    <span class="pl-c"><span class="pl-c">#</span> HTTP 服务</span>
+    <span class="pl-ent">restHost</span>: <span class="pl-s">${SW_PROMQL_REST_HOST:0.0.0.0}</span>
+    <span class="pl-ent">restPort</span>: <span class="pl-s">${SW_PROMQL_REST_PORT:9090}</span>
+    <span class="pl-ent">restContextPath</span>: <span class="pl-s">${SW_PROMQL_REST_CONTEXT_PATH:/}</span>
+    <span class="pl-ent">restMaxThreads</span>: <span class="pl-s">${SW_PROMQL_REST_MAX_THREADS:200}</span>
+    <span class="pl-ent">restIdleTimeOut</span>: <span class="pl-s">${SW_PROMQL_REST_IDLE_TIMEOUT:30000}</span>
+    <span class="pl-ent">restAcceptQueueSize</span>: <span class="pl-s">${SW_PROMQL_REST_QUEUE_SIZE:0}</span>
+    <span class="pl-c"><span class="pl-c">#</span> 用于 API buildInfo，设置模拟的构建信息</span>
+    <span class="pl-ent">buildInfoVersion</span>: <span class="pl-s">${SW_PROMQL_BUILD_INFO_VERSION:"2.45.0"}</span>
+    <span class="pl-ent">buildInfoRevision</span>: <span class="pl-s">${SW_PROMQL_BUILD_INFO_REVISION:""}</span>
+    <span class="pl-ent">buildInfoBranch</span>: <span class="pl-s">${SW_PROMQL_BUILD_INFO_BRANCH:""}</span>
+    <span class="pl-ent">buildInfoBuildUser</span>: <span class="pl-s">${SW_PROMQL_BUILD_INFO_BUILD_USER:""}</span>
+    <span class="pl-ent">buildInfoBuildDate</span>: <span class="pl-s">${SW_PROMQL_BUILD_INFO_BUILD_DATE:""}</span>
+    <span class="pl-ent">buildInfoGoVersion</span>: <span class="pl-s">${SW_PROMQL_BUILD_INFO_GO_VERSION:""}</span>
+
+<span class="pl-c"><span class="pl-c">#</span> 此模块用于 LogQL API</span>
+<span class="pl-ent">logql</span>:
+  <span class="pl-ent">selector</span>: <span class="pl-s">${SW_LOGQL:default}</span>
+  <span class="pl-ent">default</span>:
+    <span class="pl-c"><span class="pl-c">#</span> HTTP 服务</span>
+    <span class="pl-ent">restHost</span>: <span class="pl-s">${SW_LOGQL_REST_HOST:0.0.0.0}</span>
+    <span class="pl-ent">restPort</span>: <span class="pl-s">${SW_LOGQL_REST_PORT:3100}</span>
+    <span class="pl-ent">restContextPath</span>: <span class="pl-s">${SW_LOGQL_REST_CONTEXT_PATH:/}</span>
+    <span class="pl-ent">restMaxThreads</span>: <span class="pl-s">${SW_LOGQL_REST_MAX_THREADS:200}</span>
+    <span class="pl-ent">restIdleTimeOut</span>: <span class="pl-s">${SW_LOGQL_REST_IDLE_TIMEOUT:30000}</span>
+    <span class="pl-ent">restAcceptQueueSize</span>: <span class="pl-s">${SW_LOGQL_REST_QUEUE_SIZE:0}</span>
+
+<span class="pl-ent">alarm</span>:
+  <span class="pl-ent">selector</span>: <span class="pl-s">${SW_ALARM:default}</span>
+  <span class="pl-ent">default</span>:
+
+<span class="pl-ent">telemetry</span>:
+  <span class="pl-ent">selector</span>: <span class="pl-s">${SW_TELEMETRY:prometheus}</span>
+  <span class="pl-ent">none</span>:
+  <span class="pl-ent">prometheus</span>:
+    <span class="pl-ent">host</span>: <span class="pl-s">${SW_TELEMETRY_PROMETHEUS_HOST:0.0.0.0}</span>
+    <span class="pl-ent">port</span>: <span class="pl-s">${SW_TELEMETRY_PROMETHEUS_PORT:1234}</span>
+    <span class="pl-ent">sslEnabled</span>: <span class="pl-s">${SW_TELEMETRY_PROMETHEUS_SSL_ENABLED:false}</span>
+    <span class="pl-ent">sslKeyPath</span>: <span class="pl-s">${SW_TELEMETRY_PROMETHEUS_SSL_KEY_PATH:""}</span>
+    <span class="pl-ent">sslCertChainPath</span>: <span class="pl-s">${SW_TELEMETRY_PROMETHEUS_SSL_CERT_CHAIN_PATH:""}</span>
+
+<span class="pl-ent">configuration</span>:
+  <span class="pl-ent">selector</span>: <span class="pl-s">${SW_CONFIGURATION:none}</span>
+  <span class="pl-ent">none</span>:
+  <span class="pl-ent">grpc</span>:
+    <span class="pl-ent">host</span>: <span class="pl-s">${SW_DCS_SERVER_HOST:""}</span>
+    <span class="pl-ent">port</span>: <span class="pl-s">${SW_DCS_SERVER_PORT:80}</span>
+    <span class="pl-ent">clusterName</span>: <span class="pl-s">${SW_DCS_CLUSTER_NAME:SkyWalking}</span>
+    <span class="pl-ent">period</span>: <span class="pl-s">${SW_DCS_PERIOD:20}</span>
+    <span class="pl-ent">maxInboundMessageSize</span>: <span class="pl-s">${SW_DCS_MAX_INBOUND_MESSAGE_SIZE:4194304}</span>
+  <span class="pl-ent">apollo</span>:
+    <span class="pl-ent">apolloMeta</span>: <span class="pl-s">${SW_CONFIG_APOLLO:http://localhost:8080}</span>
+    <span class="pl-ent">apolloCluster</span>: <span class="pl-s">${SW_CONFIG_APOLLO_CLUSTER:default}</span>
+    <span class="pl-ent">apolloEnv</span>: <span class="pl-s">${SW_CONFIG_APOLLO_ENV:""}</span>
+    <span class="pl-ent">appId</span>: <span class="pl-s">${SW_CONFIG_APOLLO_APP_ID:skywalking}</span>
+  <span class="pl-ent">zookeeper</span>:
+    <span class="pl-ent">period</span>: <span class="pl-s">${SW_CONFIG_ZK_PERIOD:60} </span><span class="pl-c"><span class="pl-c">#</span> 同步周期，单位秒，默认每 60 秒拉取一次</span>
+    <span class="pl-ent">namespace</span>: <span class="pl-s">${SW_CONFIG_ZK_NAMESPACE:/default}</span>
+    <span class="pl-ent">hostPort</span>: <span class="pl-s">${SW_CONFIG_ZK_HOST_PORT:localhost:2181}</span>
+    <span class="pl-c"><span class="pl-c">#</span> 重试策略</span>
+    <span class="pl-ent">baseSleepTimeMs</span>: <span class="pl-s">${SW_CONFIG_ZK_BASE_SLEEP_TIME_MS:1000} </span><span class="pl-c"><span class="pl-c">#</span> 重试之间初始等待时间（毫秒）</span>
+    <span class="pl-ent">maxRetries</span>: <span class="pl-s">${SW_CONFIG_ZK_MAX_RETRIES:3}               </span><span class="pl-c"><span class="pl-c">#</span> 最大重试次数</span>
+  <span class="pl-ent">etcd</span>:
+    <span class="pl-ent">period</span>: <span class="pl-s">${SW_CONFIG_ETCD_PERIOD:60} </span><span class="pl-c"><span class="pl-c">#</span> 同步周期，单位秒，默认每 60 秒拉取一次</span>
+    <span class="pl-ent">endpoints</span>: <span class="pl-s">${SW_CONFIG_ETCD_ENDPOINTS:http://localhost:2379}</span>
+    <span class="pl-ent">namespace</span>: <span class="pl-s">${SW_CONFIG_ETCD_NAMESPACE:/skywalking}</span>
+    <span class="pl-ent">authentication</span>: <span class="pl-s">${SW_CONFIG_ETCD_AUTHENTICATION:false}</span>
+    <span class="pl-ent">user</span>: <span class="pl-s">${SW_CONFIG_ETCD_USER:}</span>
+    <span class="pl-ent">password</span>: <span class="pl-s">${SW_CONFIG_ETCD_PASSWORD:}</span>
+  <span class="pl-ent">consul</span>:
+    <span class="pl-c"><span class="pl-c">#</span> Consul 主机和端口，逗号分隔，例如 1.2.3.4:8500</span>
+    <span class="pl-ent">hostAndPorts</span>: <span class="pl-s">${SW_CONFIG_CONSUL_HOST_AND_PORTS:1.2.3.4:8500}</span>
+    <span class="pl-c"><span class="pl-c">#</span> 同步周期，单位秒，默认 60 秒</span>
+    <span class="pl-ent">period</span>: <span class="pl-s">${SW_CONFIG_CONSUL_PERIOD:60}</span>
+    <span class="pl-c"><span class="pl-c">#</span> Consul aclToken</span>
+    <span class="pl-ent">aclToken</span>: <span class="pl-s">${SW_CONFIG_CONSUL_ACL_TOKEN:""}</span>
+  <span class="pl-ent">k8s-configmap</span>:
+    <span class="pl-ent">period</span>: <span class="pl-s">${SW_CONFIG_CONFIGMAP_PERIOD:60}</span>
+    <span class="pl-ent">namespace</span>: <span class="pl-s">${SW_CLUSTER_K8S_NAMESPACE:default}</span>
+    <span class="pl-ent">labelSelector</span>: <span class="pl-s">${SW_CLUSTER_K8S_LABEL:app=collector,release=skywalking}</span>
+  <span class="pl-ent">nacos</span>:
+    <span class="pl-c"><span class="pl-c">#</span> Nacos 服务地址</span>
+    <span class="pl-ent">serverAddr</span>: <span class="pl-s">${SW_CONFIG_NACOS_SERVER_ADDR:127.0.0.1}</span>
+    <span class="pl-c"><span class="pl-c">#</span> Nacos 服务端口</span>
+    <span class="pl-ent">port</span>: <span class="pl-s">${SW_CONFIG_NACOS_SERVER_PORT:8848}</span>
+    <span class="pl-c"><span class="pl-c">#</span> Nacos 配置分组</span>
+    <span class="pl-ent">group</span>: <span class="pl-s">${SW_CONFIG_NACOS_SERVER_GROUP:skywalking}</span>
+    <span class="pl-c"><span class="pl-c">#</span> Nacos 配置命名空间</span>
+    <span class="pl-ent">namespace</span>: <span class="pl-s">${SW_CONFIG_NACOS_SERVER_NAMESPACE:}</span>
+    <span class="pl-c"><span class="pl-c">#</span> 同步周期，单位秒，默认每 60 秒拉取一次</span>
+    <span class="pl-ent">period</span>: <span class="pl-s">${SW_CONFIG_NACOS_PERIOD:60}</span>
+    <span class="pl-c"><span class="pl-c">#</span> Nacos 认证用户名</span>
+    <span class="pl-ent">username</span>: <span class="pl-s">${SW_CONFIG_NACOS_USERNAME:""}</span>
+    <span class="pl-ent">password</span>: <span class="pl-s">${SW_CONFIG_NACOS_PASSWORD:""}</span>
+    <span class="pl-c"><span class="pl-c">#</span> Nacos 认证 accessKey</span>
+    <span class="pl-ent">accessKey</span>: <span class="pl-s">${SW_CONFIG_NACOS_ACCESSKEY:""}</span>
+    <span class="pl-ent">secretKey</span>: <span class="pl-s">${SW_CONFIG_NACOS_SECRETKEY:""}</span>
+
+<span class="pl-ent">exporter</span>:
+  <span class="pl-ent">selector</span>: <span class="pl-s">${SW_EXPORTER:-}</span>
+  <span class="pl-ent">default</span>:
+    <span class="pl-c"><span class="pl-c">#</span> gRPC 导出器</span>
+    <span class="pl-ent">enableGRPCMetrics</span>: <span class="pl-s">${SW_EXPORTER_ENABLE_GRPC_METRICS:false}</span>
+    <span class="pl-ent">gRPCTargetHost</span>: <span class="pl-s">${SW_EXPORTER_GRPC_HOST:127.0.0.1}</span>
+    <span class="pl-ent">gRPCTargetPort</span>: <span class="pl-s">${SW_EXPORTER_GRPC_PORT:9870}</span>
+    <span class="pl-c"><span class="pl-c">#</span> Kafka 导出器</span>
+    <span class="pl-ent">enableKafkaTrace</span>: <span class="pl-s">${SW_EXPORTER_ENABLE_KAFKA_TRACE:false}</span>
+    <span class="pl-ent">enableKafkaLog</span>: <span class="pl-s">${SW_EXPORTER_ENABLE_KAFKA_LOG:false}</span>
+    <span class="pl-ent">kafkaBootstrapServers</span>: <span class="pl-s">${SW_EXPORTER_KAFKA_SERVERS:localhost:9092}</span>
+    <span class="pl-c"><span class="pl-c">#</span> Kafka 生产者配置，JSON 格式的 Properties</span>
+    <span class="pl-ent">kafkaProducerConfig</span>: <span class="pl-s">${SW_EXPORTER_KAFKA_PRODUCER_CONFIG:""}</span>
+    <span class="pl-ent">kafkaTopicTrace</span>: <span class="pl-s">${SW_EXPORTER_KAFKA_TOPIC_TRACE:skywalking-export-trace}</span>
+    <span class="pl-ent">kafkaTopicLog</span>: <span class="pl-s">${SW_EXPORTER_KAFKA_TOPIC_LOG:skywalking-export-log}</span>
+    <span class="pl-ent">exportErrorStatusTraceOnly</span>: <span class="pl-s">${SW_EXPORTER_KAFKA_TRACE_FILTER_ERROR:false}</span>
+
+<span class="pl-ent">health-checker</span>:
+  <span class="pl-ent">selector</span>: <span class="pl-s">${SW_HEALTH_CHECKER:-}</span>
+  <span class="pl-ent">default</span>:
+    <span class="pl-ent">checkIntervalSeconds</span>: <span class="pl-s">${SW_HEALTH_CHECKER_INTERVAL_SECONDS:5}</span>
+
+<span class="pl-ent">status-query</span>:
+  <span class="pl-ent">selector</span>: <span class="pl-s">${SW_STATUS_QUERY:default}</span>
+  <span class="pl-ent">default</span>:
+    <span class="pl-c"><span class="pl-c">#</span> 过滤配置中包含秘密的关键字列表，用逗号分隔</span>
+    <span class="pl-ent">keywords4MaskingSecretsOfConfig</span>: <span class="pl-s">${SW_DEBUGGING_QUERY_KEYWORDS_FOR_MASKING_SECRETS:user,password,token,accessKey,secretKey,authentication}</span>
+
+<span class="pl-ent">configuration-discovery</span>:
+  <span class="pl-ent">selector</span>: <span class="pl-s">${SW_CONFIGURATION_DISCOVERY:default}</span>
+  <span class="pl-ent">default</span>:
+    <span class="pl-ent">disableMessageDigest</span>: <span class="pl-s">${SW_DISABLE_MESSAGE_DIGEST:false}</span>
+
+<span class="pl-ent">receiver-event</span>:
+  <span class="pl-ent">selector</span>: <span class="pl-s">${SW_RECEIVER_EVENT:default}</span>
+  <span class="pl-ent">default</span>:
+
+<span class="pl-ent">receiver-ebpf</span>:
+  <span class="pl-ent">selector</span>: <span class="pl-s">${SW_RECEIVER_EBPF:default}</span>
+  <span class="pl-ent">default</span>:
+    <span class="pl-c"><span class="pl-c">#</span> 持续剖析策略缓存时间，单位秒</span>
+    <span class="pl-ent">continuousPolicyCacheTimeout</span>: <span class="pl-s">${SW_CONTINUOUS_POLICY_CACHE_TIMEOUT:60}</span>
+    <span class="pl-ent">gRPCHost</span>: <span class="pl-s">${SW_EBPF_GRPC_HOST:0.0.0.0}</span>
+    <span class="pl-ent">gRPCPort</span>: <span class="pl-s">${SW_EBPF_GRPC_PORT:0}</span>
+    <span class="pl-ent">maxConcurrentCallsPerConnection</span>: <span class="pl-s">${SW_EBPF_GRPC_MAX_CONCURRENT_CALL:0}</span>
+    <span class="pl-ent">maxMessageSize</span>: <span class="pl-s">${SW_EBPF_ALS_GRPC_MAX_MESSAGE_SIZE:0}</span>
+    <span class="pl-ent">gRPCThreadPoolSize</span>: <span class="pl-s">${SW_EBPF_GRPC_THREAD_POOL_SIZE:0}</span>
+    <span class="pl-ent">gRPCSslEnabled</span>: <span class="pl-s">${SW_EBPF_GRPC_SSL_ENABLED:false}</span>
+    <span class="pl-ent">gRPCSslKeyPath</span>: <span class="pl-s">${SW_EBPF_GRPC_SSL_KEY_PATH:""}</span>
+    <span class="pl-ent">gRPCSslCertChainPath</span>: <span class="pl-s">${SW_EBPF_GRPC_SSL_CERT_CHAIN_PATH:""}</span>
+    <span class="pl-ent">gRPCSslTrustedCAsPath</span>: <span class="pl-s">${SW_EBPF_GRPC_SSL_TRUSTED_CAS_PATH:""}</span>
+
+<span class="pl-ent">receiver-telegraf</span>:
+  <span class="pl-ent">selector</span>: <span class="pl-s">${SW_RECEIVER_TELEGRAF:default}</span>
+  <span class="pl-ent">default</span>:
+    <span class="pl-ent">activeFiles</span>: <span class="pl-s">${SW_RECEIVER_TELEGRAF_ACTIVE_FILES:vm}</span>
+
+<span class="pl-ent">aws-firehose</span>:
+  <span class="pl-ent">selector</span>: <span class="pl-s">${SW_RECEIVER_AWS_FIREHOSE:default}</span>
+  <span class="pl-ent">default</span>:
+    <span class="pl-ent">host</span>: <span class="pl-s">${SW_RECEIVER_AWS_FIREHOSE_HTTP_HOST:0.0.0.0}</span>
+    <span class="pl-ent">port</span>: <span class="pl-s">${SW_RECEIVER_AWS_FIREHOSE_HTTP_PORT:12801}</span>
+    <span class="pl-ent">contextPath</span>: <span class="pl-s">${SW_RECEIVER_AWS_FIREHOSE_HTTP_CONTEXT_PATH:/}</span>
+    <span class="pl-ent">maxThreads</span>: <span class="pl-s">${SW_RECEIVER_AWS_FIREHOSE_HTTP_MAX_THREADS:200}</span>
+    <span class="pl-ent">idleTimeOut</span>: <span class="pl-s">${SW_RECEIVER_AWS_FIREHOSE_HTTP_IDLE_TIME_OUT:30000}</span>
+    <span class="pl-ent">acceptQueueSize</span>: <span class="pl-s">${SW_RECEIVER_AWS_FIREHOSE_HTTP_ACCEPT_QUEUE_SIZE:0}</span>
+    <span class="pl-ent">maxRequestHeaderSize</span>: <span class="pl-s">${SW_RECEIVER_AWS_FIREHOSE_HTTP_MAX_REQUEST_HEADER_SIZE:8192}</span>
+    <span class="pl-ent">firehoseAccessKey</span>: <span class="pl-s">${SW_RECEIVER_AWS_FIREHOSE_ACCESS_KEY:}</span>
+    <span class="pl-ent">enableTLS</span>: <span class="pl-s">${SW_RECEIVER_AWS_FIREHOSE_HTTP_ENABLE_TLS:false}</span>
+    <span class="pl-ent">tlsKeyPath</span>: <span class="pl-s">${SW_RECEIVER_AWS_FIREHOSE_HTTP_TLS_KEY_PATH:}</span>
+    <span class="pl-ent">tlsCertChainPath</span>: <span class="pl-s">${SW_RECEIVER_AWS_FIREHOSE_HTTP_TLS_CERT_CHAIN_PATH:}</span>
+
+<span class="pl-ent">ai-pipeline</span>:
+  <span class="pl-ent">selector</span>: <span class="pl-s">${SW_AI_PIPELINE:default}</span>
+  <span class="pl-ent">default</span>:
+    <span class="pl-ent">uriRecognitionServerAddr</span>: <span class="pl-s">${SW_AI_PIPELINE_URI_RECOGNITION_SERVER_ADDR:}</span>
+    <span class="pl-ent">uriRecognitionServerPort</span>: <span class="pl-s">${SW_AI_PIPELINE_URI_RECOGNITION_SERVER_PORT:17128}</span>
+    <span class="pl-ent">baselineServerAddr</span>: <span class="pl-s">${SW_API_PIPELINE_BASELINE_SERVICE_HOST:}</span>
+    <span class="pl-ent">baselineServerPort</span>: <span class="pl-s">${SW_API_PIPELINE_BASELINE_SERVICE_PORT:18080}</span></pre></div>
+<h4>1.2.3 启动配置</h4>
+<p><code class="notranslate">docker-compose.yml</code></p>
+<div class="highlight highlight-source-yaml"><pre class="notranslate"><span class="pl-ent">services</span>:
+  <span class="pl-ent">oap</span>:
+    <span class="pl-ent">image</span>: <span class="pl-s">registry.cn-beijing.aliyuncs.com/witter/skywalking-oap-server:10.2.0</span>
+    <span class="pl-ent">container_name</span>: <span class="pl-s">oap-server</span>
+    <span class="pl-ent">restart</span>: <span class="pl-s">unless-stopped</span>
+    <span class="pl-ent">ports</span>:
+      - <span class="pl-s"><span class="pl-pds">"</span>11800:11800<span class="pl-pds">"</span></span>   <span class="pl-c"><span class="pl-c">#</span> gRPC 上报端口（Agent/Satellite 连这里）</span>
+      - <span class="pl-s"><span class="pl-pds">"</span>12800:12800<span class="pl-pds">"</span></span>   <span class="pl-c"><span class="pl-c">#</span> REST/UI 端口</span>
+    <span class="pl-ent">volumes</span>:
+      - <span class="pl-s">./oap/config/application.yml:/skywalking/config/application.yml</span>
+    <span class="pl-ent">environment</span>:
+      - <span class="pl-s">SW_STORAGE=elasticsearch</span>
+      - <span class="pl-s">SW_STORAGE_ES_CLUSTER_NODES=192.168.8.99:9200</span>
+      <span class="pl-c"><span class="pl-c">#</span> 调优参数（Span/Trace量大时）</span>
+      - <span class="pl-s">SW_STORAGE_ES_BULK_ACTIONS=5000</span>
+      - <span class="pl-s">SW_STORAGE_ES_BATCH_OF_BYTES=10485760</span>
+      - <span class="pl-s">SW_STORAGE_ES_FLUSH_INTERVAL=3</span>
+      - <span class="pl-s">SW_STORAGE_ES_CONCURRENT_REQUESTS=3</span>
+      - <span class="pl-s">SW_CORE_PERSISTENT_PERIOD=15</span>
+      - <span class="pl-s">SW_ES_USER=elastic</span>
+      - <span class="pl-s">SW_ES_PASSWORD=elastic</span>
+      - <span class="pl-s">SW_STORAGE_ES_HTTP_PROTOCOL=http</span>
+      <span class="pl-c"><span class="pl-c">#</span> 可选：命名空间（多租户场景）</span>
+      <span class="pl-c"><span class="pl-c">#</span> - SW_NAMESPACE=</span>
+      - <span class="pl-s">SW_TELEMETRY=prometheus</span>
+      - <span class="pl-s">JAVA_OPTS=-Xms2048m -Xmx2048m</span>
+    <span class="pl-ent">networks</span>:
+      - <span class="pl-s">skywalking</span>
+
+  <span class="pl-ent">ui</span>:
+    <span class="pl-ent">image</span>: <span class="pl-s">registry.cn-beijing.aliyuncs.com/witter/skywalking-ui:10.2.0</span>
+    <span class="pl-ent">container_name</span>: <span class="pl-s">ui</span>
+    <span class="pl-ent">restart</span>: <span class="pl-s">always</span>
+    <span class="pl-ent">depends_on</span>:
+      - <span class="pl-s">oap</span>
+    <span class="pl-ent">ports</span>:
+      - <span class="pl-s"><span class="pl-pds">"</span>8081:8080<span class="pl-pds">"</span></span>
+    <span class="pl-ent">environment</span>:
+      - <span class="pl-s">SW_OAP_ADDRESS=http://oap:12800</span>
+      - <span class="pl-s">SW_ZIPKIN_ADDRESS=http://oap:9412</span>
+    <span class="pl-ent">networks</span>:
+      - <span class="pl-s">skywalking</span>
+
+  <span class="pl-ent">satellite</span>:
+    <span class="pl-ent">image</span>: <span class="pl-s">registry.cn-beijing.aliyuncs.com/witter/skywalking-satellite:v1.3.0</span>
+    <span class="pl-ent">container_name</span>: <span class="pl-s">satellite</span>
+    <span class="pl-ent">restart</span>: <span class="pl-s">unless-stopped</span>
+    <span class="pl-ent">depends_on</span>:
+      - <span class="pl-s">oap</span>
+    <span class="pl-ent">ports</span>:
+      - <span class="pl-s"><span class="pl-pds">"</span>11801:11801<span class="pl-pds">"</span></span>
+      - <span class="pl-s"><span class="pl-pds">"</span>11234:11234<span class="pl-pds">"</span></span>
+    <span class="pl-ent">environment</span>:
+      <span class="pl-ent">SATELLITE_GRPC_ADDRESS</span>: <span class="pl-s"><span class="pl-pds">"</span>:11801<span class="pl-pds">"</span></span>
+      <span class="pl-ent">SATELLITE_LOGGER_LEVEL</span>: <span class="pl-s">info</span>
+      <span class="pl-ent">SATELLITE_TELEMETRY_EXPORT_TYPE</span>: <span class="pl-s"><span class="pl-pds">"</span>none<span class="pl-pds">"</span></span>
+      <span class="pl-ent">SATELLITE_GRPC_CLIENT_FINDER</span>: <span class="pl-s"><span class="pl-pds">"</span>static<span class="pl-pds">"</span></span>
+      <span class="pl-ent">SATELLITE_GRPC_CLIENT</span>: <span class="pl-s"><span class="pl-pds">"</span>192.168.8.104:11800<span class="pl-pds">"</span></span>
+      <span class="pl-ent">SATELLITE_QUEUE_EVENT_BUFFER_SIZE</span>: <span class="pl-s"><span class="pl-pds">"</span>50000<span class="pl-pds">"</span></span>
+      <span class="pl-c"><span class="pl-c">#</span> 如果启用了 TLS / 认证，可以继续设置相关变量</span>
+      <span class="pl-c"><span class="pl-c">#</span> SATELLITE_KAFKA_ENABLE_TLS: "true"</span>
+      <span class="pl-c"><span class="pl-c">#</span> SATELLITE_KAFKA_CLIENT_PEM_PATH: "/etc/satellite/certs/client.pem"</span>
+    <span class="pl-ent">volumes</span>:
+      - <span class="pl-s">./satellite/satellite_config.yaml:/skywalking/config/satellite_config.yaml:ro</span>
+      <span class="pl-c"><span class="pl-c">#</span>- ./certs:/etc/satellite/certs:ro</span>
+    <span class="pl-ent">networks</span>:
+      - <span class="pl-s">skywalking</span>
+
+<span class="pl-ent">networks</span>:
+  <span class="pl-ent">skywalking</span>:
+    <span class="pl-ent">driver</span>: <span class="pl-s">bridge</span></pre></div>
+<h4>1.2.4 es写入索引名</h4>
+<p><code class="notranslate">sw_*</code></p>
+<h2>2.Agent配置</h2>
+<h3>2.1 Java Agent</h3>
+<ol>
+<li>下载&amp;配置文档：<a href="https://skywalking.apache.org/docs/skywalking-java/v9.6.0/readme/" rel="nofollow">https://skywalking.apache.org/docs/skywalking-java/v9.6.0/readme/</a></li>
+<li>agent环境变量：<a href="https://skywalking.apache.org/docs/skywalking-java/v9.6.0/en/setup/service-agent/java-agent/configurations/" rel="nofollow">https://skywalking.apache.org/docs/skywalking-java/v9.6.0/en/setup/service-agent/java-agent/configurations/</a></li>
+<li>插件名列表：<a href="https://skywalking.apache.org/docs/skywalking-java/v9.6.0/en/setup/service-agent/java-agent/plugin-list/" rel="nofollow">https://skywalking.apache.org/docs/skywalking-java/v9.6.0/en/setup/service-agent/java-agent/plugin-list/</a></li>
+</ol>
+<div class="highlight highlight-source-shell"><pre class="notranslate"><span class="pl-c"><span class="pl-c">#</span> 在java服务启动项里添加</span>
+-javaagent:/skywalking-agent/skywalking-agent.jar
+-Dskywalking.agent.service_name=sk-biz-gateway
+-Dskywalking.collector.backend_service=192.168.8.104:11800
+-Dskywalking.agent.sample_n_per_3_secs=-1	<span class="pl-c"><span class="pl-c">#</span> 采样策略，值设为 -1 表示全采样，不丢弃任何链路</span>
+-Dskywalking.agent.span_limit_per_segment=50000 <span class="pl-c"><span class="pl-c">#</span> 单个 Segment 中 Span 的最大数量(默认值为300)</span>
+
+<span class="pl-c"><span class="pl-c">#</span> 如有插件不兼容情况，添加下面的参数</span>
+-Dskywalking.plugin.exclude_plugins=tomcat-7.x/8.x,tomcat-10.x,tomcat-thread-pool</pre></div></div>
+<div style="font-size:small;margin-top:8px;float:right;">🍺转载文章请注明出处，谢谢！🍺</div>
+
+<button class="btn btn-block" type="button" onclick="openComments()" id="cmButton">评论</button>
+<div class="comments" id="comments"></div>
+
+</div>
+    <div id="footer"><div id="footer1">Copyright © <span id="copyrightYear"></span> <a href="https://blog.witter.top">V's Blog</a></div>
+<div id="footer2"><span id="filingNum"><a href="https://beian.miit.gov.cn/" target="_blank">冀ICP备2022019998号</a> • </span>
+    <span id="runday"></span><span>Powered by <a href="https://meekdai.com/Gmeek.html" target="_blank">Gmeek</a></span>
+</div>
+
+<script>
+var now=new Date();
+document.getElementById("copyrightYear").innerHTML=now.getFullYear();
+
+if("06/20/2024"!=""){
+    var startSite=new Date("06/20/2024");
+    var diff=now.getTime()-startSite.getTime();
+    var diffDay=Math.floor(diff/(1000*60*60*24));
+    document.getElementById("runday").innerHTML="网站运行 "+diffDay+" 天"+" • ";
+}
+</script></div>
+</body>
+<script>
+var IconList={'sun': 'M8 10.5a2.5 2.5 0 100-5 2.5 2.5 0 000 5zM8 12a4 4 0 100-8 4 4 0 000 8zM8 0a.75.75 0 01.75.75v1.5a.75.75 0 01-1.5 0V.75A.75.75 0 018 0zm0 13a.75.75 0 01.75.75v1.5a.75.75 0 01-1.5 0v-1.5A.75.75 0 018 13zM2.343 2.343a.75.75 0 011.061 0l1.06 1.061a.75.75 0 01-1.06 1.06l-1.06-1.06a.75.75 0 010-1.06zm9.193 9.193a.75.75 0 011.06 0l1.061 1.06a.75.75 0 01-1.06 1.061l-1.061-1.06a.75.75 0 010-1.061zM16 8a.75.75 0 01-.75.75h-1.5a.75.75 0 010-1.5h1.5A.75.75 0 0116 8zM3 8a.75.75 0 01-.75.75H.75a.75.75 0 010-1.5h1.5A.75.75 0 013 8zm10.657-5.657a.75.75 0 010 1.061l-1.061 1.06a.75.75 0 11-1.06-1.06l1.06-1.06a.75.75 0 011.06 0zm-9.193 9.193a.75.75 0 010 1.06l-1.06 1.061a.75.75 0 11-1.061-1.06l1.06-1.061a.75.75 0 011.061 0z', 'moon': 'M9.598 1.591a.75.75 0 01.785-.175 7 7 0 11-8.967 8.967.75.75 0 01.961-.96 5.5 5.5 0 007.046-7.046.75.75 0 01.175-.786zm1.616 1.945a7 7 0 01-7.678 7.678 5.5 5.5 0 107.678-7.678z', 'sync': 'M1.705 8.005a.75.75 0 0 1 .834.656 5.5 5.5 0 0 0 9.592 2.97l-1.204-1.204a.25.25 0 0 1 .177-.427h3.646a.25.25 0 0 1 .25.25v3.646a.25.25 0 0 1-.427.177l-1.38-1.38A7.002 7.002 0 0 1 1.05 8.84a.75.75 0 0 1 .656-.834ZM8 2.5a5.487 5.487 0 0 0-4.131 1.869l1.204 1.204A.25.25 0 0 1 4.896 6H1.25A.25.25 0 0 1 1 5.75V2.104a.25.25 0 0 1 .427-.177l1.38 1.38A7.002 7.002 0 0 1 14.95 7.16a.75.75 0 0 1-1.49.178A5.5 5.5 0 0 0 8 2.5Z', 'home': 'M6.906.664a1.749 1.749 0 0 1 2.187 0l5.25 4.2c.415.332.657.835.657 1.367v7.019A1.75 1.75 0 0 1 13.25 15h-3.5a.75.75 0 0 1-.75-.75V9H7v5.25a.75.75 0 0 1-.75.75h-3.5A1.75 1.75 0 0 1 1 13.25V6.23c0-.531.242-1.034.657-1.366l5.25-4.2Zm1.25 1.171a.25.25 0 0 0-.312 0l-5.25 4.2a.25.25 0 0 0-.094.196v7.019c0 .138.112.25.25.25H5.5V8.25a.75.75 0 0 1 .75-.75h3.5a.75.75 0 0 1 .75.75v5.25h2.75a.25.25 0 0 0 .25-.25V6.23a.25.25 0 0 0-.094-.195Z', 'github': 'M8 0c4.42 0 8 3.58 8 8a8.013 8.013 0 0 1-5.45 7.59c-.4.08-.55-.17-.55-.38 0-.27.01-1.13.01-2.2 0-.75-.25-1.23-.54-1.48 1.78-.2 3.65-.88 3.65-3.95 0-.88-.31-1.59-.82-2.15.08-.2.36-1.02-.08-2.12 0 0-.67-.22-2.2.82-.64-.18-1.32-.27-2-.27-.68 0-1.36.09-2 .27-1.53-1.03-2.2-.82-2.2-.82-.44 1.1-.16 1.92-.08 2.12-.51.56-.82 1.28-.82 2.15 0 3.06 1.86 3.75 3.64 3.95-.23.2-.44.55-.51 1.07-.46.21-1.61.55-2.33-.66-.15-.24-.6-.83-1.23-.82-.67.01-.27.38.01.53.34.19.73.9.82 1.13.16.45.68 1.31 2.69.94 0 .67.01 1.3.01 1.49 0 .21-.15.45-.55.38A7.995 7.995 0 0 1 0 8c0-4.42 3.58-8 8-8Z', 'copy': 'M0 6.75C0 5.784.784 5 1.75 5h1.5a.75.75 0 0 1 0 1.5h-1.5a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 0 0 .25-.25v-1.5a.75.75 0 0 1 1.5 0v1.5A1.75 1.75 0 0 1 9.25 16h-7.5A1.75 1.75 0 0 1 0 14.25Z M5 1.75C5 .784 5.784 0 6.75 0h7.5C15.216 0 16 .784 16 1.75v7.5A1.75 1.75 0 0 1 14.25 11h-7.5A1.75 1.75 0 0 1 5 9.25Zm1.75-.25a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 0 0 .25-.25v-7.5a.25.25 0 0 0-.25-.25Z', 'check': 'M13.78 4.22a.75.75 0 0 1 0 1.06l-7.25 7.25a.75.75 0 0 1-1.06 0L2.22 9.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018L6 10.94l6.72-6.72a.75.75 0 0 1 1.06 0Z'};
+var utterancesLoad=0;
+
+let themeSettings={
+    "dark": ["dark","moon","#00f0ff","dark-blue"],
+    "light": ["light","sun","#ff5000","github-light"],
+    "auto": ["auto","sync","","preferred-color-scheme"]
+};
+function changeTheme(mode, icon, color, utheme){
+    document.documentElement.setAttribute("data-color-mode",mode);
+    document.getElementById("themeSwitch").setAttribute("d",value=IconList[icon]);
+    document.getElementById("themeSwitch").parentNode.style.color=color;
+    if(utterancesLoad==1){utterancesTheme(utheme);}
+}
+function modeSwitch(){
+    let currentMode=document.documentElement.getAttribute('data-color-mode');
+    let newMode = currentMode === "light" ? "dark" : currentMode === "dark" ? "auto" : "light";
+    localStorage.setItem("meek_theme", newMode);
+    if(themeSettings[newMode]){
+        changeTheme(...themeSettings[newMode]);
+    }
+}
+function utterancesTheme(theme){
+    const message={type:'set-theme',theme: theme};
+    const iframe=document.getElementsByClassName('utterances-frame')[0];
+    iframe.contentWindow.postMessage(message,'https://utteranc.es');
+}
+if(themeSettings[theme]){changeTheme(...themeSettings[theme]);}
+console.log("\n %c Gmeek last https://github.com/Meekdai/Gmeek \n","padding:5px 0;background:#02d81d;color:#fff");
+</script>
+
+<script>
+document.getElementById("pathHome").setAttribute("d",IconList["home"]);
+document.getElementById("pathIssue").setAttribute("d",IconList["github"]);
+
+
+
+function openComments(){
+    cm=document.getElementById("comments");
+    cmButton=document.getElementById("cmButton");
+    cmButton.disabled=true;
+    cmButton.innerHTML="loading";
+    span=document.createElement("span");
+    span.setAttribute("class","AnimatedEllipsis");
+    cmButton.appendChild(span);
+
+    script=document.createElement("script");
+    script.setAttribute("src","https://utteranc.es/client.js");
+    script.setAttribute("repo","ljwtorch/ljwtorch.github.io");
+    script.setAttribute("issue-term","title");
+    
+    if(localStorage.getItem("meek_theme")=="dark"){script.setAttribute("theme","dark-blue");}
+    else if(localStorage.getItem("meek_theme")=="light") {script.setAttribute("theme","github-light");}
+    else{script.setAttribute("theme","preferred-color-scheme");}
+    
+    script.setAttribute("crossorigin","anonymous");
+    script.setAttribute("async","");
+    cm.appendChild(script);
+
+    int=self.setInterval("iFrameLoading()",200);
+}
+
+function iFrameLoading(){
+    var utterances=document.getElementsByClassName('utterances');
+    if(utterances.length==1){
+        if(utterances[0].style.height!=""){
+            utterancesLoad=1;
+            int=window.clearInterval(int);
+            document.getElementById("cmButton").style.display="none";
+            console.log("utterances Load OK");
+        }
+    }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    const createClipboardHTML = (codeContent, additionalClasses = '') => `
+        <pre class="notranslate"><code class="notranslate">${codeContent}</code></pre>
+        <div class="clipboard-container position-absolute right-0 top-0 ${additionalClasses}">
+            <clipboard-copy class="ClipboardButton btn m-2 p-0" role="button" style="display: inherit;">
+                <svg height="16" width="16" class="octicon octicon-copy m-2"><path d="${IconList["copy"]}"></path></svg>
+                <svg height="16" width="16" class="octicon octicon-check color-fg-success m-2 d-none"><path d="${IconList["check"]}"></path></svg>
+            </clipboard-copy>
+            <div class="copy-feedback">Copied!</div>
+        </div>
+    `;
+
+    const handleCodeElements = (selector = '') => {
+        document.querySelectorAll(selector).forEach(codeElement => {
+            const codeContent = codeElement.innerHTML;
+            const newStructure = document.createElement('div');
+            newStructure.className = 'snippet-clipboard-content position-relative overflow-auto';
+            newStructure.innerHTML = createClipboardHTML(codeContent);
+
+            const parentElement = codeElement.parentElement;
+            if (selector.includes('highlight')) {
+                parentElement.insertBefore(newStructure, codeElement.nextSibling);
+                parentElement.removeChild(codeElement);
+            } else {
+                parentElement.parentElement.replaceChild(newStructure, parentElement);
+            }
+        });
+    };
+
+    handleCodeElements('pre.notranslate > code.notranslate');
+    handleCodeElements('div.highlight > pre.notranslate');
+
+    let currentFeedback = null;
+    document.querySelectorAll('clipboard-copy').forEach(copyButton => {
+        copyButton.addEventListener('click', () => {
+            const codeContent = copyButton.closest('.snippet-clipboard-content').innerText;
+            const tempTextArea = document.createElement('textarea');
+            tempTextArea.value = codeContent;
+            document.body.appendChild(tempTextArea);
+            tempTextArea.select();
+            document.execCommand('copy');
+            document.body.removeChild(tempTextArea);
+
+            const copyIcon = copyButton.querySelector('.octicon-copy');
+            const checkIcon = copyButton.querySelector('.octicon-check');
+            const copyFeedback = copyButton.nextElementSibling;
+
+            if (currentFeedback && currentFeedback !== copyFeedback) {currentFeedback.style.display = 'none';}
+            currentFeedback = copyFeedback;
+
+            copyIcon.classList.add('d-none');
+            checkIcon.classList.remove('d-none');
+            copyFeedback.style.display = 'block';
+            copyButton.style.borderColor = 'var(--color-success-fg)';
+
+            setTimeout(() => {
+                copyIcon.classList.remove('d-none');
+                checkIcon.classList.add('d-none');
+                copyFeedback.style.display = 'none';
+                copyButton.style.borderColor = '';
+            }, 2000);
+        });
+    });
+});
+
+</script>
+<script defer src="http://ssh.witter.top:10012/script.js" data-website-id="b891c729-62b4-46cb-bdca-d622dc706106"></script>
+
+</html>
