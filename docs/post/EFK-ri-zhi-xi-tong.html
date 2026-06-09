@@ -666,42 +666,41 @@ touch __init__.py extract_request_id.py</pre></div>
 <div class="highlight highlight-source-yaml"><pre class="notranslate"><span class="pl-c"><span class="pl-c">#</span>暂定</span></pre></div>
 <h3>logstash</h3>
 <p>实例配置文件：</p>
-<pre lang="conf" class="notranslate"><code class="notranslate">input {
+<div class="highlight highlight-source-ini"><pre class="notranslate">input {
   kafka {
-    id =&gt; "my-kafka-consumer" # 唯一标识此Kafka消费者
-    topics =&gt; ["my-topic"] # Kafka主题列表
-    topic_id =&gt; "%{topic}" # 用于标识消息来自哪个主题
-    group_id =&gt; "my-consumer-group" # Kafka消费者组ID
-    bootstrap_servers =&gt; "localhost:9092" # Kafka服务器地址
-    # 其他可选配置
-    auto_offset_reset =&gt; "earliest" # 当没有初始偏移量时，从最早的消息开始消费
-    enable_auto_commit =&gt; true # 自动提交偏移量
-    max_poll_records =&gt; 500 # 每次轮询获取的最大记录数
-    max_poll_interval_ms =&gt; 300000 # 轮询间隔的最大毫秒数
+    <span class="pl-k">id</span> =&gt; <span class="pl-s"><span class="pl-pds">"</span>my-kafka-consumer<span class="pl-pds">"</span></span> <span class="pl-c"><span class="pl-c">#</span> 唯一标识此Kafka消费者</span>
+    <span class="pl-k">topics</span> =&gt; [<span class="pl-s"><span class="pl-pds">"</span>my-topic<span class="pl-pds">"</span></span>] <span class="pl-c"><span class="pl-c">#</span> Kafka主题列表</span>
+    <span class="pl-k">topic_id</span> =&gt; <span class="pl-s"><span class="pl-pds">"</span>%{topic}<span class="pl-pds">"</span></span> <span class="pl-c"><span class="pl-c">#</span> 用于标识消息来自哪个主题</span>
+    <span class="pl-k">group_id</span> =&gt; <span class="pl-s"><span class="pl-pds">"</span>my-consumer-group<span class="pl-pds">"</span></span> <span class="pl-c"><span class="pl-c">#</span> Kafka消费者组ID</span>
+    <span class="pl-k">bootstrap_servers</span> =&gt; <span class="pl-s"><span class="pl-pds">"</span>localhost:9092<span class="pl-pds">"</span></span> <span class="pl-c"><span class="pl-c">#</span> Kafka服务器地址</span>
+    <span class="pl-c"><span class="pl-c">#</span> 其他可选配置</span>
+    <span class="pl-k">auto_offset_reset</span> =&gt; <span class="pl-s"><span class="pl-pds">"</span>earliest<span class="pl-pds">"</span></span> <span class="pl-c"><span class="pl-c">#</span> 当没有初始偏移量时，从最早的消息开始消费</span>
+    <span class="pl-k">enable_auto_commit</span> =&gt; true <span class="pl-c"><span class="pl-c">#</span> 自动提交偏移量</span>
+    <span class="pl-k">max_poll_records</span> =&gt; 500 <span class="pl-c"><span class="pl-c">#</span> 每次轮询获取的最大记录数</span>
+    <span class="pl-k">max_poll_interval_ms</span> =&gt; 300000 <span class="pl-c"><span class="pl-c">#</span> 轮询间隔的最大毫秒数</span>
   }
 }
 
 filter {
-  # 在这里添加任何你需要的过滤或数据转换操作
-  # 例如，使用grok插件解析日志格式
+  <span class="pl-c"><span class="pl-c">#</span> 在这里添加任何你需要的过滤或数据转换操作</span>
+  <span class="pl-c"><span class="pl-c">#</span> 例如，使用grok插件解析日志格式</span>
   grok {
-    match =&gt; { "message" =&gt; "%{TIMESTAMP_ISO8601:timestamp} %{LOGLEVEL:level} %{WORD:thread} %{GREEDYDATA:message}" }
+    <span class="pl-k">match</span> =&gt; { <span class="pl-s"><span class="pl-pds">"</span>message<span class="pl-pds">"</span></span> =&gt; <span class="pl-s"><span class="pl-pds">"</span>%{TIMESTAMP_ISO8601:timestamp} %{LOGLEVEL:level} %{WORD:thread} %{GREEDYDATA:message}<span class="pl-pds">"</span></span> }
   }
   date {
-    match =&gt; ["timestamp", "ISO8601"] # 转换时间戳格式
+    <span class="pl-k">match</span> =&gt; [<span class="pl-s"><span class="pl-pds">"</span>timestamp<span class="pl-pds">"</span></span>, <span class="pl-s"><span class="pl-pds">"</span>ISO8601<span class="pl-pds">"</span></span>] <span class="pl-c"><span class="pl-c">#</span> 转换时间戳格式</span>
   }
   mutate {
-    lowercase =&gt; ["level"] # 将日志级别转换为小写
+    <span class="pl-k">lowercase</span> =&gt; [<span class="pl-s"><span class="pl-pds">"</span>level<span class="pl-pds">"</span></span>] <span class="pl-c"><span class="pl-c">#</span> 将日志级别转换为小写</span>
   }
 }
 
 output {
   elasticsearch {
-    hosts =&gt; ["https://...] 
-    cacert =&gt; '/etc/logstash/config/certs/ca.crt' 
-  }
-}
-</code></pre>
+    <span class="pl-k">hosts</span> =&gt; [<span class="pl-s"><span class="pl-pds">"</span>https://...] </span>
+<span class="pl-s">    cacert =&gt; '/etc/logstash/config/certs/ca.crt' </span>
+<span class="pl-s">  }</span>
+<span class="pl-s">}</span></pre></div>
 <h1>问题</h1>
 <ol>
 <li>
